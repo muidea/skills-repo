@@ -1,25 +1,30 @@
-# 测试驱动重构模式
+# Go 重构测试模式
 
 ## 1. 表格驱动测试 (Table-Driven Tests)
-重构散乱的测试用例，统一使用表格驱动模式，确保覆盖边界情况。
+重构后的代码必须通过表格驱动测试验证其稳健性。
 
-**标准模板：**
 ```go
 func TestExample(t *testing.T) {
     tests := []struct {
         name    string
         input   string
+        want    int
         wantErr bool
     }{
-        {"valid input", "ok", false},
-        {"empty input", "", true},
+        {"success", "valid-data", 200, false},
+        {"empty-input", "", 0, true},
     }
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            err := Process(tt.input)
+            got, err := MyFunc(tt.input)
             if (err != nil) != tt.wantErr {
-                t.Errorf("Process() error = %v, wantErr %v", err, tt.wantErr)
+                t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
+                return
+            }
+            if got != tt.want {
+                t.Errorf("got = %v, want %v", got, tt.want)
             }
         })
     }
 }
+```
