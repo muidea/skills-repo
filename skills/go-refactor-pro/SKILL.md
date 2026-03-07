@@ -1,6 +1,7 @@
 ---
 name: go-refactor-pro
 description: 资深 Go 语言架构重构专家。专注于代码去重 (DRY)、模块解耦、现代特性迁移 (slog/泛型/errors.Join) 以及性能优化。在代码复杂、逻辑重复或需要从旧版本升级时使用。
+version: 1.0.1
 ---
 
 # Go Refactor Pro (God-tier Edition)
@@ -32,3 +33,46 @@ description: 资深 Go 语言架构重构专家。专注于代码去重 (DRY)、
 
 - 严禁为了抽象而抽象（拒绝过度工程化）。
 - 严禁在未透传 `context.Context` 的情况下重构 IO 调用逻辑。
+
+## 5. 代码规范 (Import Grouping)
+
+本项目采用严格的import分组规范，**同一库的不同组件必须按路径字母顺序排序**，不同库之间用空行分隔。
+
+**分组顺序（自上而下）：**
+
+1. **标准库**（Go标准包）
+2. **第三方包**（外部依赖库）
+   - 同一库的不同组件按路径字母顺序排序
+   - 不同库之间用**一个空行**分隔
+3. **本项目内部包**（当前仓库的代码）
+   - 必须放置在最底端
+
+**示例：**
+
+```go
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	cd "github.com/example/magicCommon/def"
+	"github.com/example/magicCommon/event"
+	"github.com/example/magicCommon/task"
+
+	bc "github.com/example/magicBase/pkg/common"
+
+	"github.com/example/magicModulesRepo/modules/base/biz"
+	mbcc "github.com/example/magicModulesRepo/modules/blocks/cas/pkg/common"
+	mbtc "github.com/example/magicModulesRepo/modules/blocks/totalizator/pkg/common"
+
+	imkpc "github.com/example/project/internal/modules/kernel/panel/pkg/common"
+	imkpm "github.com/example/project/internal/modules/kernel/panel/pkg/models"
+	"github.com/example/project/internal/modules/kernel/portal/config"
+	"github.com/example/project/internal/modules/kernel/portal/pkg/common"
+)
+```
+
+**关键原则：**
+- **必须排序**：同一库下的多个import必须按路径字母顺序排列
+- **必须分组**：不同库之间必须用空行分隔
+- **本项目最末**：内部包必须放在import块的最底部
