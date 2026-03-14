@@ -1,247 +1,155 @@
 #!/bin/bash
 
-# go-multi-module-dev 辅助脚本 - 创建新模块
-# 用法: ./create-module.sh [module_name] [module_type]
-# module_type: kernel | blocks (默认: kernel)
-#
-# 注意: 此脚本生成最基础的模块模板
-# magicBase和magicModulesRepo是可选依赖，请根据实际需求添加
-
-set -e
+set -euo pipefail
 
 MODULE_NAME="${1:-}"
 MODULE_TYPE="${2:-kernel}"
-PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
 
 if [ -z "$MODULE_NAME" ]; then
-    echo "用法: $0 <module_name> [kernel|blocks]"
-    echo "示例: $0 mymodule kernel"
+    echo "usage: $0 <module_name> [kernel|blocks]"
     exit 1
 fi
 
-# 验证module_type
 if [ "$MODULE_TYPE" != "kernel" ] && [ "$MODULE_TYPE" != "blocks" ]; then
-    echo "错误: module_type 必须是 'kernel' 或 'blocks'"
+    echo "error: module_type must be kernel or blocks"
     exit 1
 fi
 
+if ! command -v go >/dev/null 2>&1; then
+    echo "error: go command not found"
+    exit 1
+fi
+
+MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
 MODULE_DIR="$PROJECT_ROOT/internal/modules/$MODULE_TYPE/$MODULE_NAME"
 
-# 检查模块是否已存在
 if [ -d "$MODULE_DIR" ]; then
-    echo "错误: 模块 '$MODULE_NAME' 已存在于 $MODULE_DIR"
+    echo "error: module already exists: $MODULE_DIR"
     exit 1
 fi
 
-echo "创建新模块: $MODULE_NAME (类型: $MODULE_TYPE)"
+to_pascal_case() {
+    local input="$1"
+    IFS='-_' read -r -a parts <<< "$input"
+    local out=""
+    for part in "${parts[@]}"; do
+        [ -z "$part" ] && continue
+        local first="${part:0:1}"
+        local rest="${part:1}"
+        out+="${first^^}${rest}"
+    done
+    echo "$out"
+}
 
-# 创建目录结构
-mkdir -p "$MODULE_DIR/biz"
-mkdir -p "$MODULE_DIR/service"
-mkdir -p "$MODULE_DIR/pkg/common"
-mkdir -p "$MODULE_DIR/pkg/models"
+MODULE_PASCAL="$(to_pascal_case "$MODULE_NAME")"
 
-# 转换模块名为PascalCase
-MODULE_PASCAL=$(echo "$MODULE_NAME" | sed 's/^./\U&/' | sed 's/-[a-z]/\U&/g' | tr -d '-')
+mkdir -p "$MODULE_DIR/biz" "$MODULE_DIR/service" "$MODULE_DIR/pkg/common" "$MODULE_DIR/pkg/models"
 
-# 创建module.go
-cat > "$MODULE_DIR/module.go" <<'EOF'
-package ${MODULE_NAME}
+cat > "$MODULE_DIR/module.go" <<EOF
+package $MODULE_NAME
 
 import (
-	"log/slog"
+    cd "github.com/muidea/magicCommon/def"
+    "github.com/muidea/magicCommon/event"
+    "github.com/muidea/magicCommon/framework/plugin/module"
+    "github.com/muidea/magicCommon/task"
 
-	// magicCommon框架 - 必须
-	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/framework/plugin/module"
-	"github.com/muidea/magicCommon/task"
-
-	// 以下为可选导入，根据实际需求选择
-	// 如果需要使用Initiator功能：
-	// "github.com/muidea/magicCommon/framework/plugin/initiator"
-	// ipc "github.com/muidea/magicModulesRepo/initiators/persistence/pkg/common"
-	// irc "github.com/muidea/magicModulesRepo/initiators/routeregistry/pkg/common"
-
-	// 内部包 - 请将 {module_path} 替换为实际的项目module路径
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/biz"
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/pkg/common"
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/service"
+    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/biz"
+    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/pkg/common"
+    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/service"
 )
 
 func init() {
-	module.Register(New())
+    module.Register(New())
 }
 
-type ${MODULE_PASCAL} struct {
-	bizPtr     *biz.${MODULE_PASCAL}
-	servicePtr *service.${MODULE_PASCAL}
+type $MODULE_PASCAL struct {
+    bizPtr     *biz.$MODULE_PASCAL
+    servicePtr *service.$MODULE_PASCAL
 }
 
-func New() *${MODULE_PASCAL} {
-	return &${MODULE_PASCAL}{}
+func New() *$MODULE_PASCAL {
+    return &$MODULE_PASCAL{}
 }
 
-func (s *${MODULE_PASCAL}) ID() string {
-	return common.${MODULE_PASCAL}Module
+func (s *$MODULE_PASCAL) ID() string {
+    return common.${MODULE_PASCAL}Module
 }
 
-func (s *${MODULE_PASCAL}) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-	// 如果需要使用magicModulesRepo的Initiator功能：
-	// var persistenceHelperVal ipc.PersistenceHelper
-	// persistenceHelperVal, persistenceHelperErr := initiator.GetEntity(ipc.PersistenceInitiator, persistenceHelperVal)
-	// if persistenceHelperErr != nil {
-	//     err = persistenceHelperErr
-	//     slog.Error("${MODULE_PASCAL} setup failed", "error", persistenceHelperErr.Error())
-	//     return
-	// }
-
-	// 初始化biz和service
-	s.bizPtr = biz.New(eventHub, backgroundRoutine)
-	s.servicePtr = service.New(s.bizPtr)
-
-	return nil
+func (s *$MODULE_PASCAL) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+    s.bizPtr = biz.New(eventHub, backgroundRoutine)
+    s.servicePtr = service.New(s.bizPtr)
+    return nil
 }
 
-func (s *${MODULE_PASCAL}) Run() (err *cd.Error) {
-	err = s.bizPtr.Initialize()
-	if err != nil {
-		return
-	}
-
-	s.servicePtr.RegisterRoute()
-	return
+func (s *$MODULE_PASCAL) Run() (err *cd.Error) {
+    err = s.bizPtr.Initialize()
+    if err != nil {
+        return
+    }
+    s.servicePtr.RegisterRoute()
+    return
 }
 
-func (s *${MODULE_PASCAL}) Teardown() {
-}
+func (s *$MODULE_PASCAL) Teardown() {}
 EOF
 
-# 创建biz/biz.go
-cat > "$MODULE_DIR/biz/biz.go" <<'EOF'
+cat > "$MODULE_DIR/biz/biz.go" <<EOF
 package biz
 
 import (
-	"context"
-
-	"log/slog"
-
-	// magicCommon框架 - 必须
-	cd "github.com/muidea/magicCommon/def"
-	"github.com/muidea/magicCommon/event"
-	"github.com/muidea/magicCommon/task"
-
-	// 以下为可选导入，根据实际需求选择
-	// 如果需要使用magicBase：
-	// "github.com/muidea/magicBase/pkg/client"
-	// 如果需要使用magicModulesRepo的base biz：
-	// "github.com/muidea/magicModulesRepo/modules/base/biz"
-
-	// 内部包
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/pkg/common"
+    cd "github.com/muidea/magicCommon/def"
+    "github.com/muidea/magicCommon/event"
+    "github.com/muidea/magicCommon/task"
 )
 
-type ${MODULE_PASCAL} struct {
-	// 如果使用magicModulesRepo的base biz：
-	// biz.Base
-	// baseClient client.Client
+type $MODULE_PASCAL struct {
+    eventHub          event.Hub
+    backgroundRoutine task.BackgroundRoutine
 }
 
-func New(
-	eventHub event.Hub,
-	backgroundRoutine task.BackgroundRoutine,
-	// 如果需要使用magicBase：
-	// baseClient client.Client,
-) *${MODULE_PASCAL} {
-	ptr := &${MODULE_PASCAL}{
-		// 如果使用magicModulesRepo的base biz：
-		// Base: biz.New(common.${MODULE_PASCAL}Module, eventHub, backgroundRoutine),
-	}
-
-	// 注册事件处理
-	// ptr.SubscribeFunc(common.EventName, ptr.handleEvent)
-
-	return ptr
+func New(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) *$MODULE_PASCAL {
+    return &$MODULE_PASCAL{
+        eventHub:          eventHub,
+        backgroundRoutine: backgroundRoutine,
+    }
 }
 
-func (s *${MODULE_PASCAL}) Initialize() (err *cd.Error) {
-	slog.Info("${MODULE_PASCAL} initializing...")
-	return nil
+func (s *$MODULE_PASCAL) Initialize() (err *cd.Error) {
+    return nil
 }
-
-// 如果需要处理事件：
-/*
-func (s *${MODULE_PASCAL}) handleEvent(ctx context.Context, header *event.Values, param interface{}) (ret interface{}, err *cd.Error) {
-	// 事件处理逻辑
-	return
-}
-*/
 EOF
 
-# 创建service/service.go
-cat > "$MODULE_DIR/service/service.go" <<'EOF'
+cat > "$MODULE_DIR/service/service.go" <<EOF
 package service
 
-import (
-	"context"
-	"net/http"
+import "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/biz"
 
-	"log/slog"
-
-	// magicCommon框架 - 必须
-	cd "github.com/muidea/magicCommon/def"
-	fn "github.com/muidea/magicCommon/foundation/net"
-
-	// 以下为可选导入，根据实际需求选择
-	// 如果需要使用magicEngine的HTTP引擎：
-	// engine "github.com/muidea/magicEngine/http"
-	// 如果需要使用magicBase：
-	// bc "github.com/muidea/magicBase/pkg/common"
-	// "github.com/muidea/magicBase/pkg/toolkit"
-
-	// 内部包
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/biz"
-	"github.com/{module_path}/internal/modules/${MODULE_TYPE}/${MODULE_NAME}/pkg/common"
-)
-
-type ${MODULE_PASCAL} struct {
-	// 如果使用magicBase：
-	// roleRouteRegistry toolkit.RoleRouteRegistry
-	bizPtr *biz.${MODULE_PASCAL}
+type $MODULE_PASCAL struct {
+    bizPtr *biz.$MODULE_PASCAL
 }
 
-func New(bizPtr *biz.${MODULE_PASCAL}) *${MODULE_PASCAL} {
-	// 如果使用magicBase：
-	// roleRouteRegistry toolkit.RoleRouteRegistry,
-	return &${MODULE_PASCAL}{
-		// roleRouteRegistry: roleRouteRegistry,
-		bizPtr: bizPtr,
-	}
+func New(bizPtr *biz.$MODULE_PASCAL) *$MODULE_PASCAL {
+    return &$MODULE_PASCAL{bizPtr: bizPtr}
 }
 
-func (s *${MODULE_PASCAL}) RegisterRoute() {
-	slog.Info("${MODULE_PASCAL} registering routes...")
-	// 如果使用magicBase的路由注册：
-	// s.roleRouteRegistry.AddPrivilegeHandler(common.RouteName, engine.GET, bc.ReadPermission, s.handler)
-}
+func (s *$MODULE_PASCAL) RegisterRoute() {}
 EOF
 
-# 创建pkg/common/const.go
 cat > "$MODULE_DIR/pkg/common/const.go" <<EOF
 package common
 
 const (
-	\${MODULE_PASCAL}Module = "${MODULE_NAME}"
+    ${MODULE_PASCAL}Module = "$MODULE_NAME"
 )
 EOF
 
-echo "模块创建完成: $MODULE_DIR"
-echo ""
-echo "创建的文件:"
-echo "  - $MODULE_DIR/module.go"
-echo "  - $MODULE_DIR/biz/biz.go"
-echo "  - $MODULE_DIR/service/service.go"
-echo "  - $MODULE_DIR/pkg/common/const.go"
-echo ""
-echo "注意: {module_path} 占位符需要替换为实际的go.mod中定义的module路径"
-echo "      magicBase和magicModulesRepo是可选依赖，请根据实际需求取消注释相关代码"
+echo "created module: $MODULE_DIR"
+echo "module path: $MODULE_PATH"
+echo "next steps:"
+echo "  1. add route registration in service/"
+echo "  2. add models and common definitions"
+echo "  3. add tests and docs"
