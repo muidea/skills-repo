@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Service Recovery"
+  short_description: "Recover base application bootstrap after resets"
+  default_prompt: "Use $magicbase-service-recovery to handle Application auto-create, default database fallback, and routeregistry health route recovery in magicBase."

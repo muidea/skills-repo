@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner VMI Install Recovery"
+  short_description: "Recover and verify offline VMI installation"
+  default_prompt: "Use $magicrunner-vmi-install-recovery to debug offline VMI install, schema/database creation, entity refresh, rollback, and application startup in magicRunner."

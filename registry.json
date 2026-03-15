@@ -1,0 +1,295 @@
+{
+  "version": "1.0.0",
+  "skills": [
+    {
+      "id": "algorithmic-art",
+      "name": "algorithmic-art",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/algorithmic-art/SKILL.md"
+    },
+    {
+      "id": "brand-guidelines",
+      "name": "brand-guidelines",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/brand-guidelines/SKILL.md"
+    },
+    {
+      "id": "canvas-design",
+      "name": "canvas-design",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/canvas-design/SKILL.md"
+    },
+    {
+      "id": "design-readiness-auditor",
+      "name": "设计完备性评审专家",
+      "version": "1.2.0",
+      "author": "Architecture Auditor",
+      "description": "深度审计技术设计文档。重点评估逻辑衔接一致性、分层开展的充分性以及格式规范性，确保方案可直接指导代码开发。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/design-readiness-auditor/SKILL.md"
+    },
+    {
+      "id": "doc-coauthoring",
+      "name": "doc-coauthoring",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/doc-coauthoring/SKILL.md"
+    },
+    {
+      "id": "docx",
+      "name": "docx",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of \"Word doc\", \"word document\", \".docx\", or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a \"report\", \"memo\", \"letter\", \"template\", or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/docx/SKILL.md"
+    },
+    {
+      "id": "frontend-design",
+      "name": "frontend-design",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Generates creative, polished code and UI design that avoids generic AI aesthetics.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/frontend-design/SKILL.md"
+    },
+    {
+      "id": "go-multi-module-dev",
+      "name": "go-multi-module-dev",
+      "version": "2.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon/framework 的 Go 多模块仓库开发，覆盖 application、internal/modules、biz/service/pkg 分层、事件集成、路由注册、文档与测试同步。新增模块、扩展业务模块或做跨仓联动开发时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/go-multi-module-dev/SKILL.md"
+    },
+    {
+      "id": "go-refactor-pro",
+      "name": "go-refactor-pro",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "资深 Go 语言架构重构专家。专注于代码去重 (DRY)、模块解耦、现代特性迁移 (slog/泛型/errors.Join) 以及性能优化。在代码复杂、逻辑重复或需要从旧版本升级时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/go-refactor-pro/SKILL.md"
+    },
+    {
+      "id": "internal-comms",
+      "name": "internal-comms",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/internal-comms/SKILL.md"
+    },
+    {
+      "id": "magicbase-service-recovery",
+      "name": "magicbase-service-recovery",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicBase 在服务数据重置、自举恢复、Application 自动补建、默认数据库回落、routeregistry health 路由等场景下的恢复链。涉及 CreateApplication、routeregistry、persistence 恢复时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-service-recovery/SKILL.md"
+    },
+    {
+      "id": "magiccas-service-readiness",
+      "name": "magiccas-service-readiness",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicCas 的服务级 ready 行为、对 magicBase 的强依赖、自举恢复和权限校验入口准备。涉及 persistence、routeregistry、health/ready、session/privilege 初始化时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-service-readiness/SKILL.md"
+    },
+    {
+      "id": "magiccommon-service-health",
+      "name": "magiccommon-service-health",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicCommon 中 framework/service、framework/health、framework/configuration 驱动的服务依赖、health/live、health/ready、启动状态和 fail-fast 机制。涉及 serviceDependencies、ready 判定、启动回滚时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-service-health/SKILL.md"
+    },
+    {
+      "id": "magicengine-root-routes",
+      "name": "magicengine-root-routes",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicEngine 中不应被 API version 包裹的根路径路由，例如 health、static 或其他框架级入口。涉及 AddRoute、ApiVersion、根路径匹配时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-root-routes/SKILL.md"
+    },
+    {
+      "id": "magicfile-static-install-paths",
+      "name": "magicfile-static-install-paths",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicFile 的上传、查看、静态下载、/static 路由、client 路径拼接和安装链文件访问问题。涉及 /static、/api/v1/files/view、双斜杠路径、文件元数据查询时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicfile-static-install-paths/SKILL.md"
+    },
+    {
+      "id": "magicmodulesrepo-routeregistry-health",
+      "name": "magicmodulesrepo-routeregistry-health",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicModulesRepo 中 routeregistry、persistence 与统一 health/live、health/ready 暴露的接入。涉及无版本 health 路由、服务启动承载、公共 initiator 健康检查时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicmodulesrepo-routeregistry-health/SKILL.md"
+    },
+    {
+      "id": "magicorm-vmi-contract-alignment",
+      "name": "magicorm-vmi-contract-alignment",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicOrm 中 VMI 定义、view/valueMask、validation、insert/update 约束与 magicTest/vmi 回归之间的契约对齐。涉及 req、ro、req,ro、ValueMask、View、安装包定义核对时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-vmi-contract-alignment/SKILL.md"
+    },
+    {
+      "id": "magicrunner-vmi-install-recovery",
+      "name": "magicrunner-vmi-install-recovery",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicRunner 中离线安装 VMI 的恢复链，包括 installer、database block、schema 回滚、账号密码同步、定义更新和应用启动。涉及 install/offline、CreateSchema、DownloadApplication、UpdateEntity 时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-vmi-install-recovery/SKILL.md"
+    },
+    {
+      "id": "magictest-vmi-regression",
+      "name": "magictest-vmi-regression",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicTest/vmi 的全量回归、负向校验噪声清理、定义对齐和远端服务验证。涉及 unittest discover、autotest.local.vpc、VMI 断言和清理噪声时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magictest-vmi-regression/SKILL.md"
+    },
+    {
+      "id": "mcp-builder",
+      "name": "mcp-builder",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/mcp-builder/SKILL.md"
+    },
+    {
+      "id": "pdf",
+      "name": "pdf",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/pdf/SKILL.md"
+    },
+    {
+      "id": "pptx",
+      "name": "pptx",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \"deck,\" \"slides,\" \"presentation,\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/pptx/SKILL.md"
+    },
+    {
+      "id": "project-integrity-guardian",
+      "name": "project-integrity-guardian",
+      "version": "1.2.0",
+      "author": "unknown",
+      "description": "A consistency enforcement tool that audits a project against a \"Source of Truth\" (SoT). It supports using either a specific file or a raw text string as the anchor to verify and align Code, Docs, Scripts, Tests, and CI configurations.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/project-integrity-guardian/SKILL.md"
+    },
+    {
+      "id": "skill-creator",
+      "name": "skill-creator",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Claude's capabilities with specialized knowledge, workflows, or tool integrations.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/skill-creator/SKILL.md"
+    },
+    {
+      "id": "slack-gif-creator",
+      "name": "slack-gif-creator",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Knowledge and utilities for creating animated GIFs optimized for Slack. Provides constraints, validation tools, and animation concepts. Use when users request animated GIFs for Slack like \"make me a GIF of X doing Y for Slack.\"",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/slack-gif-creator/SKILL.md"
+    },
+    {
+      "id": "theme-factory",
+      "name": "theme-factory",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/theme-factory/SKILL.md"
+    },
+    {
+      "id": "web-artifacts-builder",
+      "name": "web-artifacts-builder",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/web-artifacts-builder/SKILL.md"
+    },
+    {
+      "id": "webapp-testing",
+      "name": "webapp-testing",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/webapp-testing/SKILL.md"
+    },
+    {
+      "id": "xlsx",
+      "name": "xlsx",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \"the xlsx in my downloads\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/xlsx/SKILL.md"
+    }
+  ]
+}

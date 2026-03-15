@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicFile Static And Install Paths"
+  short_description: "Fix upload, view, and static path issues"
+  default_prompt: "Use $magicfile-static-install-paths to debug upload, static download, file query, and client path normalization issues in magicFile."

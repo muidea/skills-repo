@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Service Health"
+  short_description: "Refine service health and dependency startup"
+  default_prompt: "Use $magiccommon-service-health to work on framework health/live, health/ready, serviceDependencies, and startup fail-fast behavior in magicCommon."

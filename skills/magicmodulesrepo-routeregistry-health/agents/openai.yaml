@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicModulesRepo Routeregistry Health"
+  short_description: "Expose stable root health routes via shared initiators"
+  default_prompt: "Use $magicmodulesrepo-routeregistry-health to work on root health routes, persistence startup, and shared initiator health behavior in magicModulesRepo."

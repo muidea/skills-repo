@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm VMI Contract Alignment"
+  short_description: "Align VMI definitions, ORM semantics, and regression tests"
+  default_prompt: "Use $magicorm-vmi-contract-alignment to align req/ro semantics, ValueMask/View behavior, and VMI definitions with regression expectations."

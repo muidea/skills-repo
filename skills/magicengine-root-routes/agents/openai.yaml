@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicEngine Root Routes"
+  short_description: "Keep root health and static routes unversioned"
+  default_prompt: "Use $magicengine-root-routes to preserve unversioned root routes such as health or static endpoints while keeping business APIs versioned."

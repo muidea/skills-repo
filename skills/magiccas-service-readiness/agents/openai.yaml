@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCas Service Readiness"
+  short_description: "Keep CAS ready for dependent services"
+  default_prompt: "Use $magiccas-service-readiness to work on magicCas readiness, magicBase dependency startup, and CAS bootstrap recovery."
