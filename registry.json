@@ -242,6 +242,16 @@
       "repository_path": "skills/skill-creator/SKILL.md"
     },
     {
+      "id": "skillhub-skill-lifecycle",
+      "name": "skillhub-skill-lifecycle",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于通过 skill-hub 创建、登记、校验、归档和推送项目本地 skill。涉及 skill-hub create、status、validate、feedback、push，以及把工作区已有 skill 同步到本地或远程仓库时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/skillhub-skill-lifecycle/SKILL.md"
+    },
+    {
       "id": "slack-gif-creator",
       "name": "slack-gif-creator",
       "version": "1.0.0",

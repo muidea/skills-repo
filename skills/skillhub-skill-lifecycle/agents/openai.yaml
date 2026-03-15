@@ -1,0 +1,4 @@
+interface:
+  display_name: "skill-hub Skill Lifecycle"
+  short_description: "Create, archive, and push local skills with skill-hub"
+  default_prompt: "Use $skillhub-skill-lifecycle to register existing project skills with skill-hub, validate them, archive them to the local repository, and push them to the remote repository."
