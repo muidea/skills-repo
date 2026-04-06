@@ -102,6 +102,50 @@
       "repository_path": "skills/internal-comms/SKILL.md"
     },
     {
+      "id": "magicbase-module-startup",
+      "name": "magicbase-module-startup",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when wiring modules, startup order, dependency registration, or runtime initialization in services built on magicBase. Covers module boundaries, bootstrap flow, and startup-safe extension patterns.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that build services on magicBase module and startup conventions. Assumes local repository access and application bootstrap code; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-module-startup/SKILL.md"
+    },
+    {
+      "id": "magicbase-monitoring-operations",
+      "name": "magicbase-monitoring-operations",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when implementing or reviewing magicBase monitoring, operational dashboards, data-accuracy checks, or service health workflows. Covers monitoring semantics, metric correctness, and operational debugging patterns.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that use magicBase monitoring, health, or operational dashboards. Assumes local repository access and monitoring-related code or docs; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-monitoring-operations/SKILL.md"
+    },
+    {
+      "id": "magicbase-routing-auth",
+      "name": "magicbase-routing-auth",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that expose HTTP services through magicBase routing and auth layers. Assumes local repository access and handler code; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-routing-auth/SKILL.md"
+    },
+    {
+      "id": "magicbase-service-access",
+      "name": "magicbase-service-access",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when building or reviewing business data access on top of magicBase and magicOrm. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working in repositories that expose business CRUD through magicBase on top of magicOrm. Assumes local repository access; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-service-access/SKILL.md"
+    },
+    {
       "id": "magicbase-service-recovery",
       "name": "magicbase-service-recovery",
       "version": "1.0.0",
@@ -114,7 +158,7 @@
     {
       "id": "magiccas-service-readiness",
       "name": "magiccas-service-readiness",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
       "description": "用于处理 magicCas 的服务级 ready 行为、对 magicBase 的强依赖、自举恢复和权限校验入口准备。涉及 persistence、routeregistry、health/ready、session/privilege 初始化时使用。",
       "tags": null,
@@ -160,6 +204,105 @@
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-routeregistry-health/SKILL.md"
+    },
+    {
+      "id": "magicorm-aging-diagnosis",
+      "name": "magicorm-aging-diagnosis",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when investigating long-run slowdown or aging warnings on services built with magicOrm and magicBase. Covers distinguishing functional correctness from performance drift, request-level versus full-flow latency, and framework-safe diagnosis steps.",
+      "tags": null,
+      "compatibility": "Designed for agent clients diagnosing aging or long-run performance behavior in repositories built on magicOrm and magicBase. Assumes local repository access and runtime logs; network access is not required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-aging-diagnosis/SKILL.md"
+    },
+    {
+      "id": "magicorm-entity-definition",
+      "name": "magicorm-entity-definition",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when defining, reviewing, or fixing magicOrm entity models in struct tags or entity JSON. Covers viewDeclare, constraints, readonly/default fields, and the rule that framework behavior must follow entity definitions rather than app-side patches.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working in repositories that use magicOrm model definitions and magicBase-based services. Assumes local repository access; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-entity-definition/SKILL.md"
+    },
+    {
+      "id": "magicorm-error-observability",
+      "name": "magicorm-error-observability",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when diagnosing magicOrm failures, error-code handling, metrics output, or instrumentation behavior. Covers framework error boundaries, metrics interpretation, and observability-safe debugging.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that expose magicOrm metrics or error flows and need framework-level diagnostics. Assumes local repository access and runtime logs or tests; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-error-observability/SKILL.md"
+    },
+    {
+      "id": "magicorm-provider-relation",
+      "name": "magicorm-provider-relation",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when defining or reviewing magicOrm local or remote provider behavior, relation modeling, relation response shape, and spec generation. Covers relation-lite rules and the rule that relationView is not a public capability.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working with magicOrm local or remote providers and relation-heavy entity models. Assumes local repository access; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-provider-relation/SKILL.md"
+    },
+    {
+      "id": "magicorm-query-write-contract",
+      "name": "magicorm-query-write-contract",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when implementing or reviewing magicOrm query and write behavior. Covers Query vs BatchQuery semantics, ValueMask and view precedence, relation-lite rules, and insert/update response projection.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working in repositories that use magicOrm query and write paths directly or through magicBase. Assumes local repository access; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-query-write-contract/SKILL.md"
+    },
+    {
+      "id": "magicorm-regression-testing",
+      "name": "magicorm-regression-testing",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when validating that business services still follow magicOrm and magicBase contracts. Covers definition-alignment checks, module tests, framework regressions, and how to distinguish test expectation bugs from framework bugs.",
+      "tags": null,
+      "compatibility": "Designed for agent clients validating repositories that use magicOrm definitions and magicBase service plumbing. Assumes local repository access and project test tooling; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-regression-testing/SKILL.md"
+    },
+    {
+      "id": "magicorm-schema-lifecycle",
+      "name": "magicorm-schema-lifecycle",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when creating, dropping, reviewing, or evolving magicOrm database schema behavior. Covers Create and Drop semantics, relation tables, type mapping, and the rule that schema changes must follow model declarations.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that rely on magicOrm to manage database schema and relation tables. Assumes local repository access and database-facing source code; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-schema-lifecycle/SKILL.md"
+    },
+    {
+      "id": "magicorm-transaction-operations",
+      "name": "magicorm-transaction-operations",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when implementing or reviewing magicOrm mutation and transaction behavior. Covers Insert, Update, Delete, Count, transaction boundaries, relation persistence, and the rule that mutation semantics must stay inside magicOrm rather than app-side wrappers.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on repositories that use magicOrm for transactional mutation and relation persistence. Assumes local repository access and test tooling; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-transaction-operations/SKILL.md"
+    },
+    {
+      "id": "magicorm-validation-write-safety",
+      "name": "magicorm-validation-write-safety",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when implementing or reviewing magicOrm validation, readonly handling, defaults, and insert or update write safety. Covers req or ro or range or enum or format constraints and framework-level enforcement.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on magicOrm validation and persistence safety in repositories that rely on framework-enforced model constraints. Assumes local repository access; no network access is required.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-validation-write-safety/SKILL.md"
     },
     {
       "id": "magicorm-vmi-contract-alignment",
