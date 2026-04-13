@@ -7,7 +7,7 @@ metadata:
   domain: magicorm
   scenario: entity-definition
   maturity: stable
-version: 1.0.1
+version: 1.0.2
 ---
 
 # MagicOrm Entity Definition
@@ -28,6 +28,7 @@ Do not use this skill for generic business debugging if the issue is clearly out
 
 - Treat the entity definition as the source of truth.
 - Use `boolean` as the canonical external boolean type name in entity JSON and type definitions.
+- Treat runtime object identity as `pkgKey = path.Join(pkgPath, name)`. Review `name` and `pkgPath` together, not separately.
 - Distinguish entity business fields from runtime-object top-level declarations such as `blockInfo`.
 - If a field does not declare a public `viewDeclare`, do not require it to be returned.
 - Public views are only `detail` and `lite`.
@@ -40,14 +41,15 @@ Do not use this skill for generic business debugging if the issue is clearly out
 ## Definition review workflow
 
 1. Find the active entity definition used by the target service.
-2. Check whether the failing concern belongs to `fields[]` or to a top-level declaration such as `blockInfo`.
-3. For field issues, check whether the failing field is actually declared.
-4. Check whether its `viewDeclare` includes `detail` or `lite`.
-5. Check whether `constraint` implies readonly, required, range, enum, or format validation.
-6. Check whether `defaultValue` is meant for insert only or also affects update-time response.
-7. For block/statistics issues, verify `blockInfo` is declared at the top level of the entity JSON rather than as a pseudo field inside `fields[]`.
-8. If tests expect undeclared fields, tighten the tests to the definition.
-9. If runtime ignores declared fields or constraints, fix `magicOrm` or `magicBase`.
+2. Reconstruct the runtime `pkgKey` from `path.Join(pkgPath, name)` and confirm it matches what code expects.
+3. Check whether the failing concern belongs to `fields[]` or to a top-level declaration such as `blockInfo`.
+4. For field issues, check whether the failing field is actually declared.
+5. Check whether its `viewDeclare` includes `detail` or `lite`.
+6. Check whether `constraint` implies readonly, required, range, enum, or format validation.
+7. Check whether `defaultValue` is meant for insert only or also affects update-time response.
+8. For block/statistics issues, verify `blockInfo` is declared at the top level of the entity JSON rather than as a pseudo field inside `fields[]`.
+9. If tests expect undeclared fields, tighten the tests to the definition.
+10. If runtime ignores declared fields or constraints, fix `magicOrm` or `magicBase`.
 
 ## Field interpretation rules
 
@@ -69,6 +71,18 @@ Do not use this skill for generic business debugging if the issue is clearly out
 - Do not model built-in statistics blocks as editable business fields just to make them visible in management pages.
 - If a business object truly stores user-managed block configuration as data, that is a separate business-field design and must be justified explicitly. Do not infer it from other panel runtime objects.
 
+## PkgKey rules
+
+- Runtime object matching in panel/base startup depends on `pkgKey = path.Join(pkgPath, name)`.
+- Do not encode the object name twice by putting it both in `pkgPath` and in `name`.
+- If code expects `/panel/hub/serviceCapabilityBinding`, the correct declaration is:
+  - `pkgPath = "/panel/hub"`
+  - `name = "serviceCapabilityBinding"`
+- A declaration such as:
+  - `pkgPath = "/panel/hub/serviceCapabilityBinding"`
+  - `name = "binding"`
+  will produce `/panel/hub/serviceCapabilityBinding/binding`, which will break runtime entity lookup.
+
 ## Fix strategy
 
 - Fix the declaration if the model is wrong.
@@ -79,6 +93,7 @@ Do not use this skill for generic business debugging if the issue is clearly out
 ## Review checklist
 
 - Is the field declared in the active model?
+- Does `path.Join(pkgPath, name)` exactly match the pkg key expected by code and runtime initialization?
 - Does the field have the expected public `viewDeclare`?
 - Are readonly/default fields preserved correctly after update?
 - Are relation fields modeled as relations rather than top-level payload expansions?
