@@ -219,7 +219,7 @@
     {
       "id": "magicorm-entity-definition",
       "name": "magicorm-entity-definition",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
       "description": "Use when defining, reviewing, or fixing magicOrm entity models in struct tags or entity JSON. Covers viewDeclare, constraints, readonly/default fields, and the rule that framework behavior must follow entity definitions rather than app-side patches.",
       "tags": null,
