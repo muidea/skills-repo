@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Portal Service"
+  short_description: "Review portal handlers, subscriptions, and auth boundaries"
+  default_prompt: "Use $magicrunner-portal-service to work on kernel/portal/service handlers, portal subscription entrypoints, auth boundaries, feedback APIs, and direct handler tests."

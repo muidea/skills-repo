@@ -1,0 +1,3 @@
+name: magicmodulesrepo-app-bootstrap
+short_description: Work on magicModulesRepo startup flow, initiators, and listener lifecycle.
+default_prompt: Diagnose and improve magicModulesRepo startup, initiator setup/run/teardown behavior, listener binding failures, and shutdown handling. Prefer returning cd.Error over panic and validate with initiator-focused tests.

@@ -1,0 +1,3 @@
+name: magicfile-file-service
+short_description: Work on magicFile upload/download/file metadata and cleanup behavior.
+default_prompt: Diagnose and improve magicFile file-service behavior, including upload/download paths, metadata Path semantics, namespace/source checks, and temp/expired file cleanup. Keep direct tests around storage path resolution and expiration logic.

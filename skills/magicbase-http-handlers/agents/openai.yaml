@@ -1,0 +1,3 @@
+name: magicbase-http-handlers
+short_description: Work on magicBase HTTP handlers, request decoding, and response semantics.
+default_prompt: Improve magicBase HTTP handlers across kernel and blocks modules. Keep invalid client input mapped to IllegalParam, preserve fail-closed application-context checks, and add direct handler tests for decoding and pagination behavior.

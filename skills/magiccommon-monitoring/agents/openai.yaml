@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Monitoring"
+  short_description: "Maintain monitoring manager and exporter"
+  default_prompt: "Use $magiccommon-monitoring to update Manager, Registry, Collector, Exporter, and monitoring tests or docs."

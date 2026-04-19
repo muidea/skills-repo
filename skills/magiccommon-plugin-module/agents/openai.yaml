@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Plugin Module"
+  short_description: "Wire plugin-based business modules cleanly"
+  default_prompt: "Use $magiccommon-plugin-module to register, structure, or debug initiator and module plugins in magicCommon."

@@ -7,7 +7,7 @@ metadata:
   domain: magicorm
   scenario: entity-definition
   maturity: stable
-version: 1.0.2
+version: 1.0.3
 ---
 
 # MagicOrm Entity Definition
@@ -29,6 +29,7 @@ Do not use this skill for generic business debugging if the issue is clearly out
 - Treat the entity definition as the source of truth.
 - Use `boolean` as the canonical external boolean type name in entity JSON and type definitions.
 - Treat runtime object identity as `pkgKey = path.Join(pkgPath, name)`. Review `name` and `pkgPath` together, not separately.
+- Do not infer runtime CRUD override paths from entity definitions alone. In `magicRunner`, standard REST exposure is produced from canonical verb routes through `toolkit.NormalizeURI()`, and that routing rule belongs to runtime routing review rather than entity modeling.
 - Distinguish entity business fields from runtime-object top-level declarations such as `blockInfo`.
 - If a field does not declare a public `viewDeclare`, do not require it to be returned.
 - Public views are only `detail` and `lite`.
@@ -61,6 +62,7 @@ Do not use this skill for generic business debugging if the issue is clearly out
   Do not require the field in public query responses.
 - `constraint: "ro"`
   The field must not be client-writable. Update paths must not let request payloads overwrite persisted values.
+- Action-driven runtime fields such as `updateTime` must not be marked `ro` if business publish/approve flows explicitly advance them. `magicOrm` update will restore assigned read-only fields from stored values and the action timestamp will not persist.
 - `constraint: "req"`
   The field is required on the appropriate write path.
 

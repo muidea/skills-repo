@@ -1,0 +1,3 @@
+name: magicmodulesrepo-metrics-module
+short_description: Work on magicModulesRepo metrics module setup and future extensions.
+default_prompt: Diagnose and improve the magicModulesRepo metrics block, especially module setup, route registry integration, and future route/event extensions. Preserve the current lightweight design unless a real route surface is added.

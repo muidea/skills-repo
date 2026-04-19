@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm Validation"
+  short_description: "Fix validation rules and adapters safely"
+  default_prompt: "Use $magicorm-validation to diagnose or update validation adapters, scenarios, and provider validation behavior."

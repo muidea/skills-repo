@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon App Bootstrap"
+  short_description: "Build service startup and shutdown flows"
+  default_prompt: "Use $magiccommon-app-bootstrap to scaffold a service entry with application, service, event hub, and background routine."

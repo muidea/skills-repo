@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Application Runtime Lifecycle"
+  short_description: "Manage install, schema, compose, start, stop, and uninstall flows"
+  default_prompt: "Use $magicrunner-application-runtime-lifecycle to troubleshoot magicRunner application install, schema rollback, installer import, compose runtime artifacts, start/stop, exposure, and uninstall cleanup."

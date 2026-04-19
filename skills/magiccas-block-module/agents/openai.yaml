@@ -1,0 +1,3 @@
+name: magiccas-block-module
+short_description: Work on magicCas block modules such as account, endpoint, namespace, role, and totalizator.
+default_prompt: Improve a magicCas block module by checking module wiring, biz/service boundaries, handler error semantics, and direct tests. Prefer consistent IllegalParam handling for obvious request errors.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Routing Auth"
+  short_description: "Review magicBase route ownership and auth boundaries"
+  default_prompt: "Use $magicbase-routing-auth to review magicBase request entry handling, auth boundary placement, route ownership, and endpoint behavior after routes and privileges are defined."

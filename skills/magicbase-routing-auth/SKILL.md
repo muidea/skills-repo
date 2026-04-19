@@ -1,17 +1,20 @@
 ---
 name: magicbase-routing-auth
-description: Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts.
+description: Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing after routes and privileges are defined. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts; use magicbase-role-routing for route and privilege definition.
 compatibility: Designed for agent clients working on repositories that expose HTTP services through magicBase routing and auth layers. Assumes local repository access and handler code; no network access is required.
 metadata:
   author: rangh-codespace
   domain: magicbase
   scenario: routing-auth
   maturity: stable
+  version: 1.0.1
 ---
 
 # MagicBase Routing And Auth
 
 Use this skill when the task is about HTTP routing, auth checks, request-to-service mapping, or handler-level consistency on `magicBase`.
+
+Use `magicbase-role-routing` first when the task is to define a new route, choose ordinary vs CAS vs privilege route registration, define `Privilege` values, or debug role privilege matching. Return here when reviewing whether a handler preserves auth and service-contract boundaries.
 
 ## Scope
 

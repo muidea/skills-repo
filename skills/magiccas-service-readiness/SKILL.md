@@ -1,7 +1,7 @@
 ---
 name: magiccas-service-readiness
 description: 用于处理 magicCas 的服务级 ready 行为、对 magicBase 的强依赖、自举恢复和权限校验入口准备。涉及 persistence、routeregistry、health/ready、session/privilege 初始化时使用。
-version: 1.0.1
+version: 1.0.2
 ---
 
 # magicCas Service Readiness
@@ -10,10 +10,10 @@ version: 1.0.1
 
 ## 先读这些文件
 
-- `magicCas/internal/initiators/routeregistry/routeregistry.go`
-- `magicCas/internal/initiators/persistence/persistence.go`
-- `magicCas/docs/design-startup.md`
-- `magicCas/docs/release-note-2026-03-hardening.md`
+- `internal/initiators/routeregistry/routeregistry.go`
+- `internal/initiators/persistence/persistence.go`
+- `docs/design-startup.md`
+- `docs/release-note-2026-03-hardening.md`
 
 ## 当前稳定规则
 
@@ -67,6 +67,6 @@ version: 1.0.1
 ## 推荐验证
 
 ```bash
-cd magicCas && GOCACHE=/tmp/magiccas-gocache \
+GOCACHE=/tmp/magiccas-gocache \
 go test ./internal/initiators/routeregistry ./internal/initiators/persistence ./internal/modules/kernel/cas -count 1
 ```

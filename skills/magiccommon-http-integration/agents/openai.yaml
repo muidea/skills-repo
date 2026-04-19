@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon HTTP Integration"
+  short_description: "Build HTTP, upload, and client helpers"
+  default_prompt: "Use $magiccommon-http-integration to integrate HTTP requests, uploads, downloads, or DNS cache clients with foundation/net."

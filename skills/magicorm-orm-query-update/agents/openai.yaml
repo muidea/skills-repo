@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm ORM Query Update"
+  short_description: "Refine query, update, and relation diffs"
+  default_prompt: "Use $magicorm-orm-query-update to improve query masks, relation diffs, or update behavior in magicOrm."

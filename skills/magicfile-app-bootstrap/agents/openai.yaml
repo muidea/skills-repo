@@ -1,0 +1,3 @@
+name: magicfile-app-bootstrap
+short_description: Work on magicFile startup, file module setup, and magicModulesRepo integration.
+default_prompt: Diagnose and improve magicFile startup, file module initialization, model registration, and integration with magicModulesRepo initiators and modules. Validate with internal package tests.

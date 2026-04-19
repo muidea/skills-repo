@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm Provider Remote"
+  short_description: "Fix provider and helper internals"
+  default_prompt: "Use $magicorm-provider-remote to inspect or fix magicOrm provider/local, provider/remote, provider/helper, mask/filter, or codec internals. Use $magicorm-provider-object-usage for app-side provider and ObjectValue usage."

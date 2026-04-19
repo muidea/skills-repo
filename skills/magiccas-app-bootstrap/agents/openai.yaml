@@ -1,0 +1,3 @@
+name: magiccas-app-bootstrap
+short_description: Work on magicCas startup flow, initiators, and lifecycle handling.
+default_prompt: Diagnose and improve magicCas startup, initiator registration, listener lifecycle, and shutdown behavior. Prefer returning cd.Error over panic and validate with initiator-focused tests.

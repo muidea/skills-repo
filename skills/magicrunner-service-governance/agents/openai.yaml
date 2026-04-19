@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Service Governance"
+  short_description: "Trace service exposure, capabilities, publication, subscription, and gateway"
+  default_prompt: "Use $magicrunner-service-governance to work on magicRunner EntityDefinition.serviceExpose, CapabilityDefinition, ServiceDefinition, binding, publication, subscription, credentials, and service governance troubleshooting."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Config Hotreload"
+  short_description: "Design config loading and hot-reload flows"
+  default_prompt: "Use $magiccommon-config-hotreload to design config layout, env overrides, and hot-reload watchers for a module."

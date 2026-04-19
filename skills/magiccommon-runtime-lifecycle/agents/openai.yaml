@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Runtime Lifecycle"
+  short_description: "Refine runtime lifecycle semantics"
+  default_prompt: "Use $magiccommon-runtime-lifecycle to refine wait, shutdown, timer, and terminate semantics across execute, task, event, and application."

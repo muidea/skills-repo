@@ -1,0 +1,3 @@
+name: magicmodulesrepo-cas-bridge
+short_description: Work on magicModulesRepo CAS bridge events and magicCas client calls.
+default_prompt: Diagnose and improve the magicModulesRepo cas block, including event input validation, namespace/session checks, privilege registration, and magicCas client integration. Prefer IllegalParam for clear input errors and add biz-level tests.

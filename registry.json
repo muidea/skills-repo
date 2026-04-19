@@ -72,9 +72,42 @@
       "repository_path": "skills/frontend-design/SKILL.md"
     },
     {
+      "id": "go-application-event-runtime",
+      "name": "go-application-event-runtime",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/go-application-event-runtime/SKILL.md"
+    },
+    {
+      "id": "go-modular-project-bootstrap",
+      "name": "go-modular-project-bootstrap",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于初始化类似现有 Go 多应用、多模块服务套件的新项目骨架，覆盖仓库结构、应用入口、模块生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/go-modular-project-bootstrap/SKILL.md"
+    },
+    {
+      "id": "go-module-initiator-lifecycle",
+      "name": "go-module-initiator-lifecycle",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与 module，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/go-module-initiator-lifecycle/SKILL.md"
+    },
+    {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.0.0",
+      "version": "2.0.2",
       "author": "unknown",
       "description": "用于基于 magicCommon/framework 的 Go 多模块仓库开发，覆盖 application、internal/modules、biz/service/pkg 分层、事件集成、路由注册、文档与测试同步。新增模块、扩展业务模块或做跨仓联动开发时使用。",
       "tags": null,
@@ -102,6 +135,83 @@
       "repository_path": "skills/internal-comms/SKILL.md"
     },
     {
+      "id": "magicbase-app-bootstrap",
+      "name": "magicbase-app-bootstrap",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicBase` 的启动链路、initiator 装配、主入口调整和应用级排障。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magicbase-client-integration",
+      "name": "magicbase-client-integration",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `pkg/client` 的请求封装、接口对接和集成测试。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-client-integration/SKILL.md"
+    },
+    {
+      "id": "magicbase-data-capability-definition",
+      "name": "magicbase-data-capability-definition",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于基于 magicBase 定义 Application、Entity、Entity fields/constraints、Block 与 serviceExpose 能力并接入数据存储，覆盖 ApplicationDeclare/数据库绑定、Entity remote.Object/schema 注册、字段类型/主键/生成策略/viewDeclare/constraint/defaultValue/relation、blockInfo 能力声明、EntityServiceExpose 能力项开放、pkg/helper DAO 使用、kernel/public 值读写、query/write 语义和恢复校验；在应用端用 magicBase 承载业务数据或开放实体服务能力时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-data-capability-definition/SKILL.md"
+    },
+    {
+      "id": "magicbase-http-crud-toolkit",
+      "name": "magicbase-http-crud-toolkit",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when implementing or reviewing thin HTTP CRUD shells on top of magicBase/pkg/toolkit/http_crud.go, including standard request decode, REST id handling, model-to-view conversion, and deciding when generic CRUD helpers are appropriate.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on services built on magicBase that want to reuse generic HTTP CRUD shell helpers without moving business semantics into the toolkit layer.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-http-crud-toolkit/SKILL.md"
+    },
+    {
+      "id": "magicbase-http-handlers",
+      "name": "magicbase-http-handlers",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicBase` 的 HTTP handler、请求解码、错误包装和分页响应。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-http-handlers/SKILL.md"
+    },
+    {
+      "id": "magicbase-kernel-entity",
+      "name": "magicbase-kernel-entity",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于处理 `kernel/base` 和 `kernel/public` 内部的应用、实体、Block、值对象和 `extData` 实现逻辑；应用侧定义 Application/Entity/Block 并接入数据存储时优先使用 magicbase-data-capability-definition。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-kernel-entity/SKILL.md"
+    },
+    {
+      "id": "magicbase-module-dev",
+      "name": "magicbase-module-dev",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于处理 `magicBase` 的 kernel/block 模块开发、路由装配和模块生命周期；如果只是定义应用侧 BlockInfo 能力并接入数据存储，优先使用 magicbase-data-capability-definition。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-module-dev/SKILL.md"
+    },
+    {
       "id": "magicbase-module-startup",
       "name": "magicbase-module-startup",
       "version": "1.0.0",
@@ -124,11 +234,22 @@
       "repository_path": "skills/magicbase-monitoring-operations/SKILL.md"
     },
     {
+      "id": "magicbase-role-routing",
+      "name": "magicbase-role-routing",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于在 magicBase 中定义和管理普通路由、CAS 认证路由、RoleRouteRegistry 权限路由、Privilege 权限项、session 绑定和鉴权中间件；新增带权限 HTTP API、定义权限值、排查 401/403 或 register privilege failed 时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicbase-role-routing/SKILL.md"
+    },
+    {
       "id": "magicbase-routing-auth",
       "name": "magicbase-routing-auth",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
-      "description": "Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts.",
+      "description": "Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing after routes and privileges are defined. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts; use magicbase-role-routing for route and privilege definition.",
       "tags": null,
       "compatibility": "Designed for agent clients working on repositories that expose HTTP services through magicBase routing and auth layers. Assumes local repository access and handler code; no network access is required.",
       "repository": "skills-repo",
@@ -137,9 +258,9 @@
     {
       "id": "magicbase-service-access",
       "name": "magicbase-service-access",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
-      "description": "Use when building or reviewing business data access on top of magicBase and magicOrm. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts.",
+      "description": "Use when building or reviewing business data access on top of magicBase and magicOrm after Application/Entity capability is already defined. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts; use magicbase-data-capability-definition for Application, Entity, Block and storage capability definition.",
       "tags": null,
       "compatibility": "Designed for agent clients working in repositories that expose business CRUD through magicBase on top of magicOrm. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
@@ -156,14 +277,179 @@
       "repository_path": "skills/magicbase-service-recovery/SKILL.md"
     },
     {
+      "id": "magiccas-app-bootstrap",
+      "name": "magiccas-app-bootstrap",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 `magicCas` 的启动链路、initiator 装配、主入口调整和应用级排障。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magiccas-base-integration",
+      "name": "magiccas-base-integration",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 `magicCas` 与 `magicBase` 之间的应用绑定、模型初始化和 client 集成。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-base-integration/SKILL.md"
+    },
+    {
+      "id": "magiccas-block-module",
+      "name": "magiccas-block-module",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 `magicCas` 的 block 模块，包括 `account`、`endpoint`、`namespace`、`role`、`totalizator`。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-block-module/SKILL.md"
+    },
+    {
+      "id": "magiccas-cas-auth",
+      "name": "magiccas-cas-auth",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicCas` 的登录、刷新、JWT / endpoint 会话、命名空间校验、账号/端点角色绑定演进，以及 `kernel/cas` 与 `account` / `role` / `namespace` / `endpoint` 授权链路的联动逻辑。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-cas-auth/SKILL.md"
+    },
+    {
+      "id": "magiccas-http-handlers",
+      "name": "magiccas-http-handlers",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicCas` 的 HTTP handler、请求体解析、REST ID 解析和返回语义；登录、刷新、JWT、endpoint token 或角色授权链路优先使用 magiccas-cas-auth。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccas-http-handlers/SKILL.md"
+    },
+    {
       "id": "magiccas-service-readiness",
       "name": "magiccas-service-readiness",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "unknown",
       "description": "用于处理 magicCas 的服务级 ready 行为、对 magicBase 的强依赖、自举恢复和权限校验入口准备。涉及 persistence、routeregistry、health/ready、session/privilege 初始化时使用。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-service-readiness/SKILL.md"
+    },
+    {
+      "id": "magiccommon-app-bootstrap",
+      "name": "magiccommon-app-bootstrap",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于基于 magicCommon 快速搭建业务服务入口，处理 framework/application、framework/service 与 plugin 启动关闭流程。涉及 EventHub、BackgroundRoutine、Post/Send、后台任务和运行时协同时优先使用 go-application-event-runtime。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magiccommon-cache",
+      "name": "magiccommon-cache",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicCommon foundation/cache 的构造器、容量限制、过期清理、统计信息、并发访问和释放语义。修改 MemoryCache、KVCache、GenericKVCache 或其测试、文档时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-cache/SKILL.md"
+    },
+    {
+      "id": "magiccommon-config-hotreload",
+      "name": "magiccommon-config-hotreload",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon framework/configuration 设计业务配置、模块配置、环境变量覆盖和热加载监听。处理 application.toml、config.d、Watch/WatchModule/Reload 等场景时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-config-hotreload/SKILL.md"
+    },
+    {
+      "id": "magiccommon-dao-persistence",
+      "name": "magiccommon-dao-persistence",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon foundation/dao 处理业务数据库接入、驱动选择、连接获取、查询执行、事务和数据库相关测试。编写或排查 MySQL、PostgreSQL 持久化逻辑时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-dao-persistence/SKILL.md"
+    },
+    {
+      "id": "magiccommon-event-driven-service",
+      "name": "magiccommon-event-driven-service",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于基于 magicCommon event 和 task 设计复杂业务事件驱动流程，包括事件 ID、订阅发布、同步结果、异步编排和跨模块通知链路。涉及应用级 EventHub/BackgroundRoutine 接线、Startup/Shutdown 或运行时容量时优先使用 go-application-event-runtime。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-event-driven-service/SKILL.md"
+    },
+    {
+      "id": "magiccommon-http-integration",
+      "name": "magiccommon-http-integration",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon foundation/net 处理业务 HTTP 集成，包括 JSON 请求、文件上传下载、URL 处理、DNS cache client 和邮件相关辅助能力。编写外部 HTTP/文件交互逻辑时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-http-integration/SKILL.md"
+    },
+    {
+      "id": "magiccommon-infra-review",
+      "name": "magiccommon-infra-review",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于评审和修复 magicCommon 基础设施模块中的并发、生命周期、关闭幂等、环境敏感测试和文档一致性问题。处理 event、execute、task、session、framework、foundation、monitoring 相关问题时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-infra-review/SKILL.md"
+    },
+    {
+      "id": "magiccommon-monitoring",
+      "name": "magiccommon-monitoring",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicCommon monitoring 的 Manager、Registry、Collector、Provider、Exporter 接入方式，以及相关测试和文档。修改监控初始化、指标提供者、导出配置或 monitoring 文档时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-monitoring/SKILL.md"
+    },
+    {
+      "id": "magiccommon-observability-integration",
+      "name": "magiccommon-observability-integration",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon monitoring 为业务模块接入指标采集、Provider 注册、Exporter 导出和运行时配置。编写业务监控、性能指标或对接 Prometheus/JSON 导出时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-observability-integration/SKILL.md"
+    },
+    {
+      "id": "magiccommon-plugin-module",
+      "name": "magiccommon-plugin-module",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于理解、评审和排查 magicCommon framework/plugin 的底层插件管理机制，覆盖 plugin/common、initiator、module 的注册、排序、反射调用、ID/Weight 和 Setup/Run/Teardown 调度；修改框架插件管理器时使用，业务插件生命周期优先使用 go-module-initiator-lifecycle。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-plugin-module/SKILL.md"
+    },
+    {
+      "id": "magiccommon-runtime-lifecycle",
+      "name": "magiccommon-runtime-lifecycle",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 magicCommon 中 execute、task、event、framework/application 底层运行时生命周期实现，覆盖等待、排空、关闭、取消和接口语义。业务服务中的 application/EventHub/BackgroundRoutine 接线和使用优先使用 go-application-event-runtime。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-runtime-lifecycle/SKILL.md"
     },
     {
       "id": "magiccommon-service-health",
@@ -176,6 +462,46 @@
       "repository_path": "skills/magiccommon-service-health/SKILL.md"
     },
     {
+      "id": "magiccommon-session-auth",
+      "name": "magiccommon-session-auth",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于基于 magicCommon session 处理业务认证与会话，包括 JWT、Endpoint 签名、Cookie Token、Session Registry、上下文读写和会话超时。编写登录态、鉴权中间件或会话透传逻辑时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magiccommon-session-auth/SKILL.md"
+    },
+    {
+      "id": "magicengine-http-bootstrap",
+      "name": "magicengine-http-bootstrap",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于搭建和调整 magicEngine 的 HTTP 服务入口，覆盖 HTTPServer、RouteRegistry、默认中间件、静态资源开关和启动流程。新增 HTTP 服务或调整服务启动参数时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-http-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magicengine-http-routing-middleware",
+      "name": "magicengine-http-routing-middleware",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicEngine 的 HTTP 路由、版本前缀、动态路径和中间件链。新增 API、排查匹配问题或调整路由中间件执行顺序时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-http-routing-middleware/SKILL.md"
+    },
+    {
+      "id": "magicengine-infra-review",
+      "name": "magicengine-infra-review",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于评审和修复 magicEngine 的基础设施代码，重点覆盖 HTTP、SSE、TCP、静态资源和中间件链的行为正确性、并发边界和测试补充。对 magicEngine 做代码评审或质量加固时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-infra-review/SKILL.md"
+    },
+    {
       "id": "magicengine-root-routes",
       "name": "magicengine-root-routes",
       "version": "1.0.0",
@@ -184,6 +510,69 @@
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/magicengine-root-routes/SKILL.md"
+    },
+    {
+      "id": "magicengine-sse-streaming",
+      "name": "magicengine-sse-streaming",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicEngine 的 SSE 服务端和客户端，包括 HolderRegistry、心跳、断线重连和 Last-Event-ID 续传。实现事件推送或排查 SSE 行为时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-sse-streaming/SKILL.md"
+    },
+    {
+      "id": "magicengine-static-upload",
+      "name": "magicengine-static-upload",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicEngine 的静态资源服务、嵌入静态资源和文件上传路由。新增前端资源托管、上传接口或排查静态文件路径问题时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-static-upload/SKILL.md"
+    },
+    {
+      "id": "magicengine-tcp-service",
+      "name": "magicengine-tcp-service",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicEngine 的 TCP Server、Client 和 Endpoint 交互，包括连接接入、收发数据和 observer 回调。实现 TCP 接入服务或排查连接行为时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicengine-tcp-service/SKILL.md"
+    },
+    {
+      "id": "magicfile-app-bootstrap",
+      "name": "magicfile-app-bootstrap",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicFile` 的启动入口、模块装配和对 `magicModulesRepo` initiator 的依赖。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicfile-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magicfile-client-integration",
+      "name": "magicfile-client-integration",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicFile/pkg/client` 的调用约定、URL 构造和上下文参数传递。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicfile-client-integration/SKILL.md"
+    },
+    {
+      "id": "magicfile-file-service",
+      "name": "magicfile-file-service",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicFile` 的文件上传、下载、浏览、元数据管理和清理逻辑。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicfile-file-service/SKILL.md"
     },
     {
       "id": "magicfile-static-install-paths",
@@ -196,6 +585,39 @@
       "repository_path": "skills/magicfile-static-install-paths/SKILL.md"
     },
     {
+      "id": "magicmodulesrepo-app-bootstrap",
+      "name": "magicmodulesrepo-app-bootstrap",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicModulesRepo` 的启动链路、initiator 装配和 listener 生命周期问题。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicmodulesrepo-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magicmodulesrepo-cas-bridge",
+      "name": "magicmodulesrepo-cas-bridge",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicModulesRepo` 里 `cas` 模块的事件桥接和 `magicCas` 客户端调用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicmodulesrepo-cas-bridge/SKILL.md"
+    },
+    {
+      "id": "magicmodulesrepo-metrics-module",
+      "name": "magicmodulesrepo-metrics-module",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicModulesRepo` 的 metrics 模块装配和后续扩展。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicmodulesrepo-metrics-module/SKILL.md"
+    },
+    {
       "id": "magicmodulesrepo-routeregistry-health",
       "name": "magicmodulesrepo-routeregistry-health",
       "version": "1.0.0",
@@ -204,6 +626,17 @@
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-routeregistry-health/SKILL.md"
+    },
+    {
+      "id": "magicmodulesrepo-totalizator",
+      "name": "magicmodulesrepo-totalizator",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `magicModulesRepo` 的 totalizator 模块，包括事件入口、BaseClient 调用和 namespace 语义。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicmodulesrepo-totalizator/SKILL.md"
     },
     {
       "id": "magicorm-aging-diagnosis",
@@ -219,7 +652,7 @@
     {
       "id": "magicorm-entity-definition",
       "name": "magicorm-entity-definition",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "unknown",
       "description": "Use when defining, reviewing, or fixing magicOrm entity models in struct tags or entity JSON. Covers viewDeclare, constraints, readonly/default fields, and the rule that framework behavior must follow entity definitions rather than app-side patches.",
       "tags": null,
@@ -239,6 +672,37 @@
       "repository_path": "skills/magicorm-error-observability/SKILL.md"
     },
     {
+      "id": "magicorm-model-design",
+      "name": "magicorm-model-design",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于基于 magicOrm 设计和调整业务模型，处理 models.Model、Field、Filter、View、关系字段、struct tag 和类型映射。编写或修改 ORM 模型定义时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-model-design/SKILL.md"
+    },
+    {
+      "id": "magicorm-orm-query-update",
+      "name": "magicorm-orm-query-update",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicOrm 的 Query、BatchQuery、Insert、Update、Delete 及关系更新精度，重点覆盖 QueryRunner、UpdateRunner、关系 diff、mask 和回填语义。修改 ORM 读写逻辑时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-orm-query-update/SKILL.md"
+    },
+    {
+      "id": "magicorm-provider-object-usage",
+      "name": "magicorm-provider-object-usage",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于在应用端正确使用 magicOrm Local Provider、Remote Provider、remote.Object、ObjectValue、SliceObjectValue 和 provider/helper 转换，覆盖模型注册、GetObject/GetObjectValue、UpdateEntity、Query/Insert/Update 输入边界、nil/empty/assigned 语义和验证；接入 magicOrm 动态模型或远端对象时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-provider-object-usage/SKILL.md"
+    },
+    {
       "id": "magicorm-provider-relation",
       "name": "magicorm-provider-relation",
       "version": "1.0.0",
@@ -248,6 +712,16 @@
       "compatibility": "Designed for agent clients working with magicOrm local or remote providers and relation-heavy entity models. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-provider-relation/SKILL.md"
+    },
+    {
+      "id": "magicorm-provider-remote",
+      "name": "magicorm-provider-remote",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于修改和排查 magicOrm provider/local、provider/remote、provider/helper、codec、mask/filter 的内部实现偏差。应用端选择 Local/Remote Provider、创建和使用 Object/ObjectValue/SliceObjectValue 时优先使用 magicorm-provider-object-usage。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-provider-remote/SKILL.md"
     },
     {
       "id": "magicorm-query-write-contract",
@@ -283,6 +757,16 @@
       "repository_path": "skills/magicorm-schema-lifecycle/SKILL.md"
     },
     {
+      "id": "magicorm-testing-db",
+      "name": "magicorm-testing-db",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicOrm 的测试分层、数据库集成测试、本地/远端测试分组、脚本入口和环境问题排查。需要跑 go test、定位 PostgreSQL/MySQL 依赖或整理 test 目录结构时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-testing-db/SKILL.md"
+    },
+    {
       "id": "magicorm-transaction-operations",
       "name": "magicorm-transaction-operations",
       "version": "1.0.0",
@@ -292,6 +776,16 @@
       "compatibility": "Designed for agent clients working on repositories that use magicOrm for transactional mutation and relation persistence. Assumes local repository access and test tooling; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-transaction-operations/SKILL.md"
+    },
+    {
+      "id": "magicorm-validation",
+      "name": "magicorm-validation",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于处理 magicOrm 验证层，包括 ValidationManager、类型适配、约束校验、场景校验、provider validation extension 以及验证错误排查。处理 Insert/Update/Delete 报验证错误时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-validation/SKILL.md"
     },
     {
       "id": "magicorm-validation-write-safety",
@@ -315,11 +809,142 @@
       "repository_path": "skills/magicorm-vmi-contract-alignment/SKILL.md"
     },
     {
-      "id": "magicrunner-vmi-install-recovery",
-      "name": "magicrunner-vmi-install-recovery",
+      "id": "magicorm-vmi-remote",
+      "name": "magicorm-vmi-remote",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于基于 magicOrm/test/vmi 的 remote schema 样例做设计、验证和回归，覆盖 VMI JSON 定义、Remote Provider、ObjectValue 往返、query/write runner 和 builder SQL。处理远端模型定义一致性时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicorm-vmi-remote/SKILL.md"
+    },
+    {
+      "id": "magicrunner-app-bootstrap",
+      "name": "magicrunner-app-bootstrap",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "DEPRECATED: 旧的项目专属应用启动 skill。新建通用 Go 多应用、多模块服务套件时改用 go-modular-project-bootstrap；仅维护既有 magicRunner 项目入口时临时参考。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-app-bootstrap/SKILL.md"
+    },
+    {
+      "id": "magicrunner-application-runtime-lifecycle",
+      "name": "magicrunner-application-runtime-lifecycle",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 magicRunner 的应用运行生命周期，覆盖 ApplicationDefinition/Package/Release 到 ApplicationRuntime 的安装、schema 创建回滚、installer 实体数据导入、compose 配置和 docker-compose 产物、Traefik 动态暴露、启动停止、卸载清理与操作记录；排查安装、启停、卸载、运行产物或数据库资源一致性时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-application-runtime-lifecycle/SKILL.md"
+    },
+    {
+      "id": "magicrunner-installer-offline",
+      "name": "magicrunner-installer-offline",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于处理 `blocks/installer` 的离线安装、路径配置和应用包检查；完整应用运行生命周期、schema、compose、启停卸载链路优先使用 magicrunner-application-runtime-lifecycle。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-installer-offline/SKILL.md"
+    },
+    {
+      "id": "magicrunner-mcp-service",
+      "name": "magicrunner-mcp-service",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `kernel/mcp` 的 SSE 接入和 MCP 路由装配。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-mcp-service/SKILL.md"
+    },
+    {
+      "id": "magicrunner-native-crud-toolkit",
+      "name": "magicrunner-native-crud-toolkit",
       "version": "1.0.0",
       "author": "unknown",
-      "description": "用于处理 magicRunner 中离线安装 VMI 的恢复链，包括 installer、database block、schema 回滚、账号密码同步、定义更新和应用启动。涉及 install/offline、CreateSchema、DownloadApplication、UpdateEntity 时使用。",
+      "description": "Use when reviewing or implementing standard CRUD handling for magicRunner native business models owned by panel or portal, or when deciding whether to reuse the thin magicBase/pkg/toolkit HTTP CRUD helpers instead of Runner fallback routes.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on magicRunner panel or portal native models. Assumes local repository access and no network access.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-native-crud-toolkit/SKILL.md"
+    },
+    {
+      "id": "magicrunner-panel-service",
+      "name": "magicrunner-panel-service",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于处理 `kernel/panel/service` 的 handler、鉴权上下文和管理台入口语义；服务治理主链优先使用 magicrunner-service-governance，应用安装启停卸载主链优先使用 magicrunner-application-runtime-lifecycle。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-panel-service/SKILL.md"
+    },
+    {
+      "id": "magicrunner-portal-service",
+      "name": "magicrunner-portal-service",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "用于处理 `kernel/portal/service` 的门户接口、订阅入口和鉴权边界；服务治理主链和订阅凭据语义优先使用 magicrunner-service-governance，gateway 访问授权优先使用 magicrunner-service-gateway-auth。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-portal-service/SKILL.md"
+    },
+    {
+      "id": "magicrunner-runner-proxy",
+      "name": "magicrunner-runner-proxy",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "用于处理 `kernel/runner` 的公开值代理路由注册和请求头注入。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-runner-proxy/SKILL.md"
+    },
+    {
+      "id": "magicrunner-runtime-routing",
+      "name": "magicrunner-runtime-routing",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Use when reviewing or implementing magicRunner runtime-object routing, Runner.RegisterEntityRoute fallback behavior, or business-module overrides of standard REST paths. Covers route ownership between runner-generated CRUD proxies and module RegisterRoute handlers.",
+      "tags": null,
+      "compatibility": "Designed for agent clients working on magicRunner modules that expose runtime objects through panel, portal, gateway, or other application-layer services. Assumes local repository access and no network access.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-runtime-routing/SKILL.md"
+    },
+    {
+      "id": "magicrunner-service-gateway-auth",
+      "name": "magicrunner-service-gateway-auth",
+      "version": "1.0.3",
+      "author": "unknown",
+      "description": "Use when implementing, reviewing, or diagnosing magicRunner service gateway access, portal or panel service debugging, endpoint Sig token authorization, ServicePublication or ServiceSubscription access checks, and entity capability forwarding through gateway. Covers the boundary between gateway authorization, CAS sessions, subscription credentials, and magicBase public-value execution; use magicrunner-service-governance for the broader service definition, capability, publication, subscription, and credential governance chain.",
+      "tags": null,
+      "compatibility": "Designed for agents working on magicRunner, magicCas, magicBase, and magicWebPortal service-access flows. Assumes local repository access and, when debugging runtime issues, access to docker logs or database access logs.",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-service-gateway-auth/SKILL.md"
+    },
+    {
+      "id": "magicrunner-service-governance",
+      "name": "magicrunner-service-governance",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 magicRunner 的服务治理主链，覆盖 EntityDefinition.serviceExpose、CapabilityDefinition 自动生成、ServiceDefinition 服务项、ServiceCapabilityBinding 聚合、ServicePublication 发布治理、ServiceSubscription 订阅、SubscriptionCredential 凭据、portal/panel 进入服务语义和 gateway 访问边界；排查能力项、服务项、发布、订阅、凭据或服务调试链路时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/magicrunner-service-governance/SKILL.md"
+    },
+    {
+      "id": "magicrunner-vmi-install-recovery",
+      "name": "magicrunner-vmi-install-recovery",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "用于处理 magicRunner 中离线安装 VMI 的恢复链，包括 installer、database block、schema 回滚、账号密码同步、定义更新和应用启动。涉及 install/offline、CreateSchema、DownloadApplication、UpdateEntity 时使用；通用应用运行生命周期优先使用 magicrunner-application-runtime-lifecycle。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-vmi-install-recovery/SKILL.md"
@@ -327,7 +952,7 @@
     {
       "id": "magictest-vmi-regression",
       "name": "magictest-vmi-regression",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
       "description": "用于处理 magicTest/vmi 的全量回归、负向校验噪声清理、定义对齐和远端服务验证。涉及 unittest discover、autotest.local.vpc、VMI 断言和清理噪声时使用。",
       "tags": null,
@@ -375,6 +1000,28 @@
       "repository_path": "skills/project-integrity-guardian/SKILL.md"
     },
     {
+      "id": "python-testing-patterns",
+      "name": "python-testing-patterns",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "Implement comprehensive testing strategies with pytest, fixtures, mocking, and test-driven development. Use when writing Python tests, setting up test suites, or implementing testing best practices.",
+      "tags": null,
+      "compatibility": "opencode",
+      "repository": "skills-repo",
+      "repository_path": "skills/python-testing-patterns/SKILL.md"
+    },
+    {
+      "id": "skill-capability-index",
+      "name": "skill-capability-index",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于在当前多项目 skill 集合中选择唯一主 skill 并降低重复触发歧义，覆盖项目初始化、module/initiator、application/event、magicOrm、magicBase、magicRunner、magicCas、magicFile、magicModulesRepo、magicEngine 等能力边界；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
+      "tags": null,
+      "compatibility": "Compatible with open_code",
+      "repository": "skills-repo",
+      "repository_path": "skills/skill-capability-index/SKILL.md"
+    },
+    {
       "id": "skill-creator",
       "name": "skill-creator",
       "version": "1.0.0",
@@ -387,9 +1034,9 @@
     {
       "id": "skillhub-skill-lifecycle",
       "name": "skillhub-skill-lifecycle",
-      "version": "1.0.0",
+      "version": "1.0.2",
       "author": "unknown",
-      "description": "用于通过 skill-hub 创建、登记、校验、归档和推送项目本地 skill。涉及 skill-hub create、status、validate、feedback、push，以及把工作区已有 skill 同步到本地或远程仓库时使用。",
+      "description": "用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/skillhub-skill-lifecycle/SKILL.md"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Event Driven Service"
+  short_description: "Build event-driven business workflows"
+  default_prompt: "Use $magiccommon-event-driven-service to design a business event flow with Hub, observers, results, and background tasks."

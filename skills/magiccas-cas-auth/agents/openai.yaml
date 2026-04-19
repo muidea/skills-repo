@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCas CAS Auth"
+  short_description: "Review login, JWT, endpoint token, namespace, role, and scope auth"
+  default_prompt: "Use $magiccas-cas-auth to diagnose magicCas authorization across kernel/cas, account, role, namespace, endpoint, AuthSecret, Namespace.Scope, Endpoint.Scope, and role-binding evolution."

@@ -1,0 +1,3 @@
+name: magicrunner-runner-proxy
+short_description: Work on magicRunner runner proxy routes and dynamic public value forwarding.
+default_prompt: Diagnose and improve kernel/runner route registration, proxy target construction, namespace/application header injection, and dynamic :id forwarding behavior.

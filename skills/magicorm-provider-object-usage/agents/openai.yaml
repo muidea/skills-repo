@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm Provider Object Usage"
+  short_description: "Use Local/Remote Provider and ObjectValue correctly"
+  default_prompt: "Use $magicorm-provider-object-usage to wire or review magicOrm Local/Remote Provider usage, Object/ObjectValue conversion, and app-side ORM input boundaries."

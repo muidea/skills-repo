@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Data Capability Definition"
+  short_description: "Define magicBase applications, entities, fields, services, and storage"
+  default_prompt: "Use $magicbase-data-capability-definition to define or review magicBase Application, Entity fields/constraints, Block, serviceExpose capability metadata, and app-side data storage integration."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Service Access"
+  short_description: "Review magicBase DAO/helper and query access behavior"
+  default_prompt: "Use $magicbase-service-access to implement or review magicBase business data access, helper usage, query endpoint behavior, and ORM contract alignment after capabilities are defined."

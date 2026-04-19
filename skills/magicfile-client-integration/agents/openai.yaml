@@ -1,0 +1,3 @@
+name: magicfile-client-integration
+short_description: Work on magicFile client URL building and request context propagation.
+default_prompt: Diagnose and improve magicFile pkg/client behavior, including URL generation, API version handling, namespace/source/scope propagation, and direct client tests.

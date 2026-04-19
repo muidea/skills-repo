@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Installer Offline"
+  short_description: "Handle offline installer package loading and config paths"
+  default_prompt: "Use $magicrunner-installer-offline to debug blocks/installer offline package loading, appPath config, cas/entity/data checks, and installer-specific non-panic error handling."

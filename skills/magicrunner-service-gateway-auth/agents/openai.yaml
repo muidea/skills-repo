@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Service Gateway Auth"
+  short_description: "Debug gateway service access and endpoint credentials"
+  default_prompt: "Use $magicrunner-service-gateway-auth to debug /api/v1/gateway/services/*, endpoint Sig token authorization, panel or portal service debugging, subscription credentials, and entity capability forwarding."

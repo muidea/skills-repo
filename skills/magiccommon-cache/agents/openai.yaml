@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Cache"
+  short_description: "Tune cache capacity, cleanup, and stats"
+  default_prompt: "Use $magiccommon-cache to adjust cache options, expiration, eviction, stats, and related tests."

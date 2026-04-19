@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCas HTTP Handlers"
+  short_description: "Review magicCas request parsing and handler errors"
+  default_prompt: "Use $magiccas-http-handlers to diagnose magicCas HTTP handlers, request body parsing, REST ID validation, handler-level error semantics, and direct httptest coverage."

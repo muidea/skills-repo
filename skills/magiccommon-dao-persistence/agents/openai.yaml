@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon DAO Persistence"
+  short_description: "Implement DAO and DB persistence flows"
+  default_prompt: "Use $magiccommon-dao-persistence to add or debug MySQL or PostgreSQL persistence with foundation/dao."

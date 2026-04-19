@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Observability Integration"
+  short_description: "Integrate business metrics and exporters"
+  default_prompt: "Use $magiccommon-observability-integration to add monitoring providers, exporter config, and runtime metrics to a business module."

@@ -1,0 +1,3 @@
+name: magicrunner-mcp-service
+short_description: Work on magicRunner MCP SSE/message endpoints and MCP server integration.
+default_prompt: Improve kernel/mcp module wiring, SSE and message route registration, and MCP server integration with routeregistry. Keep handler logic thin and verify package tests.

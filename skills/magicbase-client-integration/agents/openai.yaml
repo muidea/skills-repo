@@ -1,0 +1,3 @@
+name: magicbase-client-integration
+short_description: Work on magicBase client APIs and integration-style client tests.
+default_prompt: Improve magicBase pkg/client behavior and tests. Keep integration tests environment-aware, skip cleanly when the local server is unavailable, and preserve the current API request conventions.

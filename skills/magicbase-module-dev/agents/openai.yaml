@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Module Dev"
+  short_description: "Build and wire magicBase kernel/block modules"
+  default_prompt: "Use $magicbase-module-dev to build or refactor magicBase kernel/block modules, route registration, service wiring, and module lifecycle behavior."

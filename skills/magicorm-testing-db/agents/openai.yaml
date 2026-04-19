@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm Testing DB"
+  short_description: "Run and debug magicOrm test layers"
+  default_prompt: "Use $magicorm-testing-db to choose the right test entry, debug DB-dependent failures, or organize test execution for magicOrm."

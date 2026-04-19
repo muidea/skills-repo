@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm VMI Remote"
+  short_description: "Validate VMI remote schemas and flows"
+  default_prompt: "Use $magicorm-vmi-remote to validate test/vmi remote schemas, ObjectValue round-trips, and runner or builder behavior."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicOrm Model Design"
+  short_description: "Design ORM models and field mappings"
+  default_prompt: "Use $magicorm-model-design to design or refine a magicOrm model, tags, views, and relation fields."

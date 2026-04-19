@@ -1,12 +1,12 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 的 Go 多模块仓库开发，覆盖 application、internal/modules、biz/service/pkg 分层、事件集成、路由注册、文档与测试同步。新增模块、扩展业务模块或做跨仓联动开发时使用。
-version: 2.0.0
+version: 2.0.2
 ---
 
 # Go Multi Module Development
 
-这个 skill 用于 `magicBase` / `magicRunner` 这类基于 `magicCommon` 的多模块 Go 仓库。
+这个 skill 用于基于 `magicCommon` 的多应用、多模块 Go 仓库。
 
 ## 1. 先看这些文件
 
@@ -19,6 +19,7 @@ version: 2.0.0
 - 模块结构和落点：`references/MODULE_STRUCTURE.md`
 - 事件与生命周期：`references/EVENT_USAGE.md`
 - 最小模板和脚本：`references/TEMPLATES.md`
+- 如果任务涉及 `initiator` 接线、module 生命周期、`Setup` / `Run` / `Teardown` 顺序，配合使用 `go-module-initiator-lifecycle`
 
 ## 3. 工作流
 
@@ -26,7 +27,7 @@ version: 2.0.0
    - `magicCommon` 是基础框架
    - `magicEngine` 负责 HTTP
    - `magicOrm` 负责模型和持久化
-   - `magicBase` / `magicRunner` 本身会再封装业务能力
+   - 业务仓库在这些基础库之上封装应用入口和模块能力
 2. 先确定改动落点
    - 应用入口：`application/{app}/`
    - 核心模块：`internal/modules/kernel/{module}/`

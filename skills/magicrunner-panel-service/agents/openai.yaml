@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicRunner Panel Service"
+  short_description: "Review panel handlers and management entry semantics"
+  default_prompt: "Use $magicrunner-panel-service to work on kernel/panel/service handlers, auth context handling, management entry semantics, and direct handler tests after choosing the broader governance or lifecycle skill when needed."

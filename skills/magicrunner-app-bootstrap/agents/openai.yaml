@@ -1,0 +1,4 @@
+interface:
+  display_name: "Deprecated Runner App Bootstrap"
+  short_description: "Deprecated project-specific startup skill"
+  default_prompt: "This skill is deprecated. Use $go-modular-project-bootstrap for new generic Go service-suite initialization, and only reference this skill for legacy magicRunner entrypoint maintenance."

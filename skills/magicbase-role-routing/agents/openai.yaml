@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Role Routing"
+  short_description: "Define magicBase routes, CAS auth, privileges, and role checks"
+  default_prompt: "Use $magicbase-role-routing to define or review magicBase ordinary routes, CAS-auth routes, privilege routes, permission values, session binding, and 401/403 authorization behavior."

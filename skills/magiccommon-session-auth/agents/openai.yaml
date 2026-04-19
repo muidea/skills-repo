@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Session Auth"
+  short_description: "Implement session and auth flows"
+  default_prompt: "Use $magiccommon-session-auth to wire JWT, cookie token, or endpoint-signed session flows for a service."

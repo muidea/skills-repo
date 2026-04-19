@@ -1,0 +1,3 @@
+name: magicbase-app-bootstrap
+short_description: Work on magicBase startup flow, initiators, and lifecycle handling.
+default_prompt: Diagnose and improve magicBase startup, initiator registration, listener lifecycle, and shutdown behavior. Prefer returning cd.Error over panic and validate with initiator-focused tests.

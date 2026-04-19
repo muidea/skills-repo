@@ -1,0 +1,3 @@
+name: magiccas-base-integration
+short_description: Work on magicCas integration with magicBase application binding, client usage, and model initialization.
+default_prompt: Diagnose and improve magicCas persistence initialization and magicBase integration. Focus on application binding, model initialization, error propagation, and direct tests around internal/pkg/models.

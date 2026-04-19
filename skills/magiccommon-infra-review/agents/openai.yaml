@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicCommon Infra Review"
+  short_description: "Review magicCommon infra safely"
+  default_prompt: "Use $magiccommon-infra-review to review or fix concurrency, lifecycle, shutdown, and environment-sensitive test issues."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "magicBase Kernel Entity"
+  short_description: "Maintain kernel/base and kernel/public entity internals"
+  default_prompt: "Use $magicbase-kernel-entity to refine magicBase kernel/base and kernel/public internals for application, entity, block, value, extData, and ObjectValue behavior."

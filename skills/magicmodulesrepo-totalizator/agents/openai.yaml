@@ -1,0 +1,3 @@
+name: magicmodulesrepo-totalizator
+short_description: Work on magicModulesRepo totalizator events, namespace handling, and BaseClient calls.
+default_prompt: Diagnose and improve the magicModulesRepo totalizator block, especially event input validation, namespace handling, and BaseClient-driven filter/check/refresh behavior. Keep input errors as IllegalParam and add biz-level tests.

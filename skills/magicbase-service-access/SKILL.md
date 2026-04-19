@@ -1,17 +1,20 @@
 ---
 name: magicbase-service-access
-description: Use when building or reviewing business data access on top of magicBase and magicOrm. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts.
+description: Use when building or reviewing business data access on top of magicBase and magicOrm after Application/Entity capability is already defined. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts; use magicbase-data-capability-definition for Application, Entity, Block and storage capability definition.
 compatibility: Designed for agent clients working in repositories that expose business CRUD through magicBase on top of magicOrm. Assumes local repository access; no network access is required.
 metadata:
   author: rangh-codespace
   domain: magicbase
   scenario: service-access
   maturity: stable
+  version: 1.0.1
 ---
 
 # MagicBase Service Access
 
 Use this skill when implementing or reviewing DAO, helper, toolkit, or HTTP entrypoint behavior built on `magicBase`.
+
+If the task is to define `Application`, `Entity`, `BlockInfo`, schema capability, or app storage binding, use `magicbase-data-capability-definition` first. Return here after the capability exists and the question is about read/write access behavior.
 
 ## Service-layer contract
 
@@ -31,10 +34,12 @@ Use this skill when implementing or reviewing DAO, helper, toolkit, or HTTP entr
 
 ## DAO and helper rules
 
+- Prefer `pkg/helper.QueryValue`, `FilterValue`, `InsertValue`, and `UpdateValue` for app-side data access.
 - Do not simulate single query with filter-plus-mask logic.
 - Do not pass non-empty response templates just to enlarge child payloads.
 - Do not handcraft service-side relation expansion.
 - Keep helper functions as thin wrappers over the framework contract.
+- Do not bypass magicBase/magicOrm with direct SQL for business value reads or writes.
 
 ## HTTP entrypoint rules
 

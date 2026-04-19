@@ -1,12 +1,14 @@
 ---
 name: magicrunner-vmi-install-recovery
-description: 用于处理 magicRunner 中离线安装 VMI 的恢复链，包括 installer、database block、schema 回滚、账号密码同步、定义更新和应用启动。涉及 install/offline、CreateSchema、DownloadApplication、UpdateEntity 时使用。
-version: 1.0.0
+description: 用于处理 magicRunner 中离线安装 VMI 的恢复链，包括 installer、database block、schema 回滚、账号密码同步、定义更新和应用启动。涉及 install/offline、CreateSchema、DownloadApplication、UpdateEntity 时使用；通用应用运行生命周期优先使用 magicrunner-application-runtime-lifecycle。
+version: 1.0.1
 ---
 
 # magicRunner VMI Install Recovery
 
 这个 skill 只关注 `magicRunner` 的离线安装恢复链。
+
+通用应用安装、schema、compose、启停和卸载主链优先使用 `magicrunner-application-runtime-lifecycle`；本 skill 只处理 VMI 离线安装恢复的特殊问题。
 
 ## 先读这些文件
 
