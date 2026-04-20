@@ -236,7 +236,7 @@
     {
       "id": "magicbase-role-routing",
       "name": "magicbase-role-routing",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "用于在 magicBase 中定义和管理普通路由、CAS 认证路由、RoleRouteRegistry 权限路由、Privilege 权限项、session 绑定和鉴权中间件；新增带权限 HTTP API、定义权限值、排查 401/403 或 register privilege failed 时使用。",
       "tags": null,
@@ -887,7 +887,7 @@
     {
       "id": "magicrunner-portal-service",
       "name": "magicrunner-portal-service",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "用于处理 `kernel/portal/service` 的门户接口、订阅入口和鉴权边界；服务治理主链和订阅凭据语义优先使用 magicrunner-service-governance，gateway 访问授权优先使用 magicrunner-service-gateway-auth。",
       "tags": null,
@@ -909,9 +909,9 @@
     {
       "id": "magicrunner-runtime-routing",
       "name": "magicrunner-runtime-routing",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
-      "description": "Use when reviewing or implementing magicRunner runtime-object routing, Runner.RegisterEntityRoute fallback behavior, or business-module overrides of standard REST paths. Covers route ownership between runner-generated CRUD proxies and module RegisterRoute handlers.",
+      "description": "Use when reviewing, implementing, or fixing magicRunner runtime-object routing, business-module CRUD route ownership, apps or panel or portal module RegisterRoute definitions, Runner.RegisterEntityRoute fallback behavior, 404 route mismatches, or URL constants that may violate magicRunner framework conventions. Covers route contract design, NormalizeURI effects, canonical CRUD routes, frontend REST paths, and quick diagnosis or repair of route deviations.",
       "tags": null,
       "compatibility": "Designed for agent clients working on magicRunner modules that expose runtime objects through panel, portal, gateway, or other application-layer services. Assumes local repository access and no network access.",
       "repository": "skills-repo",
