@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Application Event Runtime"
   short_description: "Manage magicCommon application, EventHub, and background runtime"
-  default_prompt: "Use $go-application-event-runtime to wire, review, or fix application Startup/Run/Shutdown with EventHub and BackgroundRoutine behavior in a magicCommon-based Go service."
+  default_prompt: "Use $go-application-event-runtime to wire, review, or fix application Startup/Run/Shutdown with EventHub and BackgroundRoutine behavior in a magicCommon-based Go service while keeping runtime semantics independent of project-specific naming."

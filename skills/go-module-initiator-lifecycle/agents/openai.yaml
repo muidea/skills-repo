@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Module Initiator Lifecycle"
-  short_description: "Create and manage magicCommon initiators and modules"
-  default_prompt: "Use $go-module-initiator-lifecycle to create, wire, or review initiator and module lifecycle behavior in a magicCommon-based Go service."
+  short_description: "Manage magicCommon initiator and runtime-unit lifecycle"
+  default_prompt: "Use $go-module-initiator-lifecycle to create, wire, or review initiator and plugin-module lifecycle behavior in a magicCommon-based Go service without assuming fixed repository directory names."

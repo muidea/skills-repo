@@ -1,34 +1,43 @@
 ---
 name: go-module-initiator-lifecycle
-description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与 module，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
+description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "rangh"
   created_at: "2026-04-18T21:51:51+08:00"
 ---
 
 # Go Module Initiator Lifecycle
 
-这个 skill 是创建和管理 `initiator` / `module` 的通用入口。它面向基于 `magicCommon/framework/plugin` 与 `framework/service` 的 Go 服务，不绑定具体业务项目名。
+这个 skill 是创建和管理 `initiator` 与基于 `magicCommon/framework/plugin/module` 的运行单元入口。这里的“运行单元”是通用术语；如果当前仓库使用 plugin `module` 机制，它在代码层就对应 `module.Register(...)` 那类实现。
 
 ## 使用边界
 
 使用本 skill：
 
 - 新增 `initiator`
-- 新增 `module`
+- 新增基于 plugin `module` 的运行单元
 - 调整插件 `ID`、`Weight`、`Setup`、`Run`、`Teardown`
-- 处理 module 依赖 initiator 的获取和类型断言
+- 处理运行单元依赖 initiator 的获取和类型断言
 - 调整启动顺序、依赖注册、listener 启停、后台任务注册
 - 排查插件重复 ID、类型不匹配、启动失败、关闭不彻底
 
 不使用本 skill：
 
-- 只创建业务模块目录和 `biz/service/pkg` 骨架，优先使用 `go-multi-module-dev`
+- 只创建业务运行单元目录和 `biz/service/pkg` 骨架，优先使用 `go-multi-module-dev`
 - 只创建完整新项目，优先使用 `go-modular-project-bootstrap`
 - 只排查 `magicCommon` 底层插件管理器实现，使用 `magiccommon-plugin-module`
 - 只处理 HTTP、ORM、session、monitoring 的专项业务语义，使用对应专项 skill
+
+## 占位符约定
+
+- `<unit-root>`: 运行单元根目录，例如 `modules`、`features`
+- `<group-path>`: 分组路径，例如 `shared`、`orchestration`
+- `<unit>`: 单个运行单元目录名
+- `<unit-entry-file>`: 主文件名，例如 `module.go`
+
+如果仓库已经有固定术语，优先沿用仓库自己的命名。
 
 ## 必读实现
 
@@ -47,11 +56,11 @@ metadata:
 - 插件注册要求指针类型，并且至少实现 `ID() string` 与 `Run() *cd.Error`。
 - `Setup` 和 `Teardown` 可选；缺失时由插件管理器忽略 `NotFound`。
 - `Weight() int` 可选；未实现时使用默认权重。
-- 重复 `ID` 会注册失败；同一类型的插件按权重升序执行，`Teardown` 反向执行。
+- 重复 `ID` 会注册失败；同一类型插件按权重升序执行，`Teardown` 反向执行。
 
 ## Initiator 规则
 
-`initiator` 用于提供应用级基础能力和跨 module 依赖，例如 persistence、route registry、monitoring、pprof、cron、timer 或配置驱动 runtime 能力。
+`initiator` 用于提供应用级基础能力和跨运行单元依赖，例如 persistence、route registry、monitoring、pprof、cron、timer 或配置驱动 runtime 能力。
 
 - 在 `init()` 中调用 `initiator.Register(New())`。
 - `ID()` 返回稳定常量，常量放在该 initiator 的 `pkg/common` 或等价公共包。
@@ -61,13 +70,13 @@ metadata:
 - 对外暴露能力时提供窄接口，例如 `GetRouteRegistry()`、`GetBaseClient()`，不要暴露整个实现对象。
 - 常规失败返回 `*cd.Error`，不要用 `panic` 或裸 `log.Fatal`。
 
-## Module 规则
+## 运行单元规则
 
-`module` 用于承载业务能力和路由注册。推荐结构：
+推荐结构：
 
 ```text
-internal/modules/{kernel|blocks}/{module}/
-├── module.go
+internal/<unit-root>/<group-path>/<unit>/
+├── <unit-entry-file>        # 常见为 module.go
 ├── biz/
 ├── service/
 └── pkg/
@@ -75,13 +84,24 @@ internal/modules/{kernel|blocks}/{module}/
     └── models/
 ```
 
-- 在 `init()` 中调用 `module.Register(New())`。
-- `ID()` 返回稳定模块常量。
-- 需要调整模块顺序时实现 `Weight() int`，不要依赖 import 顺序。
+- 如果使用 plugin `module` 机制，在 `init()` 中调用 `module.Register(New())`。
+- `ID()` 返回稳定单元常量。
+- 需要调整顺序时实现 `Weight() int`，不要依赖 import 顺序。
 - `Setup` 通过 `initiator.GetEntity` 获取基础能力，完成 `biz`、`service` 构造和依赖绑定。
 - `Run` 先启动 biz，再注册 route 或启动对外服务。
-- `Teardown` 做幂等释放；如果当前模块没有资源，也显式确认不需要清理。
+- `Teardown` 做幂等释放；如果当前单元没有资源，也显式确认不需要清理。
 - `biz` 处理业务、事件、后台任务和持久化编排；`service` 只做协议、路由、请求响应适配。
+
+### 分组落点
+
+生命周期接线前必须先确认运行单元落点，避免把治理流程错误塞进基础能力分组。
+
+- 共享能力分组：承载单一基础资源或单一技术能力，提供可复用 CRUD、状态流转、基础校验、资源事件
+- 编排/治理分组：承载核心业务治理、跨能力编排、策略、模板、审核、准入、授权或运行态控制
+- 如果运行单元需要同时调用多个低层能力才完成业务闭环，默认属于编排/治理分组
+- 如果运行单元只是为一个基础资源提供可被复用的底层能力，才属于共享能力分组
+
+如果仓库已经把这些分组命名成 `kernel/blocks` 或其他名字，直接沿用；不要为了套 skill 重命名目录。
 
 依赖 initiator 的标准方式：
 
@@ -97,19 +117,19 @@ if err != nil {
 
 ## 顺序和依赖
 
-- 基础资源类 initiator 先于业务 module 准备。
-- module 不应在 `init()` 中读取配置、连接数据库或注册路由。
-- module 间依赖优先通过明确接口、事件或公共 client 表达，不要隐式依赖启动顺序。
+- 基础资源类 initiator 先于业务运行单元准备。
+- 运行单元不应在 `init()` 中读取配置、连接数据库或注册路由。
+- 运行单元间依赖优先通过明确接口、事件或公共 client 表达，不要隐式依赖启动顺序。
 - `Weight` 只解决同类插件内顺序，不应用来隐藏架构依赖。
 - HTTP 暴露必须晚于必要依赖 ready；缺少核心依赖时不要启动半可用服务。
-- ready 状态应由 service 生命周期统一标记，不要由单个 module 私自标记全局 ready。
+- ready 状态应由 service 生命周期统一标记，不要由单个运行单元私自标记全局 ready。
 
 ## 常见模式
 
-- listener 型 initiator：`Setup` 解析配置、构造 runtime、完成预绑定；`Run` 非阻塞启动 serve；`Teardown` 带超时 shutdown。
-- background 型 initiator：`Setup` 保存 `eventHub` 与 `backgroundRoutine`；`Run` 注册 timer、cron 或常驻任务。
-- route module：`Setup` 获取 route registry helper，构造 biz/service，绑定 registry；`Run` 先 `biz.Run()` 再 `service.RegisterRoute()`。
-- event module：`Setup` 保存 event hub、注册 handler 所需依赖；`Run` 订阅事件或启动消费逻辑；`Teardown` 取消订阅或释放 worker。
+- listener 型 initiator：`Setup` 解析配置、构造 runtime、完成预绑定；`Run` 非阻塞启动 serve；`Teardown` 带超时 shutdown
+- background 型 initiator：`Setup` 保存 `eventHub` 与 `backgroundRoutine`；`Run` 注册 timer、cron 或常驻任务
+- route 型运行单元：`Setup` 获取 route registry helper，构造 biz/service，绑定 registry；`Run` 先 `biz.Run()` 再 `service.RegisterRoute()`
+- event 型运行单元：`Setup` 保存 event hub、注册 handler 所需依赖；`Run` 订阅事件或启动消费逻辑；`Teardown` 取消订阅或释放 worker
 
 ## 验证
 
@@ -119,16 +139,10 @@ if err != nil {
 GOCACHE=/tmp/go-module-initiator-gocache go test ./framework/plugin/... ./framework/service -count=1
 ```
 
-业务仓库中新增或调整 plugin 时：
+业务仓库中新增或调整 plugin 时，按真实目录替换：
 
 ```bash
-GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./internal/modules/... -count=1
-```
-
-如果仓库没有 `internal/initiators`，改跑实际 initiator 目录，例如：
-
-```bash
-GOCACHE=/tmp/go-module-initiator-gocache go test ./initiators/... ./internal/modules/... -count=1
+GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./internal/<unit-root>/... -count=1
 ```
 
 交付前检查：

@@ -1,16 +1,22 @@
 ---
 name: skillhub-skill-lifecycle
 description: 用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。
-version: 1.0.2
+compatibility: Compatible with open_code
+metadata:
+  version: "1.1.1"
+  author: "rangh-codespace"
+  created_at: "2026-04-24T20:05:43+08:00"
 ---
 
 # skill-hub Skill Lifecycle
 
-这个 skill 只关注 `skill-hub` 的实际使用流程和仓库生命周期，不负责设计 skill 的业务内容。创建或重写 skill 内容时，先使用专门的 skill 创建规范；完成内容后再回到这里做登记、归档和同步。
+这个 skill 关注 `skill-hub` 的实际使用流程和仓库生命周期，也负责把“当前项目中对 skill 的编辑任务”纳入 `skill-hub` 流程。只要任务直接涉及当前项目 `.agents/skills/` 下的 skill 更新、刷新、批量同步、归档或发布，就应优先使用本 skill，再决定是否需要配合其他内容类 skill。
 
 ## 适用场景
 
 - 项目里新增了一个不是通过 `skill-hub create` 创建的 skill，需要登记到本地仓库
+- 当前任务直接修改 `.agents/skills/<id>/SKILL.md`、`agents/openai.yaml`、`references/`、`scripts/`
+- 需要刷新、重写、批量更新当前项目里已有 skill，并确保更新能回到 skill-hub 本地仓库
 - 从当前目录及子目录收集 `.agents/skills/*/SKILL.md`，统一整理到当前项目 `.agents/skills`
 - 需要去除重复 skill，并按最新修改时间或明确来源保留最新版本
 - `SKILL.md` 缺少 frontmatter，需要补齐 `name`、`description`、`compatibility`、`metadata.version`
@@ -20,6 +26,8 @@ version: 1.0.2
 
 ## 核心规则
 
+- 只要任务直接触达当前项目 `.agents/skills/`，优先先加载本 skill，再决定是否需要额外的内容设计 skill。
+- 不要把“内容编辑”和“skill 生命周期管理”拆成互不相关的两步；只要修改了工作区 skill，就必须至少补 `status`、`validate`、`feedback` 这条链。
 - 不要绕过 `skill-hub` 直接写 `~/.skill-hub/state.json` 来登记 skill。
 - 对尚未在项目本地工作区登记的 skill，必须先运行 `skill-hub create <id>`。
 - `feedback` 只用于把已登记的项目本地 skill 归档到默认本地仓库。
@@ -28,6 +36,15 @@ version: 1.0.2
 - 如果 `skill-hub` 不在 `PATH` 中，先从当前环境的本地 skill-hub checkout 或安装目录定位二进制，不要把用户 home 下的绝对路径写入 skill。
 
 ## 单个 Skill 流程
+
+如果任务是“编辑已有 skill”，推荐顺序：
+
+1. 先定位目标 skill 当前状态
+2. 修改工作区 skill 内容
+3. 执行 `validate`
+4. 执行 `feedback --dry-run`
+5. 确认后执行 `feedback --force`
+6. 用 `status` 确认回到 `Synced`
 
 ### 1. 补齐 SKILL.md 元数据
 
@@ -76,6 +93,8 @@ skill-hub status <id>
 - `Missing`
 
 新增 skill 在归档前通常会显示为 `Modified`，并且仓库版本为 `N/A`。
+
+已登记 skill 在工作区被编辑后，通常会显示为 `Modified`；这不是异常，而是提示你后续必须执行 `feedback`。
 
 ### 4. 验证结构
 
@@ -183,6 +202,12 @@ git -C ~/.skill-hub/repositories/<default-repo> status --short
 - `skill-hub status` 显示目标 skill 为 `Synced`
 - 默认本地仓库 `skills/<id>` 包含目标 skill
 - 默认本地仓库 `registry.json` 包含目标 skill
+
+## 与内容类 skill 的协同
+
+- 如果任务是“改 skill 内容”，本 skill 负责生命周期主链：`status`、`validate`、`feedback`、`push`
+- 如果任务还需要重写 `SKILL.md` 业务内容、references 或脚本，可以配合内容类 skill
+- 但无论是否配合其他 skill，只要改了 `.agents/skills/`，最后都要回到本 skill 完成归档和状态确认
 
 ## 注意事项
 

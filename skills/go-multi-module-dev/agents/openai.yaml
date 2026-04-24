@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Multi Module Dev"
-  short_description: "Build modules in magicCommon monorepos"
-  default_prompt: "Use $go-multi-module-dev to add or extend a module in this magicCommon-based multi-module Go repository."
+  short_description: "Build runtime units in magicCommon repos"
+  default_prompt: "Use $go-multi-module-dev to add or extend a runtime unit in this magicCommon-based Go repository while preserving the repository's existing entry and grouping conventions."

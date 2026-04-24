@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skill Capability Index"
+  short_description: "Route skill work to skill-hub first"
+  default_prompt: "Use $skill-capability-index to choose the primary skill for a task. If the task edits, refreshes, syncs, archives, or publishes anything under .agents/skills, select $skillhub-skill-lifecycle as the main skill before any content-specific skill."

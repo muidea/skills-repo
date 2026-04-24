@@ -2,13 +2,13 @@
 
 ## 1. 什么时候用 event
 
-- 模块间异步通知：`Post`
+- 运行单元间异步通知：`Post`
 - 需要同步结果：`Send`
-- 模块内部后台处理：结合 `task.BackgroundRoutine`
+- 运行单元内部后台处理：结合 `task.BackgroundRoutine`
 
 ## 2. 处理顺序
 
-1. 先定义事件 ID 和归属模块
+1. 先定义事件 ID 和归属运行单元
 2. 再定义传输数据结构
 3. 在 `biz` 层订阅 / 发送
 4. 不要在 `service` 层直接堆复杂事件逻辑
@@ -16,15 +16,15 @@
 ## 3. 推荐模式
 
 ```go
-func (s *Module) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
+func (s *Unit) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
     s.bizPtr = biz.New(eventHub, background)
     return nil
 }
 ```
 
 ```go
-type ModuleBiz struct {
-    eventHub event.Hub
+type UnitBiz struct {
+    eventHub   event.Hub
     background task.BackgroundRoutine
 }
 ```

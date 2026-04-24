@@ -2,19 +2,21 @@
 
 set -euo pipefail
 
-MODULE_NAME="${1:-}"
-MODULE_TYPE="${2:-kernel}"
+UNIT_NAME="${1:-}"
+GROUP_PATH="${2:-shared}"
+UNIT_ROOT="${3:-internal/modules}"
+ENTRY_FILE="${4:-module.go}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 PROJECT_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
 
-if [ -z "$MODULE_NAME" ]; then
-    echo "usage: $0 <module_name> [kernel|blocks]"
+if [ -z "$UNIT_NAME" ]; then
+    echo "usage: $0 <unit_name> [group_path] [unit_root] [entry_file]"
     exit 1
 fi
 
-if [ "$MODULE_TYPE" != "kernel" ] && [ "$MODULE_TYPE" != "blocks" ]; then
-    echo "error: module_type must be kernel or blocks"
+if [[ "$ENTRY_FILE" != *.go ]]; then
+    echo "error: entry_file must end with .go"
     exit 1
 fi
 
@@ -23,13 +25,12 @@ if ! command -v go >/dev/null 2>&1; then
     exit 1
 fi
 
-MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
-MODULE_DIR="$PROJECT_ROOT/internal/modules/$MODULE_TYPE/$MODULE_NAME"
-
-if [ -d "$MODULE_DIR" ]; then
-    echo "error: module already exists: $MODULE_DIR"
-    exit 1
-fi
+trim_path() {
+    local path="$1"
+    path="${path#/}"
+    path="${path%/}"
+    echo "$path"
+}
 
 to_pascal_case() {
     local input="$1"
@@ -44,12 +45,38 @@ to_pascal_case() {
     echo "$out"
 }
 
-MODULE_PASCAL="$(to_pascal_case "$MODULE_NAME")"
+to_package_name() {
+    local input="$1"
+    input="${input//-/_}"
+    echo "$input"
+}
 
-mkdir -p "$MODULE_DIR/biz" "$MODULE_DIR/service" "$MODULE_DIR/pkg/common" "$MODULE_DIR/pkg/models"
+GROUP_PATH="$(trim_path "$GROUP_PATH")"
+UNIT_ROOT="$(trim_path "$UNIT_ROOT")"
+UNIT_PASCAL="$(to_pascal_case "$UNIT_NAME")"
+PACKAGE_NAME="$(to_package_name "$UNIT_NAME")"
+MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
 
-cat > "$MODULE_DIR/module.go" <<EOF
-package $MODULE_NAME
+UNIT_DIR="$PROJECT_ROOT/$UNIT_ROOT"
+IMPORT_ROOT="$MODULE_PATH/$UNIT_ROOT"
+
+if [ -n "$GROUP_PATH" ]; then
+    UNIT_DIR="$UNIT_DIR/$GROUP_PATH"
+    IMPORT_ROOT="$IMPORT_ROOT/$GROUP_PATH"
+fi
+
+UNIT_DIR="$UNIT_DIR/$UNIT_NAME"
+IMPORT_ROOT="$IMPORT_ROOT/$UNIT_NAME"
+
+if [ -d "$UNIT_DIR" ]; then
+    echo "error: runtime unit already exists: $UNIT_DIR"
+    exit 1
+fi
+
+mkdir -p "$UNIT_DIR/biz" "$UNIT_DIR/service" "$UNIT_DIR/pkg/common" "$UNIT_DIR/pkg/models"
+
+cat > "$UNIT_DIR/$ENTRY_FILE" <<EOF
+package $PACKAGE_NAME
 
 import (
     cd "github.com/muidea/magicCommon/def"
@@ -57,35 +84,35 @@ import (
     "github.com/muidea/magicCommon/framework/plugin/module"
     "github.com/muidea/magicCommon/task"
 
-    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/biz"
-    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/pkg/common"
-    "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/service"
+    "$IMPORT_ROOT/biz"
+    "$IMPORT_ROOT/pkg/common"
+    "$IMPORT_ROOT/service"
 )
 
 func init() {
     module.Register(New())
 }
 
-type $MODULE_PASCAL struct {
-    bizPtr     *biz.$MODULE_PASCAL
-    servicePtr *service.$MODULE_PASCAL
+type $UNIT_PASCAL struct {
+    bizPtr     *biz.$UNIT_PASCAL
+    servicePtr *service.$UNIT_PASCAL
 }
 
-func New() *$MODULE_PASCAL {
-    return &$MODULE_PASCAL{}
+func New() *$UNIT_PASCAL {
+    return &$UNIT_PASCAL{}
 }
 
-func (s *$MODULE_PASCAL) ID() string {
-    return common.${MODULE_PASCAL}Module
+func (s *$UNIT_PASCAL) ID() string {
+    return common.${UNIT_PASCAL}Unit
 }
 
-func (s *$MODULE_PASCAL) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *$UNIT_PASCAL) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
     s.bizPtr = biz.New(eventHub, backgroundRoutine)
     s.servicePtr = service.New(s.bizPtr)
     return nil
 }
 
-func (s *$MODULE_PASCAL) Run() (err *cd.Error) {
+func (s *$UNIT_PASCAL) Run() (err *cd.Error) {
     err = s.bizPtr.Initialize()
     if err != nil {
         return
@@ -94,10 +121,10 @@ func (s *$MODULE_PASCAL) Run() (err *cd.Error) {
     return
 }
 
-func (s *$MODULE_PASCAL) Teardown() {}
+func (s *$UNIT_PASCAL) Teardown() {}
 EOF
 
-cat > "$MODULE_DIR/biz/biz.go" <<EOF
+cat > "$UNIT_DIR/biz/biz.go" <<EOF
 package biz
 
 import (
@@ -106,49 +133,49 @@ import (
     "github.com/muidea/magicCommon/task"
 )
 
-type $MODULE_PASCAL struct {
+type $UNIT_PASCAL struct {
     eventHub          event.Hub
     backgroundRoutine task.BackgroundRoutine
 }
 
-func New(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) *$MODULE_PASCAL {
-    return &$MODULE_PASCAL{
+func New(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) *$UNIT_PASCAL {
+    return &$UNIT_PASCAL{
         eventHub:          eventHub,
         backgroundRoutine: backgroundRoutine,
     }
 }
 
-func (s *$MODULE_PASCAL) Initialize() (err *cd.Error) {
+func (s *$UNIT_PASCAL) Initialize() (err *cd.Error) {
     return nil
 }
 EOF
 
-cat > "$MODULE_DIR/service/service.go" <<EOF
+cat > "$UNIT_DIR/service/service.go" <<EOF
 package service
 
-import "$MODULE_PATH/internal/modules/$MODULE_TYPE/$MODULE_NAME/biz"
+import "$IMPORT_ROOT/biz"
 
-type $MODULE_PASCAL struct {
-    bizPtr *biz.$MODULE_PASCAL
+type $UNIT_PASCAL struct {
+    bizPtr *biz.$UNIT_PASCAL
 }
 
-func New(bizPtr *biz.$MODULE_PASCAL) *$MODULE_PASCAL {
-    return &$MODULE_PASCAL{bizPtr: bizPtr}
+func New(bizPtr *biz.$UNIT_PASCAL) *$UNIT_PASCAL {
+    return &$UNIT_PASCAL{bizPtr: bizPtr}
 }
 
-func (s *$MODULE_PASCAL) RegisterRoute() {}
+func (s *$UNIT_PASCAL) RegisterRoute() {}
 EOF
 
-cat > "$MODULE_DIR/pkg/common/const.go" <<EOF
+cat > "$UNIT_DIR/pkg/common/const.go" <<EOF
 package common
 
 const (
-    ${MODULE_PASCAL}Module = "$MODULE_NAME"
+    ${UNIT_PASCAL}Unit = "$UNIT_NAME"
 )
 EOF
 
-echo "created module: $MODULE_DIR"
-echo "module path: $MODULE_PATH"
+echo "created runtime unit: $UNIT_DIR"
+echo "import root: $IMPORT_ROOT"
 echo "next steps:"
 echo "  1. add route registration in service/"
 echo "  2. add models and common definitions"

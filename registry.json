@@ -74,7 +74,7 @@
     {
       "id": "go-application-event-runtime",
       "name": "go-application-event-runtime",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
       "tags": null,
@@ -85,9 +85,9 @@
     {
       "id": "go-modular-project-bootstrap",
       "name": "go-modular-project-bootstrap",
-      "version": "1.0.3",
+      "version": "1.3.0",
       "author": "unknown",
-      "description": "用于初始化类似现有 Go 多应用、多模块服务套件的新项目骨架，覆盖仓库结构、应用入口、模块生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
+      "description": "用于初始化类似现有 Go 多应用、多运行单元服务套件的新项目骨架，覆盖仓库结构、应用入口、运行单元生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
       "tags": null,
       "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
@@ -96,9 +96,9 @@
     {
       "id": "go-module-initiator-lifecycle",
       "name": "go-module-initiator-lifecycle",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": "unknown",
-      "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与 module，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
+      "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,
       "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
@@ -107,9 +107,9 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.0.2",
+      "version": "2.1.0",
       "author": "unknown",
-      "description": "用于基于 magicCommon/framework 的 Go 多模块仓库开发，覆盖 application、internal/modules、biz/service/pkg 分层、事件集成、路由注册、文档与测试同步。新增模块、扩展业务模块或做跨仓联动开发时使用。",
+      "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/go-multi-module-dev/SKILL.md"
@@ -236,7 +236,7 @@
     {
       "id": "magicbase-role-routing",
       "name": "magicbase-role-routing",
-      "version": "1.0.4",
+      "version": "1.0.5",
       "author": "unknown",
       "description": "用于在 magicBase 中定义和管理普通路由、CAS 认证路由、RoleRouteRegistry 权限路由、Privilege 权限项、session 绑定和鉴权中间件；新增带权限 HTTP API、定义权限值、排查 401/403 或 register privilege failed 时使用。",
       "tags": null,
@@ -301,9 +301,9 @@
     {
       "id": "magiccas-block-module",
       "name": "magiccas-block-module",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "unknown",
-      "description": "用于处理 `magicCas` 的 block 模块，包括 `account`、`endpoint`、`namespace`、`role`、`totalizator`。",
+      "description": "用于处理 `magicCas` 的基础 block 模块，包括 `account`、`endpoint`、`namespace`、`role`、`totalizator`；不用于承载 `kernel/registration` 这类基于基础 block 编排的 CAS 治理流程。",
       "tags": null,
       "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
@@ -312,9 +312,9 @@
     {
       "id": "magiccas-cas-auth",
       "name": "magiccas-cas-auth",
-      "version": "1.0.2",
+      "version": "1.0.6",
       "author": "unknown",
-      "description": "用于处理 `magicCas` 的登录、刷新、JWT / endpoint 会话、命名空间校验、账号/端点角色绑定演进，以及 `kernel/cas` 与 `account` / `role` / `namespace` / `endpoint` 授权链路的联动逻辑。",
+      "description": "用于处理 `magicCas` 的登录、刷新、JWT / endpoint 会话、命名空间校验、账号/端点角色绑定演进、注册准入治理，以及 `kernel/cas` / `kernel/registration` 与 `account` / `role` / `namespace` / `endpoint` 授权链路的联动逻辑。",
       "tags": null,
       "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
@@ -920,7 +920,7 @@
     {
       "id": "magicrunner-service-gateway-auth",
       "name": "magicrunner-service-gateway-auth",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "Use when implementing, reviewing, or diagnosing magicRunner service gateway access, portal or panel service debugging, endpoint Sig token authorization, ServicePublication or ServiceSubscription access checks, and entity capability forwarding through gateway. Covers the boundary between gateway authorization, CAS sessions, subscription credentials, and magicBase public-value execution; use magicrunner-service-governance for the broader service definition, capability, publication, subscription, and credential governance chain.",
       "tags": null,
@@ -1013,7 +1013,7 @@
     {
       "id": "skill-capability-index",
       "name": "skill-capability-index",
-      "version": "1.0.0",
+      "version": "1.1.1",
       "author": "unknown",
       "description": "用于在当前多项目 skill 集合中选择唯一主 skill 并降低重复触发歧义，覆盖项目初始化、module/initiator、application/event、magicOrm、magicBase、magicRunner、magicCas、magicFile、magicModulesRepo、magicEngine 等能力边界；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
       "tags": null,
@@ -1032,12 +1032,46 @@
       "repository_path": "skills/skill-creator/SKILL.md"
     },
     {
+      "id": "skill-hub-project-usage",
+      "name": "skill-hub-project-usage",
+      "version": "1.0.1",
+      "author": "unknown",
+      "description": "Use when helping an application or business project consume skills already managed by skill-hub. Guides agents through initializing the project, syncing repositories, listing/searching managed skills before use, selecting a suitable skill only when one exists, enabling skills with use, applying them to .agents/skills, checking status, and feeding project-local improvements back to the local skill repository without pushing remotely unless explicitly requested.",
+      "tags": null,
+      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
+      "repository": "skills-repo",
+      "repository_path": "skills/skill-hub-project-usage/SKILL.md"
+    },
+    {
+      "id": "skill-hub-skill-authoring",
+      "name": "skill-hub-skill-authoring",
+      "version": "1.0.2",
+      "author": "unknown",
+      "description": "Primary workflow when creating or updating skills in an environment where skill-hub is installed, available, or used to manage skills. Use this before the generic skill-creator for skill-hub managed skills. Covers creating, repairing, validating, registering, importing, archiving, and otherwise managing reusable local skills with skill-hub; authoring Chinese-by-default SKILL.md files; declaring the matching formatter; maintaining .agents/skills content; syncing local project skill edits back to the default skill repository; and previewing remote push without publishing unless explicitly requested.",
+      "tags": null,
+      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
+      "repository": "skills-repo",
+      "repository_path": "skills/skill-hub-skill-authoring/SKILL.md"
+    },
+    {
+      "id": "skill-hub-workflow",
+      "name": "skill-hub-workflow",
+      "version": "1.1.2",
+      "author": "unknown",
+      "description": "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between two business scenarios: creating/managing reusable local skills and consuming already managed skills inside other projects. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for application-project consumption work.",
+      "tags": null,
+      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
+      "repository": "skills-repo",
+      "repository_path": "skills/skill-hub-workflow/SKILL.md"
+    },
+    {
       "id": "skillhub-skill-lifecycle",
       "name": "skillhub-skill-lifecycle",
-      "version": "1.0.2",
+      "version": "1.1.1",
       "author": "unknown",
       "description": "用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。",
       "tags": null,
+      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/skillhub-skill-lifecycle/SKILL.md"
     },

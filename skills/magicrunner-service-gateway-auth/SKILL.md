@@ -7,7 +7,7 @@ metadata:
   domain: magicrunner
   scenario: service-gateway-auth
   maturity: stable
-version: 1.0.3
+version: 1.0.4
 ---
 
 # MagicRunner Service Gateway Auth
@@ -23,7 +23,7 @@ If the task is about how `EntityDefinition.serviceExpose` becomes `CapabilityDef
 - [biz.go](magicRunner/internal/modules/kernel/gateway/biz/biz.go)
 - [service.go](magicRunner/internal/modules/kernel/gateway/service/service.go)
 - [common.go](magicRunner/internal/modules/kernel/gateway/pkg/common/common.go)
-- [metadata.go](magicRunner/internal/modules/kernel/servicedebug/metadata.go)
+- [metadata.go](magicRunner/internal/pkg/servicedebug/metadata.go)
 - [design-http-entrypoints.md](magicRunner/docs/design-http-entrypoints.md)
 
 ## Core Boundary

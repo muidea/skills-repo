@@ -3,7 +3,7 @@ name: skill-capability-index
 description: 用于在当前多项目 skill 集合中选择唯一主 skill 并降低重复触发歧义，覆盖项目初始化、module/initiator、application/event、magicOrm、magicBase、magicRunner、magicCas、magicFile、magicModulesRepo、magicEngine 等能力边界；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.0"
+  version: "1.1.1"
   author: "rangh-codespace"
   created_at: "2026-04-18T23:12:34+08:00"
 ---
@@ -17,16 +17,25 @@ metadata:
 - 每个任务默认只指定一个主 skill。
 - 只有任务明确跨越多个能力域，才组合多个 skill。
 - canonical skill 优先于项目专属 supporting skill。
+- 只要任务直接修改当前项目 `.agents/skills/`，优先选择 skill 生命周期类 skill 作为主 skill，再补内容类 supporting skill。
 - 项目专属 skill 只在任务落到该项目实现、排障或历史兼容时使用。
 - 标记为 deprecated 的 skill 不用于新建能力，只能作为既有项目维护参考。
 - 如果用户明确点名 skill，以用户点名为准；若点名 skill 与任务目标冲突，先说明冲突并选择更安全的主 skill。
+
+## Skill 管理
+
+| 任务 | 主 skill | supporting skill |
+| --- | --- | --- |
+| 编辑、刷新、批量同步当前项目 `.agents/skills/` 下已有 skill | `skillhub-skill-lifecycle` | 具体业务 skill，必要时再参考通用 skill 创建规范 |
+| 判断某个 skill 更新后是否需要 `create` / `validate` / `feedback` / `push` | `skillhub-skill-lifecycle` | 无 |
+| 批量收集、去重、归档项目本地 skill | `skillhub-skill-lifecycle` | 无 |
 
 ## 通用 Go 服务
 
 | 任务 | 主 skill | supporting skill |
 | --- | --- | --- |
 | 初始化新 Go 多应用、多模块服务套件 | `go-modular-project-bootstrap` | `go-multi-module-dev`, `go-module-initiator-lifecycle`, `go-application-event-runtime` |
-| 在已有项目新增业务模块、扩展 biz/service/pkg 分层 | `go-multi-module-dev` | `go-module-initiator-lifecycle` |
+| 在已有项目新增业务模块、判断 kernel/blocks 落点、扩展 biz/service/pkg 分层 | `go-multi-module-dev` | `go-module-initiator-lifecycle` |
 | 创建、接线或调整 initiator/module 生命周期 | `go-module-initiator-lifecycle` | `magiccommon-plugin-module` |
 | 应用启动、EventHub、BackgroundRoutine、Shutdown 协同 | `go-application-event-runtime` | `magiccommon-app-bootstrap`, `magiccommon-event-driven-service`, `magiccommon-runtime-lifecycle` |
 | 代码质量、架构重构、去重和解耦 | `go-refactor-pro` | 具体项目 skill |
@@ -91,8 +100,9 @@ metadata:
 | 任务 | 主 skill | supporting skill |
 | --- | --- | --- |
 | magicCas 登录、刷新、JWT、endpoint session、role/namespace 授权链 | `magiccas-cas-auth` | `magiccas-http-handlers`, `magiccas-service-readiness` |
+| magicCas 注册准入治理：RegistrationProfile、RegistrationPolicy、AccountRegistration、注册模板、审核、默认 role 绑定 | `magiccas-cas-auth` | `go-module-initiator-lifecycle`, `magiccas-block-module` |
 | magicCas 启动和 ready、自举恢复、magicBase 强依赖 | `magiccas-service-readiness` | `magiccas-app-bootstrap`, `magiccas-base-integration` |
-| magicCas block 模块 | `magiccas-block-module` | `magiccas-base-integration` |
+| magicCas 基础 block 模块：account、endpoint、namespace、role、totalizator | `magiccas-block-module` | `magiccas-base-integration` |
 | magicFile 上传、下载、浏览、元数据、清理 | `magicfile-file-service` | `magicfile-static-install-paths`, `magicfile-client-integration` |
 | magicFile 启动、模块装配、magicModulesRepo 依赖 | `magicfile-app-bootstrap` | `go-module-initiator-lifecycle` |
 | magicModulesRepo 启动、initiator、listener 生命周期 | `magicmodulesrepo-app-bootstrap` | `magicmodulesrepo-routeregistry-health` |
@@ -100,12 +110,15 @@ metadata:
 
 ## 歧义处理
 
+- “完善 skill”“刷新 skill”“同步 skill”“修改 `.agents/skills` 下的 `SKILL.md` / `agents/openai.yaml` / `references` / `scripts`” 优先用 `skillhub-skill-lifecycle`，不要直接走纯内容编辑路径。
 - “项目初始化”优先判定是否新项目；新项目用 `go-modular-project-bootstrap`，不是 `magicrunner-app-bootstrap`。
-- “module”先判断是业务插件生命周期还是某项目内部 block；生命周期用 `go-module-initiator-lifecycle`，项目内部实现再用项目 skill。
+- “module”先判断是业务插件生命周期还是业务模块落点；生命周期用 `go-module-initiator-lifecycle`，kernel/blocks 落点用 `go-multi-module-dev`，项目内部实现再用项目 skill。
+- “block 还是 module / kernel 还是 blocks / 业务模型应该放哪里”优先用 `go-multi-module-dev`，不要直接进入项目专属 block skill。
 - “event_hub”或“后台任务”优先用 `go-application-event-runtime`；只有改底层 event/task 实现才用 `magiccommon-runtime-lifecycle`。
 - “ORM provider/object/value”优先用 `magicorm-provider-object-usage`；只有修改 provider 内部才用 `magicorm-provider-remote`。
 - “定义 Application/Entity/Block/serviceExpose”优先用 `magicbase-data-capability-definition`；只有 magicBase 内核实现才用 `magicbase-kernel-entity`。
 - “服务能力、发布订阅、凭据”优先用 `magicrunner-service-governance`；只有请求已经落到 gateway 授权失败才用 `magicrunner-service-gateway-auth`。
+- magicCas 中的“registration / 用户注册 / 注册模板 / 注册审核”默认指 `kernel/registration` 治理模块；不要选 `magiccas-block-module` 作为主 skill，也不要新增 `blocks/registration`。
 
 ## 使用步骤
 

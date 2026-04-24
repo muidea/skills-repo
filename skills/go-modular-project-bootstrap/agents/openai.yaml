@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Modular Project Bootstrap"
-  short_description: "Bootstrap generic Go service-suite projects"
-  default_prompt: "Use $go-modular-project-bootstrap to initialize a generic multi-application, multi-module Go service project from existing framework patterns."
+  short_description: "Bootstrap reusable Go service projects"
+  default_prompt: "Use $go-modular-project-bootstrap to initialize a reusable Go service project or service suite from existing framework patterns without copying project-specific directory shapes or business application naming."

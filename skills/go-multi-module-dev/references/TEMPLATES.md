@@ -1,28 +1,28 @@
 # Templates
 
-## 1. 模块入口骨架
+## 1. 运行单元入口骨架
 
 ```go
 func init() {
     module.Register(New())
 }
 
-type Module struct {
-    bizPtr *biz.Module
-    servicePtr *service.Module
+type Unit struct {
+    bizPtr     *biz.Unit
+    servicePtr *service.Unit
 }
 
-func New() *Module { return &Module{} }
+func New() *Unit { return &Unit{} }
 
-func (s *Module) ID() string { return common.ModuleID }
+func (s *Unit) ID() string { return common.UnitID }
 
-func (s *Module) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
+func (s *Unit) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
     s.bizPtr = biz.New(eventHub, background)
     s.servicePtr = service.New(s.bizPtr)
     return nil
 }
 
-func (s *Module) Run() (err *cd.Error) {
+func (s *Unit) Run() (err *cd.Error) {
     err = s.bizPtr.Initialize()
     if err != nil {
         return
@@ -35,16 +35,16 @@ func (s *Module) Run() (err *cd.Error) {
 ## 2. biz 骨架
 
 ```go
-type Module struct {
-    eventHub event.Hub
+type Unit struct {
+    eventHub   event.Hub
     background task.BackgroundRoutine
 }
 
-func New(eventHub event.Hub, background task.BackgroundRoutine) *Module {
-    return &Module{eventHub: eventHub, background: background}
+func New(eventHub event.Hub, background task.BackgroundRoutine) *Unit {
+    return &Unit{eventHub: eventHub, background: background}
 }
 
-func (s *Module) Initialize() (err *cd.Error) {
+func (s *Unit) Initialize() (err *cd.Error) {
     return nil
 }
 ```
@@ -52,26 +52,27 @@ func (s *Module) Initialize() (err *cd.Error) {
 ## 3. service 骨架
 
 ```go
-type Module struct {
-    bizPtr *biz.Module
+type Unit struct {
+    bizPtr *biz.Unit
 }
 
-func New(bizPtr *biz.Module) *Module {
-    return &Module{bizPtr: bizPtr}
+func New(bizPtr *biz.Unit) *Unit {
+    return &Unit{bizPtr: bizPtr}
 }
 
-func (s *Module) RegisterRoute() {
+func (s *Unit) RegisterRoute() {
 }
 ```
 
 ## 4. create-module.sh
 
-用 `scripts/create-module.sh <module_name> [kernel|blocks]` 创建最小骨架。
+用 `scripts/create-module.sh <unit_name> [group_path] [unit_root] [entry_file]` 创建最小骨架。
 
 脚本会自动：
 
 - 读取当前仓库 `go.mod` 的 module path
-- 生成 `module.go`
+- 在目标 `<unit-root>/<group-path>/<unit_name>/` 下生成骨架
+- 生成 `<unit-entry-file>`
 - 生成 `biz/biz.go`
 - 生成 `service/service.go`
 - 生成 `pkg/common/const.go`
