@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/<unit-root>/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。
-version: 2.1.1
+version: 2.1.2
 ---
 
 # Go Multi Module Development
@@ -51,6 +51,8 @@ version: 2.1.1
    - 对外复用公共包常见于 `pkg/`
    - 如果仓库已经使用 `internal/modules/kernel`、`internal/modules/blocks` 这类分组，就沿用，不要改名
    - 如果仓库没有这些名字，不要强行引入
+   - 如果应用自身承载业务编排、HTTP 服务、前端 assets、observed/presenter 等实现，并且仓库已有 `internal/modules/application` 分组，应落到 `internal/modules/application/<entry-name>/{biz,service,pkg}`，不要额外保留 `internal/<entry-name>` 作为中间实现根
+   - `<entry-root>/<entry-name>` 只保留进程入口、入口测试、启动参数解析或少量进程级文件；不放 appservice、bootstrap、server、observed、presenter 等实现包
 3. 再判断运行单元的职责边界
    - 可复用基础能力单元：围绕单一资源或单一技术能力，提供稳定 CRUD、状态流转、基础校验、资源事件或公共封装
    - 编排/治理单元：组合多个基础能力或外部系统，完成策略、准入、授权、审核、运行态治理或跨资源一致性
@@ -93,6 +95,8 @@ version: 2.1.1
 
 - 先看现有运行单元，不要凭空造新分层。
 - 如果仓库使用 `magicCommon/framework/plugin/module` 生命周期，入口优先保持 `module.Register(New()) -> Setup() -> Run() -> Teardown()` 这条链。
+- 多运行单元应用入口应通过显式 import 选择本入口需要加载的 initiator 和 modules；不要依赖某个实现包被业务代码间接 import 来触发注册。
+- `internal/modules/application/<entry-name>/module.go` 负责把应用服务接入 plugin module 生命周期；该 module 的实现子包按职责放到 `biz/`、`service/`、`pkg/`，不要平铺在 module 根目录。
 - 新增运行单元前先完成 `<entry-root>` / `<unit-root>` / `<group-path>` / `pkg` 落点判断，并把判断写入设计文档或变更说明。
 - 如果仓库存在“基础能力分组”和“编排/治理分组”，沿用现有名字；不要把某个项目里的 `kernel`、`blocks` 当成所有仓库的默认规范。
 - 基础层或共享 initiator 可以提供通用查询、绑定、client 构造能力，但不负责某个具体业务“缺失时如何初始化”的策略判断。
@@ -104,7 +108,17 @@ version: 2.1.1
 - `pkg/models` 放 DTO / entity / view model。
 - 如果任务只是扩展已有运行单元，优先沿用现有目录，而不是再创建新运行单元。
 
-## 7. 常用脚本
+## 7. 结构完成验收
+
+完成目录调整或新建骨架后，必须做结构验收，不要只依赖 `go test`：
+
+- 入口验收：`find <entry-root>/<entry-name> -maxdepth 3 -type f` 应只包含入口、入口测试、启动参数或少量进程级文件。
+- 应用 module 验收：如果存在 `internal/modules/application/<entry-name>`，其实现应按 `biz/`、`service/`、`pkg/` 分层，`module.go` 保持生命周期桥接职责。
+- 旧路径验收：用 `rg "internal/<entry-name>|<entry-root>/<entry-name>/(appservice|bootstrap|server|observed|presenter|demo)"` 检查中间态实现根和旧路径引用是否清零；历史归档文档可显式排除。
+- 加载验收：入口文件应显式 import 本入口选择的 initiator、kernel、blocks、application module；新入口不能靠隐式依赖完成 module 注册。
+- 文档验收：`README.md`、`docs/structure.md` 或状态文档必须描述最终正式路径，不能继续描述已删除的中间态路径。
+
+## 8. 常用脚本
 
 - 创建最小运行单元骨架：`scripts/create-module.sh`
 
@@ -116,7 +130,7 @@ version: 2.1.1
 
 如果这些条件不成立，不要硬用脚本，直接按目标仓库现状手工落结构。
 
-## 8. 推荐验证
+## 9. 推荐验证
 
 先跑受影响范围，再跑全量：
 

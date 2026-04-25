@@ -3,7 +3,7 @@ name: go-modular-project-bootstrap
 description: 用于初始化类似现有 Go 多应用、多运行单元服务套件的新项目骨架，覆盖仓库结构、应用入口、运行单元生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: 1.3.0
+  version: 1.3.1
   author: "rangh"
   created_at: "2026-04-18T21:37:24+08:00"
 ---
@@ -83,6 +83,8 @@ metadata:
 
 如果参考项目里存在业务色彩很重的目录名，默认把它们视为“职责样例”，不是“新项目模板”。
 
+应用实现目录必须使用正式职责名和正式分层；禁止使用 `phase1`、`demo-only`、`fallback`、`internal/<app>` 这类中间态或兼容性命名作为最终结构。
+
 ## 占位符约定
 
 本文中的占位符只表达职责角色，不表达固定目录规范：
@@ -126,6 +128,7 @@ metadata:
 - 仓库形态: 单入口、多入口、基础能力仓库或混合复用
 - 入口布局: `<entry-root>/<entry-name>/main.go` 还是 `<entry-root>/<entry-name>/cmd/main.go`
 - 应用入口清单，以及每个入口加载哪些 initiator/运行单元
+- 每个入口的显式加载清单：哪些 initiator、`internal/modules/application/<app>`、`kernel`、`blocks` 需要通过 blank import 注册
 - 哪些能力放本仓库，哪些能力复用外部依赖仓库
 - 运行单元分层: 使用 `internal/<unit-group>/`，再按 `<group-a>/<group-b>` 或更贴近领域的名字分组
 - 对外路由边界
@@ -189,6 +192,29 @@ internal/
     └── <domain-group>/      # 领域能力或可选能力
 ```
 
+方案 C2，应用自身也是运行单元：
+
+```text
+<project>/
+├── <entry-root>/
+│   └── <entry-name>/
+│       └── main.go          # 只做进程入口、显式加载和 application 生命周期
+└── internal/
+    ├── initiators/
+    │   └── <runtime>/
+    └── <unit-group>/
+        ├── application/
+        │   └── <entry-name>/
+        │       ├── module.go
+        │       ├── biz/
+        │       ├── service/
+        │       └── pkg/
+        ├── <platform-group>/
+        └── <domain-group>/
+```
+
+当入口对应的应用服务需要承载 HTTP server、前端 assets、运行时装配、observed/presenter 或应用级 orchestration 时，优先采用该结构。不要把这些实现放在 `<entry-root>/<entry-name>/` 或新建 `internal/<entry-name>/` 中间根目录。
+
 方案 D，不拆双层分组，直接按领域分组：
 
 ```text
@@ -223,6 +249,12 @@ internal/
 - `application.Shutdown()`
 
 保留这个链路即可，不必复制参考项目的所有导入项。
+
+入口文件必须显式选择加载项：
+
+- 通过 blank import 加载本入口需要的 initiator 和运行单元。
+- 只加载当前入口职责需要的 module/block，不要全量导入无关运行单元。
+- `internal/modules/application/<entry-name>/module.go` 负责把应用服务接入 plugin module 生命周期；入口不直接拼装业务依赖。
 
 按入口职责区分启动模式：
 
@@ -274,6 +306,8 @@ internal/
 
 不要把 `pkg/common`、`pkg/models`、`service`、`biz` 当作所有项目都必须存在的强约束。
 
+但对于 `internal/modules/application/<entry-name>` 这类应用运行单元，推荐固定使用 `biz/`、`service/`、`pkg/`，因为它通常同时承载应用编排、协议适配、展示/观察模型和 assets。
+
 ### 6. 接入路由和健康检查
 
 基础项目至少保留：
@@ -308,7 +342,17 @@ internal/
 - 外部依赖通过接口或独立配置接入，而不是把参考仓库路径写死
 - Docker、脚本、README 都只绑定当前仓库的真实入口，不假设一定存在某组固定角色名
 
-### 8. 测试与验证
+### 8. 结构验收基线
+
+新建或重构完成后必须执行结构验收：
+
+- `find <entry-root>/<entry-name> -maxdepth 3 -type f`：确认入口目录没有业务实现包。
+- `find internal/<unit-group>/application/<entry-name> -maxdepth 3 -type d`：确认应用运行单元使用 `biz/service/pkg` 分层。
+- `rg "internal/<entry-name>|<entry-root>/<entry-name>/(appservice|bootstrap|server|observed|presenter|demo)"`：确认没有中间态路径和旧路径引用残留。
+- `rg "phase1|fallback|temporary|compatibility" --glob '!docs/archive/**'`：确认最终代码没有非正式业务命名；历史归档文档除外。
+- 运行受影响测试、全量测试和本地服务验证，并同步 README / docs 中的最终结构描述。
+
+### 9. 测试与验证
 
 完成初始化后至少验证：
 

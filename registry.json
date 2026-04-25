@@ -85,7 +85,7 @@
     {
       "id": "go-modular-project-bootstrap",
       "name": "go-modular-project-bootstrap",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "author": "unknown",
       "description": "用于初始化类似现有 Go 多应用、多运行单元服务套件的新项目骨架，覆盖仓库结构、应用入口、运行单元生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
       "tags": null,
@@ -96,7 +96,7 @@
     {
       "id": "go-module-initiator-lifecycle",
       "name": "go-module-initiator-lifecycle",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,
@@ -107,7 +107,7 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.1.1",
+      "version": "2.1.2",
       "author": "unknown",
       "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
       "tags": null,
@@ -1013,7 +1013,7 @@
     {
       "id": "skill-capability-index",
       "name": "skill-capability-index",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "author": "unknown",
       "description": "用于在当前多项目 skill 集合中选择唯一主 skill 并降低重复触发歧义，覆盖项目初始化、module/initiator、application/event、magicOrm、magicBase、magicRunner、magicCas、magicFile、magicModulesRepo、magicEngine 等能力边界；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
       "tags": null,
