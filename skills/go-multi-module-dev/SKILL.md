@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/<unit-root>/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。
-version: 2.1.0
+version: 2.1.1
 ---
 
 # Go Multi Module Development
@@ -41,6 +41,9 @@ version: 2.1.0
    - `magicEngine` 负责 HTTP
    - `magicOrm` 负责模型和持久化
    - 业务仓库在这些基础库之上封装入口、运行单元和对外能力
+   - 必须先检查 `go.mod` 和入口代码是否已经实际依赖 `magicCommon` / `magicEngine` / `magicOrm`；不要只因为目录形状类似就判定项目已经接入基础框架
+   - 如果目标是“符合 go-multi-module-dev 的可部署服务”，但发现入口仍直接使用 `net/http`、项目本地 `EventHub`、手写 `Startup/Shutdown` 或 `go.mod` 没有基础框架依赖，必须把任务升级为框架接入差异处理，先配合 `go-application-event-runtime`，涉及 HTTP 时再配合 magicEngine 路由/启动相关 skill
+   - 如果用户明确要求先交付功能、暂不接入基础框架，必须在状态文档中标注这是 transitional implementation，不能把它描述为已完成 magicCommon/magicEngine 框架接入
 2. 先确定当前仓库已经采用的目录与命名
    - 入口可能在 `<entry-root>/<entry-name>/`
    - 运行单元可能在 `internal/<unit-root>/<group-path>/<unit>/`
@@ -69,7 +72,24 @@ version: 2.1.0
    - 文档
    - 如有复用价值，再更新 skill
 
-## 5. 开发规则
+## 5. 框架接入基线检查
+
+在已有服务项目中使用本 skill 时，先给出一段明确判断：
+
+- `go.mod` 是否依赖 `magicCommon`、`magicEngine`、`magicOrm`
+- 主入口是否通过 `magicCommon/framework/application` 的 `Startup` / `Run` / `Shutdown`
+- 运行单元是否通过框架 service / initiator / module 生命周期接收 `event.Hub` 和 `task.BackgroundRoutine`
+- 事件是否使用 `magicCommon/event.Hub`，而不是项目本地临时 hub
+- HTTP 是否使用 `magicEngine` 的 route / service 注册，而不是直接 `net/http` 自建 mux
+- 如果某项未满足，先记录为 framework gap，再决定是本轮补齐还是明确延期
+
+触发规则：
+
+- 用户说“使用 go-multi-module-dev”“符合基础框架”“使用 magicCommon / magicEngine / magicOrm”时，本检查是必做步骤。
+- 用户只说“新增业务运行单元”且项目已实际接入基础框架时，才直接进入运行单元分层开发。
+- 发现框架 gap 时，本 skill 不应单独作为完成依据；应把 `go-application-event-runtime` 作为主框架协同 skill，必要时再追加 magicEngine / magicOrm 专项 skill。
+
+## 6. 开发规则
 
 - 先看现有运行单元，不要凭空造新分层。
 - 如果仓库使用 `magicCommon/framework/plugin/module` 生命周期，入口优先保持 `module.Register(New()) -> Setup() -> Run() -> Teardown()` 这条链。
@@ -84,7 +104,7 @@ version: 2.1.0
 - `pkg/models` 放 DTO / entity / view model。
 - 如果任务只是扩展已有运行单元，优先沿用现有目录，而不是再创建新运行单元。
 
-## 6. 常用脚本
+## 7. 常用脚本
 
 - 创建最小运行单元骨架：`scripts/create-module.sh`
 
@@ -96,7 +116,7 @@ version: 2.1.0
 
 如果这些条件不成立，不要硬用脚本，直接按目标仓库现状手工落结构。
 
-## 7. 推荐验证
+## 8. 推荐验证
 
 先跑受影响范围，再跑全量：
 

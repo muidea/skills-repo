@@ -24,6 +24,19 @@ project-root/
 
 如果当前仓库已经把 `<shared-group>` 和 `<orchestration-group>` 命名成 `blocks/kernel` 或其他名字，直接沿用，不要重命名。
 
+## 2.1 基础框架基线
+
+目录结构只说明职责落点，不等于已经接入基础框架。对声明“基于 magicCommon / magicEngine / magicOrm”的服务仓库，先核对：
+
+- `go.mod` 是否有基础框架依赖
+- 主入口是否使用 `magicCommon/framework/application`
+- 服务生命周期是否通过 framework service / initiator / module 接线
+- 事件是否使用 `magicCommon/event.Hub`
+- HTTP 是否通过 `magicEngine` route/service 注册
+- 持久化是否按项目目标接入 `magicOrm` 或明确说明当前使用临时 repository backend
+
+如果这些检查不通过，当前项目只能判定为“目录分层接近 go-multi-module-dev”，不能判定为“已符合基础框架”。后续改造应先补 framework gap，再继续扩业务功能。
+
 ## 3. 共享能力分组与编排分组决策规则
 
 先判断能力的职责边界，再创建目录。

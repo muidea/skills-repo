@@ -3,7 +3,7 @@ name: go-application-event-runtime
 description: 用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.1"
+  version: 1.0.2
   author: "rangh"
   created_at: "2026-04-18T22:09:00+08:00"
 ---
@@ -18,6 +18,8 @@ metadata:
 
 - 创建或调整服务主入口的 `application.Startup`、`Run`、`Shutdown`
 - 管理默认 `EventHub` 与 `BackgroundRoutine` 的传递、使用和关闭
+- 将已有 Go 服务从手写 runtime / 本地 EventHub / 直接 shutdown 管理迁移到 `magicCommon/framework/application` 与应用级 `event.Hub`
+- 当 `go-multi-module-dev` 检查发现项目只有目录分层、但缺少 magicCommon application/event/task 实际依赖时，先使用本 skill 处理 framework gap
 - 决定事件使用 `Post` 还是 `Send`
 - 设计跨运行单元的事件通知、同步结果、lane 顺序和后台任务协同
 - 排查应用 shutdown 后任务、事件、timer、goroutine 残留
@@ -41,6 +43,8 @@ metadata:
 - `task/background.go`
 - `event/README.md`
 - `task/README.md`
+
+如果目标仓库当前还没有依赖 `magicCommon`，先读取本地参考实现中的同名文件，并把缺失依赖、入口形态、事件接口差异列成迁移清单；不要直接把项目本地 `MemoryHub` 或手写 lifecycle 当成框架等价实现。
 
 当前通用语义：
 
