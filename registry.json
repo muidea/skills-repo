@@ -32,6 +32,16 @@
       "repository_path": "skills/canvas-design/SKILL.md"
     },
     {
+      "id": "code-cleanup-regression-guard",
+      "name": "code-cleanup-regression-guard",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于执行失效代码、兼容代码、fallback、legacy 文档或结构清理前的回归防护流程，要求先识别业务边界、运行时闭环、真实外部系统行为和验收基线，避免误删仍支撑 MVP 或端到端流程的代码。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/code-cleanup-regression-guard/SKILL.md"
+    },
+    {
       "id": "design-readiness-auditor",
       "name": "设计完备性评审专家",
       "version": "1.2.0",
