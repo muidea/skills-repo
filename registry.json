@@ -74,7 +74,7 @@
     {
       "id": "go-application-event-runtime",
       "name": "go-application-event-runtime",
-      "version": "1.0.2",
+      "version": "1.0.1",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
       "tags": null,
@@ -107,7 +107,7 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.1.1",
+      "version": "2.1.0",
       "author": "unknown",
       "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
       "tags": null,
@@ -133,6 +133,16 @@
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/internal-comms/SKILL.md"
+    },
+    {
+      "id": "lsp-bridge-install-usage",
+      "name": "lsp-bridge-install-usage",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于在任意项目中安装、接入和验证 lsp-bridge MCP Server，覆盖在线安装路径选择、用户本地 bin 默认规则、LSP 依赖、MCP Client 配置、项目级 mcp-config.json 与故障排查。需要为项目启用 LSP 语义工具、配置 lsp-bridge、核对安装位置或复用统一安装流程时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/lsp-bridge-install-usage/SKILL.md"
     },
     {
       "id": "magicbase-app-bootstrap",
@@ -960,6 +970,16 @@
       "repository_path": "skills/magictest-vmi-regression/SKILL.md"
     },
     {
+      "id": "magicwebportal-umi-structure",
+      "name": "magicwebportal-umi-structure",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于调整或评审 magicWebPortal 的 Umi Max 前端目录结构、页面私有组件归属、跨页面 service 边界和菜单层级落点。涉及 src/pages、src/components、src/services、.umirc.ts routes、panel/portal/workbench 页面组织或清理 features/components 旧目录时使用。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/magicwebportal-umi-structure/SKILL.md"
+    },
+    {
       "id": "mcp-builder",
       "name": "mcp-builder",
       "version": "1.0.0",
@@ -1013,9 +1033,9 @@
     {
       "id": "skill-capability-index",
       "name": "skill-capability-index",
-      "version": "1.1.1",
+      "version": "1.3.0",
       "author": "unknown",
-      "description": "用于在当前多项目 skill 集合中选择唯一主 skill 并降低重复触发歧义，覆盖项目初始化、module/initiator、application/event、magicOrm、magicBase、magicRunner、magicCas、magicFile、magicModulesRepo、magicEngine 等能力边界；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
+      "description": "用于在当前任务中选择唯一主 skill 并降低重复触发歧义，覆盖 skill 管理、通用 Go 服务初始化、运行单元生命周期、应用运行时、基础框架能力与通用重构场景；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
       "tags": null,
       "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
@@ -1114,6 +1134,16 @@
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/webapp-testing/SKILL.md"
+    },
+    {
+      "id": "workorch-core-template-boundary",
+      "name": "workorch-core-template-boundary",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "在 WorkOrch 开发、评审或排查中涉及 kernel/orchestrator/appservice、workspaceTemplate、Soul、DoD、evidence policy、prompt/context、ticket/approval、runtime block、memory 或 e2e 时使用；用于强制核对 WorkOrch 基础能力与 workspaceTemplate 业务策略边界，避免把具体场景、语言、工具或模板规则写入 core 通用流程。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/workorch-core-template-boundary/SKILL.md"
     },
     {
       "id": "xlsx",
