@@ -3,7 +3,7 @@ name: go-module-initiator-lifecycle
 description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.1.0"
+  version: "1.1.1"
   author: "rangh"
   created_at: "2026-04-18T21:51:51+08:00"
 ---
@@ -118,6 +118,8 @@ if err != nil {
 ## 顺序和依赖
 
 - 基础资源类 initiator 先于业务运行单元准备。
+- 应用入口负责通过显式 import 选择要注册的 initiator 和 module；不要让业务实现包的间接 import 决定运行单元是否注册。
+- 如果一个应用入口需要共享 repository、event hub、route registry 或跨模块 service，可新增应用 runtime initiator 作为窄接口依赖容器，再由各 module 在 `Setup` 中通过 `initiator.GetEntity` 获取。
 - 运行单元不应在 `init()` 中读取配置、连接数据库或注册路由。
 - 运行单元间依赖优先通过明确接口、事件或公共 client 表达，不要隐式依赖启动顺序。
 - `Weight` 只解决同类插件内顺序，不应用来隐藏架构依赖。
@@ -154,3 +156,5 @@ GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./int
 - route 注册不早于依赖 ready
 - 没有在 `init()` 中做重副作用
 - 测试和文档覆盖新增生命周期行为
+- 入口显式 import 清单与预期加载模块一致
+- 旧实现根目录和旧 import 路径已清零，例如不再残留 `<entry-root>/<entry-name>/server` 或 `internal/<entry-name>` 中间态实现包

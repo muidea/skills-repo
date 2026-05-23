@@ -32,6 +32,16 @@
       "repository_path": "skills/canvas-design/SKILL.md"
     },
     {
+      "id": "code-cleanup-regression-guard",
+      "name": "code-cleanup-regression-guard",
+      "version": "1.0.0",
+      "author": "unknown",
+      "description": "用于执行失效代码、兼容代码、fallback、legacy 文档或结构清理前的回归防护流程，要求先识别业务边界、运行时闭环、真实外部系统行为和验收基线，避免误删仍支撑 MVP 或端到端流程的代码。",
+      "tags": null,
+      "repository": "skills-repo",
+      "repository_path": "skills/code-cleanup-regression-guard/SKILL.md"
+    },
+    {
       "id": "design-readiness-auditor",
       "name": "设计完备性评审专家",
       "version": "1.2.0",
@@ -85,7 +95,7 @@
     {
       "id": "go-modular-project-bootstrap",
       "name": "go-modular-project-bootstrap",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "author": "unknown",
       "description": "用于初始化类似现有 Go 多应用、多运行单元服务套件的新项目骨架，覆盖仓库结构、应用入口、运行单元生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
       "tags": null,
@@ -96,7 +106,7 @@
     {
       "id": "go-module-initiator-lifecycle",
       "name": "go-module-initiator-lifecycle",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,
@@ -107,7 +117,7 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.1.0",
+      "version": "2.1.2",
       "author": "unknown",
       "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
       "tags": null,
