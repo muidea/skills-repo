@@ -2,7 +2,7 @@
 name: lsp-bridge-install-usage
 description: 用于在任意项目中安装、接入和验证 lsp-bridge MCP Server，覆盖在线安装路径选择、用户本地 bin 默认规则、LSP 依赖、MCP Client 配置、项目级 mcp-config.json 与故障排查。需要为项目启用 LSP 语义工具、配置 lsp-bridge、核对安装位置或复用统一安装流程时使用。
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   author: "rangh"
   created_at: "2026-05-23T11:18:44+08:00"
 ---
@@ -17,6 +17,8 @@ metadata:
 - 用户要在某个项目中配置 MCP Client 的 `mcpServers.lsp-bridge`。
 - 项目需要通过 `gopls`、`pyright-langserver`、`rust-analyzer`、`typescript-language-server`、`bash-language-server` 等 LSP server 提供代码语义能力。
 - 需要确认 `LSP_BRIDGE_INSTALL_DIR`、`LSP_BRIDGE_HOME`、`LSP_BRIDGE_CONFIG`、`PATH` 的实际路径和保留位置。
+- 需要检查后端 LSP server 是否缺失、是否正在运行，或需要通过 `lsp_repair` 输出修复建议。
+- 需要为大项目配置 LSP server 复用、空闲回收、实例上限、超时和结果截断策略。
 
 ## 工作流程
 
@@ -50,7 +52,7 @@ curl -fsSL https://raw.githubusercontent.com/muidea/lsp-bridge/master/scripts/in
 固定版本或跳过默认 LSP 依赖：
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/muidea/lsp-bridge/master/scripts/install.sh | LSP_BRIDGE_VERSION=v0.1.2 bash
+curl -fsSL https://raw.githubusercontent.com/muidea/lsp-bridge/master/scripts/install.sh | LSP_BRIDGE_VERSION=v0.1.4 bash
 curl -fsSL https://raw.githubusercontent.com/muidea/lsp-bridge/master/scripts/install.sh | INSTALL_PYRIGHT=0 INSTALL_GOPLS=0 bash
 ```
 
@@ -75,6 +77,19 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
 
 ```json
 {
+  "runtime": {
+    "idle_ttl_sec": 1800,
+    "max_instances": 8,
+    "max_restarts": 3,
+    "restart_backoff_ms": 1000
+  },
+  "performance": {
+    "default_timeout_ms": 5000,
+    "initialize_timeout_ms": 30000,
+    "max_references": 50,
+    "max_diagnostics": 100,
+    "max_hover_chars": 4000
+  },
   "languages": {
     "go": {
       "command": ["gopls", "serve"]
@@ -94,6 +109,13 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
   }
 }
 ```
+
+运行时配置原则：
+
+- `runtime.idle_ttl_sec` 用于回收长时间空闲的 LSP server，避免无界常驻。
+- `runtime.max_instances` 用于限制 `(root_path, lang_id)` 实例数量，超过后按空闲 LRU 回收。
+- `performance.default_timeout_ms` 和 `initialize_timeout_ms` 用于限制请求等待时间，避免大项目卡死调用链。
+- `max_references`、`max_diagnostics`、`max_hover_chars` 用于限制返回规模；如果被截断，工具结果应包含 `truncated`、`limit`、`complete` 等元信息。
 
 6. 配置 MCP Client
    - 如果 `lsp-bridge` 已在 `PATH` 中，可以用短命令。
@@ -138,6 +160,17 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
 - `lsp_hover`
 - `lsp_diagnostics`
 - `lsp_references`
+- `lsp_status`
+- `lsp_shutdown`
+- `lsp_repair`
+
+8. 检查状态和修复
+   - 接入完成后调用 `lsp_status`，确认实例状态、后端 LSP server 命令、依赖存在性和运行状态。
+   - 可以传入 `root_path` 和 `lang_id` 检查尚未启动实例的依赖是否存在。
+   - 发现缺失依赖、PATH 不可见、实例异常退出时，优先调用 `lsp_repair` 获取修复建议。
+   - `lsp_repair` 默认只返回建议；`apply=true` 只允许执行安全的实例级修复，例如重启已经存在但进程退出的实例。
+   - 安装缺失依赖、修改 PATH、改写 `mcp-config.json` 或 shell rc 只能输出建议，不能自动执行，除非用户明确授权。
+   - 需要释放资源时调用 `lsp_shutdown` 关闭指定 `(root_path, lang_id)` 实例，或使用 `{"all": true}` 关闭全部实例。
 
 ## 验证
 
@@ -150,6 +183,8 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
   - Rust: `command -v rust-analyzer`
   - TypeScript/JavaScript: `command -v typescript-language-server`
   - Shell: `command -v bash-language-server`
+- 运行时验证：调用 `lsp_status`，确认 `server.found`、`server.running`、`server.healthy` 符合预期。
+- 修复验证：调用 `lsp_repair`，确认建议动作明确；只有用户授权时才按建议安装依赖或调整配置。
 - 功能验证：对目标项目执行 `lsp_initialize`，再调用 `lsp_hover` 或 `lsp_diagnostics`。
 
 ## 故障处理
@@ -157,6 +192,10 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
 - `lsp-bridge: command not found`: 检查 shell rc 是否加载，或在 MCP Client 中使用绝对路径。
 - `read config` 失败或配置未生效：把 `LSP_BRIDGE_CONFIG` 改成绝对路径，并确认 MCP Client 传入了 env。
 - 初始化失败且提示 LSP server 不存在：安装对应语言的 LSP server，或在 `mcp-config.json` 中写入正确命令。
+- `lsp_status` 显示 `server.found=false`: 检查对应 LSP server 是否安装，或把可执行文件所在目录加入 MCP Server 进程可见的 `PATH`。
+- `lsp_status` 显示实例 `exited`: 下次请求会按配置自动重启；也可以调用 `lsp_repair` 获取安全重启建议。
+- 查询返回 `truncated=true` 或 `complete=false`: 结果不应被视为全量，按需要提高 `performance.max_references`、`max_diagnostics`、`max_hover_chars` 或缩小查询范围。
+- LSP server 长期占用资源：调低 `runtime.idle_ttl_sec` 或 `runtime.max_instances`，或通过 `lsp_shutdown` 显式关闭实例。
 - Go 项目语义不完整：确认在正确的 module/workspace 根目录调用 `lsp_initialize`，并检查 `go env`、`go.mod`、`go.work`。
 - Node 类 LSP 不可用：确认 `node`、`npm`、`$LSP_BRIDGE_HOME/.deps/node/node_modules/.bin` 或项目 `node_modules/.bin` 可用。
 - 多项目同时使用：每个项目保留自己的 `mcp-config.json`，MCP Client 通过不同 server 配置或 env 指向对应配置。
@@ -171,6 +210,8 @@ export PATH="$LSP_BRIDGE_HOME/bin:$PATH"
 
 - 向用户报告最终安装根目录、二进制路径、配置文件路径和 MCP Client 配置片段。
 - 明确哪些 LSP 依赖已安装，哪些需要项目自行补充。
+- 报告 `lsp_status` 的关键结果，包括实例状态、后端 LSP server 是否找到、是否运行、是否健康。
+- 如果执行或建议 `lsp_repair`，说明哪些动作已应用，哪些动作只给出建议且需要用户授权。
 - 如果修改了项目配置文件，列出具体文件和验证命令。
 - 如果创建或更新了 reusable skill，先 validate，再通过 `skill-hub feedback <skill-id> --force` 归档到本地默认 skill 仓库；不要自动远程 push。
 
