@@ -3,7 +3,7 @@ name: go-application-event-runtime
 description: 用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.1"
+  version: "1.0.2"
   author: "rangh"
   created_at: "2026-04-18T22:09:00+08:00"
 ---
@@ -54,6 +54,8 @@ metadata:
 ## 应用入口规则
 
 - 主入口优先使用 `framework/application`，不要在 `main` 里手工创建多套 hub 和 background routine。
+- `framework/plugin/initiator` 与 `framework/plugin/module` 的 side-effect imports 应集中在可执行入口 `main` 或明确入口装配文件中，表示该进程按需启用哪些运行单元。
+- 业务 `app` 包、service 包和 `biz/bootstrap` 包不要通过空白 import 控制 module 启用；这些包应接收 framework 传入的依赖或显式 runtime exports。
 - 一个进程默认只应有一套应用级 `EventHub` / `BackgroundRoutine`，除非明确需要隔离运行域。
 - `Startup` 失败必须返回 `*cd.Error`，不要用 `panic` 或裸 `log.Fatal` 处理常规启动错误。
 - `Run` 成功后才能认为服务 ready；不要在单个运行单元里私自标记全局 ready。
@@ -105,6 +107,17 @@ metadata:
 - 事件发布不能早于订阅方依赖准备完成，除非业务明确允许丢弃或延迟处理
 - 跨运行单元通信优先用事件或显式 helper 接口，不要通过全局变量偷取 hub
 - 应用关闭时依赖顺序是 service 先停，再停 background routine，再 terminate event hub；不要反向关闭
+- service 或 runtime 自己持有的局部 module lifecycle 在关闭时应尽量继续 teardown 后续模块并聚合错误，然后再释放 EventHub。
+- 如果需要在 framework/service 外部构造局部 runtime，不要复用全局 plugin manager；使用显式 lifecycle 列表，并只通过窄接口 exports 暴露能力。
+- 配置、repository、client、scheduler 等运行时依赖优先从 Startup/Setup 注入到 service/runtime/use-case，不要在后台任务或事件 handler 中散乱读取全局单例。
+
+## Module 通讯边界
+
+- 状态机裁决类事件使用同步通道，确保发布方拿到错误或拒绝结果；纯 UI/observability 通知使用异步通道。
+- workspace/run/step 等有作用域的事件必须携带对应 ID，并为同一业务对象绑定稳定 lane key。
+- observer 中只做轻量转发或状态投影；长耗时 resume、recovery、snapshot warm、governance continuation 应提交到 `BackgroundRoutine`。
+- shutdown 或 teardown 后不得继续向 `BackgroundRoutine` 提交任务；scheduler helper 应能感知关闭状态。
+- HTTP/TUI handler 不直接操作跨模块状态机；它们应调用 appservice 或明确的 service 接口，由对应 owner 模块完成转换。
 
 ## 验证
 
@@ -131,3 +144,8 @@ GOCACHE=/tmp/go-application-event-runtime-gocache go test ./internal/initiators/
 - shutdown 后没有继续提交后台任务
 - ready 状态不早于 `service.Run` 成功
 - 相关 README、设计文档或 skill 已同步
+
+## Formatter
+
+- Markdown/YAML: run `skill-hub validate go-application-event-runtime --links` before feedback.
+- Go examples: run `gofmt -w <files>` when adding real `.go` example files.

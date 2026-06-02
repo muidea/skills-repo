@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/<unit-root>/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。
-version: 2.1.2
+version: 2.2.0
 ---
 
 # Go Multi Module Development
@@ -41,6 +41,7 @@ version: 2.1.2
    - `magicEngine` 负责 HTTP
    - `magicOrm` 负责模型和持久化
    - 业务仓库在这些基础库之上封装入口、运行单元和对外能力
+   - 使用 `magicCommon/framework` 时，运行单元启用权归入口装配层，不归业务 bootstrap 或普通 package
 2. 先确定当前仓库已经采用的目录与命名
    - 入口可能在 `<entry-root>/<entry-name>/`
    - 运行单元可能在 `internal/<unit-root>/<group-path>/<unit>/`
@@ -76,17 +77,33 @@ version: 2.1.2
 - 先看现有运行单元，不要凭空造新分层。
 - 如果仓库使用 `magicCommon/framework/plugin/module` 生命周期，入口优先保持 `module.Register(New()) -> Setup() -> Run() -> Teardown()` 这条链。
 - 多运行单元应用入口应通过显式 import 选择本入口需要加载的 initiator 和 modules；不要依赖某个实现包被业务代码间接 import 来触发注册。
+- framework side-effect import 只放在可执行入口 `main` 或明确入口装配文件中，用来按需启用 initiator/module；不要放在业务 `app` 包、`biz/bootstrap` 包或共享 helper 中。
 - `internal/modules/application/<entry-name>/module.go` 负责把应用服务接入 plugin module 生命周期；该 module 的实现子包按职责放到 `biz/`、`service/`、`pkg/`，不要平铺在 module 根目录。
 - 新增运行单元前先完成 `<entry-root>` / `<unit-root>` / `<group-path>` / `pkg` 落点判断，并把判断写入设计文档或变更说明。
 - 如果仓库存在“基础能力分组”和“编排/治理分组”，沿用现有名字；不要把某个项目里的 `kernel`、`blocks` 当成所有仓库的默认规范。
 - 基础层或共享 initiator 可以提供通用查询、绑定、client 构造能力，但不负责某个具体业务“缺失时如何初始化”的策略判断。
 - “当前业务运行时缺失时如何处理”属于具体服务自己的启动治理逻辑，应放在该服务自己的 startup / persistence / system 类运行单元中，不要下沉到共享基础层。
 - 如果启动链路中 `baseClient`、`persistence helper`、`route registry` 等基础依赖未就绪，后续运行单元必须 fail-fast 返回明确错误，禁止继续执行到 DAO / helper 再发生 nil pointer panic。
+- `biz/bootstrap` 可以显式组合当前运行域所需对象，但不要复用 framework plugin manager 扫描全局注册表来装配局部 runtime；局部 runtime 应使用显式 lifecycle 列表和窄接口 exports。
+- 运行配置、EventHub、BackgroundRoutine、repository/helper 等跨模块依赖优先通过构造参数、session/export 或窄接口传入，不要在 use-case 内散乱读取全局单例。
 - `biz` 负责业务和事件，不直接堆 HTTP 细节。
 - `service` 负责 route / handler / request-response。
 - `pkg/common` 放单元 ID、常量、错误、过滤器、结果。
 - `pkg/models` 放 DTO / entity / view model。
 - 如果任务只是扩展已有运行单元，优先沿用现有目录，而不是再创建新运行单元。
+
+## 6. Module 边界核对清单
+
+新增或调整运行单元时，至少核对：
+
+- 入口装配：side-effect imports 是否只在入口层，是否能按需启用/禁用 module。
+- 生命周期：`Setup` 只接线依赖，`Run` 启动订阅、route、listener 或任务，`Teardown` 幂等释放。
+- 依赖边界：initiator/helper 获取失败是否 fail-fast，是否只暴露窄接口。
+- 事件边界：同步裁决用 EventHub `Send` 或项目封装的同步发布；通知类事件用 `Post`；同一业务对象需要 lane key。
+- 后台任务：长期任务、timer、恢复扫描、异步 continuation 是否挂在 framework `BackgroundRoutine` 或统一 scheduler。
+- 状态权威：基础资源模块只维护自己的正式对象；跨模块状态机裁决放在编排/治理模块。
+- 配置读取：入口、bootstrap、configuration service 可读取全局配置；业务 use-case 优先使用注入的 config accessor。
+- 验证：补直接测试、受影响包测试、文档或 checklist。
 
 ## 7. 结构完成验收
 
@@ -117,3 +134,8 @@ version: 2.1.2
 ```bash
 GOCACHE=/tmp/go-multi-module-gocache go test ./... -count 1
 ```
+
+## Formatter
+
+- Markdown/YAML: run `skill-hub validate go-multi-module-dev --links` before feedback.
+- Go examples: run `gofmt -w <files>` when adding real `.go` example files.

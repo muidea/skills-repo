@@ -3,7 +3,7 @@ name: go-module-initiator-lifecycle
 description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.1.1"
+  version: 1.1.2
   author: "rangh"
   created_at: "2026-04-18T21:51:51+08:00"
 ---
@@ -58,6 +58,14 @@ metadata:
 - `Weight() int` 可选；未实现时使用默认权重。
 - 重复 `ID` 会注册失败；同一类型插件按权重升序执行，`Teardown` 反向执行。
 
+## Framework 接线边界
+
+- `framework/plugin/initiator` 与 `framework/plugin/module` 的 side-effect import 只放在可执行入口 `main` 或明确的入口装配文件中，用来按需启用运行单元。
+- 业务 `app` 包、`biz/bootstrap` 包和普通运行单元包不要通过空白 import 偷偷启用其他 module；运行单元是否启用应由入口装配决定。
+- 如果代码运行在 `framework/service` 外部的测试或内嵌 runtime 中，不要复用 framework plugin manager 扫描全局注册表来组装局部模块；应使用显式 lifecycle 列表，并保持 `Setup -> Run -> Teardown` 语义一致。
+- 显式 lifecycle runner 必须按声明顺序 `Setup` / `Run`，按反向顺序 `Teardown`；关闭时应尽量继续释放后续模块并聚合错误。
+- framework plugin manager 只负责应用级 service lifecycle；业务 bootstrap 不应把它当成普通依赖注入容器或局部 module registry。
+
 ## Initiator 规则
 
 `initiator` 用于提供应用级基础能力和跨运行单元依赖，例如 persistence、route registry、monitoring、pprof、cron、timer 或配置驱动 runtime 能力。
@@ -65,6 +73,7 @@ metadata:
 - 在 `init()` 中调用 `initiator.Register(New())`。
 - `ID()` 返回稳定常量，常量放在该 initiator 的 `pkg/common` 或等价公共包。
 - `Setup(eventHub, backgroundRoutine)` 只做依赖接线、配置解析、资源构造和预绑定。
+- `Setup` 必须保存 framework 传入的 `eventHub` / `backgroundRoutine`，不要自行创建第二套应用级 EventHub 或后台任务队列。
 - listener 型 initiator 必须在 `Setup` 完成 bind/listen，在 `Run` 启动 serve，在 `Teardown` 关闭 listener/server。
 - 后台任务型 initiator 在 `Setup` 保存 `eventHub` / `backgroundRoutine`，在 `Run` 注册 timer/cron/task。
 - 对外暴露能力时提供窄接口，例如 `GetRouteRegistry()`、`GetBaseClient()`，不要暴露整个实现对象。
@@ -88,6 +97,7 @@ internal/<unit-root>/<group-path>/<unit>/
 - `ID()` 返回稳定单元常量。
 - 需要调整顺序时实现 `Weight() int`，不要依赖 import 顺序。
 - `Setup` 通过 `initiator.GetEntity` 获取基础能力，完成 `biz`、`service` 构造和依赖绑定。
+- `Setup` 获取不到必要 initiator/helper 时必须 fail-fast 返回明确错误，不要构造半可用 service 或延迟到 handler 才失败。
 - `Run` 先启动 biz，再注册 route 或启动对外服务。
 - `Teardown` 做幂等释放；如果当前单元没有资源，也显式确认不需要清理。
 - `biz` 处理业务、事件、后台任务和持久化编排；`service` 只做协议、路由、请求响应适配。
@@ -150,6 +160,7 @@ GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./int
 交付前检查：
 
 - 新插件 ID 唯一
+- side-effect import 只出现在入口装配层
 - `Setup` / `Run` / `Teardown` 职责清晰
 - listener 有关闭路径
 - 后台任务挂在 `BackgroundRoutine`
@@ -158,3 +169,8 @@ GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./int
 - 测试和文档覆盖新增生命周期行为
 - 入口显式 import 清单与预期加载模块一致
 - 旧实现根目录和旧 import 路径已清零，例如不再残留 `<entry-root>/<entry-name>/server` 或 `internal/<entry-name>` 中间态实现包
+
+## Formatter
+
+- Markdown/YAML: run `skill-hub validate go-module-initiator-lifecycle --links` before feedback.
+- Go examples: run `gofmt -w <files>` when adding real `.go` example files.
