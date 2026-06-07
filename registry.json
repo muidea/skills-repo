@@ -464,7 +464,7 @@
     {
       "id": "magiccommon-runtime-lifecycle",
       "name": "magiccommon-runtime-lifecycle",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "unknown",
       "description": "用于处理 magicCommon 中 execute、task、event、framework/application 底层运行时生命周期实现，覆盖等待、排空、关闭、取消和接口语义。业务服务中的 application/EventHub/BackgroundRoutine 接线和使用优先使用 go-application-event-runtime。",
       "tags": null,
