@@ -1,11 +1,11 @@
 ---
 name: skill-hub-workflow
-description: "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between two business scenarios: creating/managing reusable local skills and consuming already managed skills inside other projects. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for application-project consumption work."
+description: "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between creating/managing reusable local skills, consuming managed skills inside projects, and enabling managed skills globally on this machine. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for project or global consumption work."
 compatibility: "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub"
 metadata:
   author: skill-hub Team
   tags: skill-hub,skills,workflow,router
-  version: 1.1.2
+  version: 1.1.7
 ---
 
 # Skill Hub Workflow Router
@@ -17,7 +17,7 @@ When `skill-hub` is installed or the current project uses `.agents/skills`, rout
 There are two primary business scenarios:
 
 1. Creating and managing reusable local skills.
-2. Using already managed skills inside another project.
+2. Using already managed skills inside another project or as machine-global agent skills.
 
 Prefer the dedicated scenario skill whenever the task is clear.
 
@@ -40,6 +40,7 @@ Use `skill-hub-project-usage` when the user wants to:
 - enable a skill with `use`
 - apply enabled skills into `.agents/skills`
 - inspect project skill status
+- enable, inspect, apply, or remove managed skills with `--global` for machine-global agent skill directories
 - feed project-local improvements back to the local skill repository
 - synchronize repositories before consuming skills
 
@@ -47,9 +48,16 @@ Use `skill-hub-project-usage` when the user wants to:
 
 - `use` records a skill in project state; it does not copy files.
 - `apply` copies enabled skills into `.agents/skills/`.
+- `use --global` records a skill in `~/.skill-hub/global-state.json`; it does not copy files.
+- `apply --global` refreshes `~/.skill-hub/global/skills/` and configured agent global skills directories.
+- `status --global` checks global desired state, source repository content, agent directories, and Skill-Hub manifests.
+- `remove --global` removes global desired state and only deletes Skill-Hub managed agent skill directories unless `--force` is explicit.
 - `feedback` writes project-local skill changes to the local default skill repository.
+- `import <skills-dir> --archive --archive-only --force` archives release-bundled or batch skill directories such as `agent-skills/*` without registering them in the current project state.
+- `repo rebuild-index [repo]` repairs repository indexes; it is not a skill archive entry point.
 - `push` is the explicit remote publication step. Never run it automatically.
 - `pull` and `repo sync` synchronize remote repositories into local repositories; they are not remote publication.
+- `upgrade` updates the skill-hub binary from GitHub Releases; it is not a skill repository sync and does not publish local skill changes.
 - In `serve` mode, `secretKey` is only required for remote push.
 - `target` and compatibility metadata are descriptive; do not branch business logic by target.
 
@@ -59,9 +67,16 @@ For authoring reusable skills:
 
 ```bash
 skill-hub create <skill-id>
-skill-hub validate <skill-id> --links
-skill-hub feedback <skill-id> --dry-run
-skill-hub feedback <skill-id> --force
+skill-hub validate --pattern <skill-id> --links
+skill-hub feedback --pattern <skill-id> --dry-run
+skill-hub feedback --pattern <skill-id> --force
+```
+
+For release-bundled or batch skill directories:
+
+```bash
+skill-hub import agent-skills --archive --archive-only --force
+skill-hub repo rebuild-index
 ```
 
 For consuming managed skills in a project:
@@ -71,9 +86,27 @@ skill-hub init
 skill-hub repo sync --json
 skill-hub list
 skill-hub search <keyword>
-skill-hub use <skill-id>
+skill-hub use --pattern <skill-id>
 skill-hub apply
+skill-hub apply --pattern <skill-id>
 skill-hub status
+```
+
+For enabling managed skills globally on this machine:
+
+```bash
+skill-hub list
+skill-hub search <keyword>
+skill-hub use --pattern <skill-id> --global --agent codex
+skill-hub status --global
+skill-hub apply --global --dry-run
+skill-hub apply --global
+```
+
+For removing machine-global skills:
+
+```bash
+skill-hub remove <skill-id> --global --agent codex
 ```
 
 For remote publication, only after explicit user approval:
@@ -82,6 +115,15 @@ For remote publication, only after explicit user approval:
 skill-hub push --dry-run --json
 skill-hub push --message "update skills"
 ```
+
+For updating the installed `skill-hub` binary:
+
+```bash
+skill-hub upgrade --check
+skill-hub upgrade --yes
+```
+
+`upgrade` verifies Release sha256 archives, replaces the current binary on Linux/macOS, refreshes bundled `skill-hub-*` agent workflow skills, and restarts registered running `serve` instances unless disabled.
 
 ## Serve Troubleshooting
 
@@ -93,8 +135,9 @@ skill-hub serve stop <name>
 skill-hub serve start <name>
 ```
 
-The latest installer restarts running registered `serve` instances after replacing the binary:
+The latest installer and `skill-hub upgrade --yes` restart running registered `serve` instances after replacing the binary:
 
 ```bash
 curl -s https://raw.githubusercontent.com/muidea/skill-hub/master/scripts/install-latest.sh | bash
+skill-hub upgrade --yes
 ```

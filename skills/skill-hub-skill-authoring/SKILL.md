@@ -5,7 +5,7 @@ compatibility: "Designed for Claude Code, Cursor, OpenCode, and other AI coding 
 metadata:
   author: skill-hub Team
   tags: skill-hub,skill-authoring,skills,validation,feedback
-  version: 1.0.2
+  version: 1.0.4
 ---
 
 # Skill Hub Skill Authoring
@@ -24,8 +24,8 @@ For skill-hub managed skills, always anchor creation on:
 
 ```bash
 skill-hub create <skill-id>
-skill-hub validate <skill-id> --links
-skill-hub feedback <skill-id> --dry-run
+skill-hub validate --pattern <skill-id> --links
+skill-hub feedback --pattern <skill-id> --dry-run
 ```
 
 ## Authoring Model
@@ -34,6 +34,8 @@ skill-hub feedback <skill-id> --dry-run
 - The required entry point is `.agents/skills/<skill-id>/SKILL.md`.
 - The default skill repository under `~/.skill-hub/repositories/<default>/` is the archive source for reusable skills.
 - `feedback` copies project-local skill content back to the local default skill repository.
+- `import <skills-dir> --archive --archive-only --force` is the archive path for existing skill directories outside the standard project workspace, including release-bundled `agent-skills/*`, when they should not be registered in the current project state.
+- `repo rebuild-index [repo]` repairs stale `registry.json` indexes; do not use manual directory copies as an archive workflow.
 - `push` publishes local repository changes to a remote and must only run after explicit user approval.
 - Compatibility metadata is descriptive. Do not create target-specific branches or write `preferred_target`.
 
@@ -88,14 +90,14 @@ Every new skill must include a concise formatter section in the body:
 ```markdown
 ## Formatter
 
-- Markdown/YAML: run `skill-hub validate <skill-id> --links` before feedback.
+- Markdown/YAML: run `skill-hub validate --pattern <skill-id> --links` before feedback.
 - Scripts/code: use the formatter already configured by the target project or repository. If none exists, state the expected formatter explicitly.
-- Run formatting before `skill-hub feedback <skill-id> --force`.
+- Run formatting before `skill-hub feedback --pattern <skill-id> --force`.
 ```
 
 Choose formatter commands by content:
 
-- Markdown/YAML-only skills: use stable Markdown formatting plus `skill-hub validate <skill-id> --links`.
+- Markdown/YAML-only skills: use stable Markdown formatting plus `skill-hub validate --pattern <skill-id> --links`.
 - Go scripts or examples: use `gofmt -w <files>`.
 - Python scripts: use the repository formatter such as `ruff format <files>` or `black <files>`.
 - JavaScript or TypeScript examples: use the repository script such as `npm run format` or the configured `prettier`.
@@ -114,7 +116,9 @@ skill-hub register <skill-id>
 Import skills from an existing directory when migrating content:
 
 ```bash
-skill-hub import --path <dir>
+skill-hub import <skills-dir>
+skill-hub import <skills-dir> --archive --force
+skill-hub import <skills-dir> --archive --archive-only --force
 ```
 
 Use `--skip-validate` only when intentionally staging invalid content for later repair.
@@ -124,21 +128,21 @@ Use `--skip-validate` only when intentionally staging invalid content for later 
 Validate frontmatter and local links:
 
 ```bash
-skill-hub validate <skill-id>
-skill-hub validate <skill-id> --links
+skill-hub validate --pattern <skill-id>
+skill-hub validate --pattern <skill-id> --links
 ```
 
 Preview project status:
 
 ```bash
-skill-hub status <skill-id>
-skill-hub status <skill-id> --json
+skill-hub status --pattern <skill-id>
+skill-hub status --pattern <skill-id> --json
 ```
 
 Use automatic frontmatter repair only when the user accepts file edits:
 
 ```bash
-skill-hub validate <skill-id> --fix
+skill-hub validate --pattern <skill-id> --fix
 ```
 
 Run path and duplicate checks when reorganizing skills:
@@ -157,16 +161,22 @@ skill-hub sync-copies --canonical .agents/skills --scope .
 
 ## Archive To The Local Skill Repository
 
+Use the correct archive entry point for the source location:
+
+- Project workspace `.agents/skills/<skill-id>`: use `feedback`.
+- Existing or release-bundled skill directory such as `agent-skills/<skill-id>`: use `import <skills-dir> --archive --archive-only --force`.
+- Stale repository index after abnormal local edits: use `repo rebuild-index [repo]`.
+
 Preview the archive diff:
 
 ```bash
-skill-hub feedback <skill-id> --dry-run
+skill-hub feedback --pattern <skill-id> --dry-run
 ```
 
 Archive the skill to the local default repository:
 
 ```bash
-skill-hub feedback <skill-id> --force
+skill-hub feedback --pattern <skill-id> --force
 ```
 
 For many skills:
@@ -175,10 +185,17 @@ For many skills:
 skill-hub feedback --all --force --json
 ```
 
+For bundled or batch directories:
+
+```bash
+skill-hub import agent-skills --archive --archive-only --force
+skill-hub repo rebuild-index
+```
+
 After feedback, confirm the project and repository copies are synced:
 
 ```bash
-skill-hub status <skill-id> --json
+skill-hub status --pattern <skill-id> --json
 ```
 
 ## Publish Only When Explicitly Requested

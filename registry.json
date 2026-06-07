@@ -1064,9 +1064,9 @@
     {
       "id": "skill-hub-project-usage",
       "name": "skill-hub-project-usage",
-      "version": "1.0.1",
+      "version": "1.0.6",
       "author": "unknown",
-      "description": "Use when helping an application or business project consume skills already managed by skill-hub. Guides agents through initializing the project, syncing repositories, listing/searching managed skills before use, selecting a suitable skill only when one exists, enabling skills with use, applying them to .agents/skills, checking status, and feeding project-local improvements back to the local skill repository without pushing remotely unless explicitly requested.",
+      "description": "Use when helping an application or business project consume skills already managed by skill-hub, or when enabling managed skills globally on this machine for Codex, OpenCode, or Claude. Guides agents through initializing the project when needed, syncing repositories, listing/searching managed skills before use, selecting a suitable skill only when one exists, enabling skills with use or use --global, applying them to .agents/skills or agent global skills directories, checking status, and feeding project-local improvements back to the local skill repository without pushing remotely unless explicitly requested.",
       "tags": null,
       "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
       "repository": "skills-repo",
@@ -1075,7 +1075,7 @@
     {
       "id": "skill-hub-skill-authoring",
       "name": "skill-hub-skill-authoring",
-      "version": "1.0.2",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "Primary workflow when creating or updating skills in an environment where skill-hub is installed, available, or used to manage skills. Use this before the generic skill-creator for skill-hub managed skills. Covers creating, repairing, validating, registering, importing, archiving, and otherwise managing reusable local skills with skill-hub; authoring Chinese-by-default SKILL.md files; declaring the matching formatter; maintaining .agents/skills content; syncing local project skill edits back to the default skill repository; and previewing remote push without publishing unless explicitly requested.",
       "tags": null,
@@ -1086,9 +1086,9 @@
     {
       "id": "skill-hub-workflow",
       "name": "skill-hub-workflow",
-      "version": "1.1.2",
+      "version": "1.1.7",
       "author": "unknown",
-      "description": "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between two business scenarios: creating/managing reusable local skills and consuming already managed skills inside other projects. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for application-project consumption work.",
+      "description": "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between creating/managing reusable local skills, consuming managed skills inside projects, and enabling managed skills globally on this machine. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for project or global consumption work.",
       "tags": null,
       "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
       "repository": "skills-repo",
