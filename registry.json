@@ -84,7 +84,7 @@
     {
       "id": "go-application-event-runtime",
       "name": "go-application-event-runtime",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
       "tags": null,
@@ -106,7 +106,7 @@
     {
       "id": "go-module-initiator-lifecycle",
       "name": "go-module-initiator-lifecycle",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,

@@ -3,7 +3,7 @@ name: go-application-event-runtime
 description: 用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.5"
+  version: 1.0.6
   author: "rangh"
   created_at: "2026-04-18T22:09:00+08:00"
 ---
@@ -36,6 +36,7 @@ metadata:
 
 - `framework/application/application.go`
 - `framework/service/service.go`
+- `framework/service/lifecycle.go`
 - `event/event.go`
 - `event/hub.go`
 - `task/background.go`
@@ -46,9 +47,11 @@ metadata:
 
 - `application.Get()` 创建默认 `BackgroundRoutine` 和 `EventHub`
 - `application.Startup(service)` 初始化配置，并把同一组 `eventHub` / `backgroundRoutine` 传给 `service.Startup`
+- `application.StartupWithOptions(service, Options)` 可显式传入 `ConfigDir`、`ServiceName`、外部 `EventHub`、外部 `BackgroundRoutine` 和 runtime ownership；应用入口已有明确配置目录时优先用它表达配置注入，而不是只依赖环境变量副作用
 - `service.Startup` 再传给 `initiator.Setup` 和 plugin `module` 的 `Setup`
 - `application.Run()` 调用 `service.Run()`
 - `application.Shutdown()` 依次关闭 service、background routine、event hub，然后重建新的默认实例并重置配置和健康状态
+- `framework/service.LifecycleService` 适合普通 Go `Startup(ctx) error` / `Run(ctx) error` / `Shutdown(ctx) error` 生命周期；需要接入 `framework/service.Service` 时使用 `service.AdaptLifecycle`
 - 默认队列容量可由 `BG_TASK_QUEUE_SIZE` 和 `HUB_EVENT_QUEUE_SIZE` 覆盖
 
 ## 应用入口规则
@@ -56,8 +59,10 @@ metadata:
 - 主入口优先使用 `framework/application`，不要在 `main` 里手工创建多套 hub 和 background routine。
 - `framework/plugin/initiator` 与 `framework/plugin/module` 的 side-effect imports 应集中在可执行入口 `main` 或明确入口装配文件中，表示该进程按需启用哪些运行单元。
 - 业务 `app` 包、service 包和 `biz/bootstrap` 包不要通过空白 import 控制 module 启用；这些包应接收 framework 传入的依赖或显式 runtime exports。
+- 入口如果需要在 server、interactive、remote 等模式间切换，可把每个模式实现为 `framework/service.LifecycleService`；本地不要再复制同形生命周期接口。
 - 一个进程默认只应有一套应用级 `EventHub` / `BackgroundRoutine`，除非明确需要隔离运行域。
 - `Startup` 失败必须返回 `*cd.Error`，不要用 `panic` 或裸 `log.Fatal` 处理常规启动错误。
+- 当把框架返回的 `*cd.Error` 桥接成 Go `error` 时必须显式判断 nil 后再返回；不要直接 `return application.Run(ctx)`，否则 typed nil 指针会变成非 nil `error` 接口，入口可能误判失败并提前 shutdown。
 - `Run` 成功后才能认为服务 ready；不要在单个运行单元里私自标记全局 ready。
 - 退出路径必须调用 `application.Shutdown()`，不要只关闭 HTTP server 或某个局部运行单元。
 - 测试中需要重置单例时使用框架提供的 test reset 能力，不要直接改全局变量。

@@ -3,7 +3,7 @@ name: go-module-initiator-lifecycle
 description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: 1.1.5
+  version: 1.1.6
   author: "rangh"
   created_at: "2026-04-18T21:51:51+08:00"
 ---
@@ -44,6 +44,7 @@ metadata:
 先核对当前仓库是否 vendored 或直接依赖 `magicCommon`，再读取对应版本：
 
 - `framework/service/service.go`
+- `framework/service/lifecycle.go`
 - `framework/plugin/common/util.go`
 - `framework/plugin/initiator/initiator.go`
 - `framework/plugin/module/module.go`
@@ -57,6 +58,8 @@ metadata:
 - `Setup` 和 `Teardown` 可选；缺失时由插件管理器忽略 `NotFound`。
 - `Weight() int` 可选；未实现时使用默认权重。
 - 重复 `ID` 会注册失败；同一类型插件按权重升序执行，`Teardown` 反向执行。
+- 新版本框架提供 `RegisterE` 与 `MustRegister` 时，生产入口可继续使用现有 `Register(New())` 约定；需要在测试或脚手架中显式处理重复 ID / 非法插件错误时优先用 `RegisterE`。
+- 普通进程级生命周期可以实现 `framework/service.LifecycleService`，再用 `service.AdaptLifecycle` 接入 `framework/service.Service`；plugin module 仍用于按入口选择启用的运行单元。
 
 ## Framework 接线边界
 
