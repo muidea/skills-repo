@@ -3,7 +3,7 @@ name: go-module-initiator-lifecycle
 description: 用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: 1.1.2
+  version: 1.1.5
   author: "rangh"
   created_at: "2026-04-18T21:51:51+08:00"
 ---
@@ -65,6 +65,11 @@ metadata:
 - 如果代码运行在 `framework/service` 外部的测试或内嵌 runtime 中，不要复用 framework plugin manager 扫描全局注册表来组装局部模块；应使用显式 lifecycle 列表，并保持 `Setup -> Run -> Teardown` 语义一致。
 - 显式 lifecycle runner 必须按声明顺序 `Setup` / `Run`，按反向顺序 `Teardown`；关闭时应尽量继续释放后续模块并聚合错误。
 - framework plugin manager 只负责应用级 service lifecycle；业务 bootstrap 不应把它当成普通依赖注入容器或局部 module registry。
+- initiator/helper 只能暴露 repository、EventHub、runtime policy、route registry、client factory 等基础装配能力；禁止把它做成跨 owner module 的 `Service` 注册表。
+- 不要在 helper 上增加 `SetXService` / `XService()` 或在 bootstrap exports 中增加跨 owner `ServiceExports`。需要运行期注入时，优先注入窄基础能力或 EventHub-backed adapter。
+- 一个运行单元需要另一个 owner 的正式状态时，生产路径必须通过 EventHub command event 与 owner module 通讯；不能在 `Setup` 中直接注入对方 service 或正式 state repository。
+- shared runtime policy、execution request/result、artifact continuation 等跨运行单元契约应放在基础 contract 包中；initiator 可以暴露这些基础契约或 provider，但不要 import 某个 owner module 的 model 来表达通用 runtime contract。
+- framework plugin manager 不能作为业务 bootstrap 的 service locator；如果某个测试、CLI 或嵌入式 runtime 必须局部启动模块，使用显式 lifecycle runner，并通过窄 exports 传入基础能力。
 
 ## Initiator 规则
 
@@ -77,6 +82,8 @@ metadata:
 - listener 型 initiator 必须在 `Setup` 完成 bind/listen，在 `Run` 启动 serve，在 `Teardown` 关闭 listener/server。
 - 后台任务型 initiator 在 `Setup` 保存 `eventHub` / `backgroundRoutine`，在 `Run` 注册 timer/cron/task。
 - 对外暴露能力时提供窄接口，例如 `GetRouteRegistry()`、`GetBaseClient()`，不要暴露整个实现对象。
+- 对外暴露能力不应包含业务 owner service facade。即使为了运行期装配需要 initiator，也只传递基础设施和窄 adapter，避免 application/appservice 绕过 owner module 的 EventHub 边界。
+- 如果需要在运行期注入 repository 或 runtime 能力，优先注入 repository provider、config accessor、EventHub-backed adapter 或 contract provider；不要注入 owner service 本体。
 - 常规失败返回 `*cd.Error`，不要用 `panic` 或裸 `log.Fatal`。
 
 ## 运行单元规则
@@ -99,8 +106,23 @@ internal/<unit-root>/<group-path>/<unit>/
 - `Setup` 通过 `initiator.GetEntity` 获取基础能力，完成 `biz`、`service` 构造和依赖绑定。
 - `Setup` 获取不到必要 initiator/helper 时必须 fail-fast 返回明确错误，不要构造半可用 service 或延迟到 handler 才失败。
 - `Run` 先启动 biz，再注册 route 或启动对外服务。
+- event 型运行单元必须在 `Run` 订阅 command/notification topic，在 `Teardown` 取消订阅；调用方依赖返回结果的 command topic 必须返回 `events.Response`，无 response 应视为装配或生命周期错误。
+- 运行单元间同步读写正式状态时，只发布 command envelope；owner module 在 handler 内调用自己的 service/repository 并返回 response。调用方不要直接 import owner `service` command 类型。
+- block module 只执行 runtime 技术能力或外部系统操作，不拥有 formal owner state；owner state 的 repository/service 只在对应 owner module 内访问。
 - `Teardown` 做幂等释放；如果当前单元没有资源，也显式确认不需要清理。
 - `biz` 处理业务、事件、后台任务和持久化编排；`service` 只做协议、路由、请求响应适配。
+
+### 生命周期粒度判断
+
+新增或拆分 module/block/initiator 前，先回答这些问题：
+
+- 是否需要被入口按需启用/禁用？如果不需要，通常不是新的 framework module。
+- 是否拥有自己的 `Setup`/`Run`/`Teardown` 资源、订阅、listener、timer 或后台任务？如果没有，优先 focused package。
+- 是否拥有正式状态 repository 或状态机权威？如果有，应是 owner module；如果只是执行外部能力，应是 block。
+- 是否只是 mapping、projection、payload DTO、validation、query helper 或路径 helper？如果是，放在 owner/application 内部 focused package，不要做 module。
+- 是否只有一层转调 wrapper？如果是，优先删除 wrapper 或合并回调用方。
+- 是否拆分后必须通过 `Weight` 或隐式 import 保证正确性？如果是，说明依赖没有表达清楚，不应先拆。
+- 是否拆分后需要跨 owner service 注入？如果是，说明边界设计错误，应改为 EventHub-backed adapter 或 contract DTO。
 
 ### 分组落点
 
@@ -130,9 +152,11 @@ if err != nil {
 - 基础资源类 initiator 先于业务运行单元准备。
 - 应用入口负责通过显式 import 选择要注册的 initiator 和 module；不要让业务实现包的间接 import 决定运行单元是否注册。
 - 如果一个应用入口需要共享 repository、event hub、route registry 或跨模块 service，可新增应用 runtime initiator 作为窄接口依赖容器，再由各 module 在 `Setup` 中通过 `initiator.GetEntity` 获取。
+- 如果一个应用入口需要共享 repository、event hub、route registry 或 runtime policy，可新增应用 runtime initiator 作为窄接口依赖容器，再由各 module 在 `Setup` 中通过 `initiator.GetEntity` 获取；跨 owner service 不应放入该容器。
 - 运行单元不应在 `init()` 中读取配置、连接数据库或注册路由。
 - 运行单元间依赖优先通过明确接口、事件或公共 client 表达，不要隐式依赖启动顺序。
 - `Weight` 只解决同类插件内顺序，不应用来隐藏架构依赖。
+- 不要通过提高/降低 `Weight` 来弥补缺失依赖；缺失依赖应在 `Setup` 中 fail-fast，或通过明确 initiator/helper/EventHub contract 补齐。
 - HTTP 暴露必须晚于必要依赖 ready；缺少核心依赖时不要启动半可用服务。
 - ready 状态应由 service 生命周期统一标记，不要由单个运行单元私自标记全局 ready。
 
@@ -164,6 +188,10 @@ GOCACHE=/tmp/go-module-initiator-gocache go test ./internal/initiators/... ./int
 - `Setup` / `Run` / `Teardown` 职责清晰
 - listener 有关闭路径
 - 后台任务挂在 `BackgroundRoutine`
+- owner module command topic 已在 `Run` 订阅并在 `Teardown` 释放，且调用方验证 `events.Response`
+- shared runtime contract 不依赖具体 owner module model，基础 initiator/blocks 没有反向 import owner module
+- module/block/initiator 粒度合理：没有 catch-all module，没有 wrapper-only module，没有用 `Weight` 掩盖依赖，没有为了行数拆生命周期主流程
+- initiator/helper/bootstrap 没有 `ServiceExports`、`SetXService`、`XService()` 这类跨 owner service facade
 - route 注册不早于依赖 ready
 - 没有在 `init()` 中做重副作用
 - 测试和文档覆盖新增生命周期行为

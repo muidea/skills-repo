@@ -3,7 +3,7 @@ name: go-application-event-runtime
 description: 用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.0.2"
+  version: "1.0.5"
   author: "rangh"
   created_at: "2026-04-18T22:09:00+08:00"
 ---
@@ -109,15 +109,35 @@ metadata:
 - 应用关闭时依赖顺序是 service 先停，再停 background routine，再 terminate event hub；不要反向关闭
 - service 或 runtime 自己持有的局部 module lifecycle 在关闭时应尽量继续 teardown 后续模块并聚合错误，然后再释放 EventHub。
 - 如果需要在 framework/service 外部构造局部 runtime，不要复用全局 plugin manager；使用显式 lifecycle 列表，并只通过窄接口 exports 暴露能力。
+- 局部 runtime exports 只能暴露 repository/infrastructure/config loader 等必要基础能力；不要导出跨 owner module 的 `ServiceExports`，也不要让 initiator helper 成为 `SetXService` / `XService()` service registry。
+- 共享 runtime policy、execution request/result、artifact continuation 等通用契约应位于基础 contract 包，供 initiator、blocks、kernel orchestration 和 application 共同依赖；不要让基础运行时依赖某个 owner module 的模型包。
 - 配置、repository、client、scheduler 等运行时依赖优先从 Startup/Setup 注入到 service/runtime/use-case，不要在后台任务或事件 handler 中散乱读取全局单例。
 
 ## Module 通讯边界
 
 - 状态机裁决类事件使用同步通道，确保发布方拿到错误或拒绝结果；纯 UI/observability 通知使用异步通道。
+- 跨运行单元读写正式状态、触发状态机转换或查询 owner evidence 时，使用同步 EventHub command event；owner module 必须返回 `events.Response`，调用方不能把缺失 response 当成成功。
+- owner module 在 command handler 内调用自己的 service/repository，并把结果放入 response payload；调用方只使用稳定 payload key 或 DTO，不直接 import owner `service` command 类型来构造 payload。
+- 一个 command topic 对应一个清晰意图，例如 read/list/create/update/transition/purge；不要把无关动作塞进一个万能 command payload。
+- payload 粒度应匹配 owner 的公开契约：跨 module 使用 contract DTO、owner model 或 primitive payload map；owner 内部 service command 可以存在，但不作为 EventHub 跨模块契约。
+- 读模型聚合可以在 application/facade 层组合多个 EventHub-backed reader；正式写入和状态机转换仍由 owner command 完成。
 - workspace/run/step 等有作用域的事件必须携带对应 ID，并为同一业务对象绑定稳定 lane key。
 - observer 中只做轻量转发或状态投影；长耗时 resume、recovery、snapshot warm、governance continuation 应提交到 `BackgroundRoutine`。
 - shutdown 或 teardown 后不得继续向 `BackgroundRoutine` 提交任务；scheduler helper 应能感知关闭状态。
 - HTTP/TUI handler 不直接操作跨模块状态机；它们应调用 appservice 或明确的 service 接口，由对应 owner 模块完成转换。
+- HTTP/TUI/appservice 生产代码不直接访问 kernel owner repository/service；读模型和快照也应通过 EventHub-backed reader 或 appservice query entrypoint 获取 owner state。
+- block 与 application 只能执行技术能力、外部系统操作或用户入口编排；formal owner state、状态机转换和 evidence 权威记录必须留在 owner module 或治理/编排 module。
+
+## WorkOrch 验证过的 EventHub 收口检查
+
+- command topic 的发布方必须检查同步 response，不能把无 response 当成成功。
+- owner command handler 只在 owner module 内翻译 DTO 并调用自己的 service/repository。
+- 跨 module command payload 不使用 owner service command 类型；优先使用稳定 contract DTO、owner model 或 primitive payload map。
+- 运行期注入只注入基础设施、contract provider 或 EventHub-backed adapter，不注入跨 owner service。
+- 嵌入式 runtime 和测试 runtime 使用显式 lifecycle 列表，不复用 framework plugin manager 扫描全局注册表。
+- 大文件拆分不是 EventHub 合规条件；真正需要收口的是边界违规、职责混杂、状态权威不清和通信契约过宽。
+- 信息交互粒度应避免两个极端：不要用一个全能 Event 承载所有动作，也不要为每个字段变化创建一个 topic；按业务意图、状态权威和一致性需求分 topic。
+- module/block 粒度应服务通信边界：如果两个单元总是同步互调并共享同一状态，它们可能应该属于同一 owner；如果只是纯算法或投影，应留在 focused package。
 
 ## 验证
 
@@ -143,6 +163,11 @@ GOCACHE=/tmp/go-application-event-runtime-gocache go test ./internal/initiators/
 - timer 有取消路径
 - shutdown 后没有继续提交后台任务
 - ready 状态不早于 `service.Run` 成功
+- 跨 owner command topics 使用同步路径并检查 `events.Response`
+- command payload 不引用 owner service command 类型，基础 runtime contract 不反向依赖 owner module model
+- command topic 与 payload 粒度清晰，没有万能 command，也没有无语义的过细 topic
+- runtime/session/bootstrap 未暴露跨 owner `ServiceExports` 或 service registry
+- appservice/HTTP/TUI 没有直接 owner repository/service 访问的生产残留
 - 相关 README、设计文档或 skill 已同步
 
 ## Formatter
