@@ -3,7 +3,7 @@ name: magicbase-data-capability-definition
 description: 用于基于 magicBase 定义 Application、Entity、Entity fields/constraints、Block 与 serviceExpose 能力并接入数据存储，覆盖 ApplicationDeclare/数据库绑定、Entity remote.Object/schema 注册、字段类型/主键/生成策略/viewDeclare/constraint/defaultValue/relation、blockInfo 能力声明、EntityServiceExpose 能力项开放、pkg/helper DAO 使用、kernel/public 值读写、query/write 语义和恢复校验；在应用端用 magicBase 承载业务数据或开放实体服务能力时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: 1.0.3
+  version: 1.0.4
   author: "rangh-codespace"
   created_at: "2026-04-18T22:45:00+08:00"
 ---
@@ -94,9 +94,13 @@ Blocks are entity capabilities, not normal business fields.
 - Declare block capability through top-level `blockInfo`, matching `common.BlockInfo`.
 - Keep block capability metadata separate from persisted business fields in the `remote.Object` field list.
 - Use `common.StageView`, block params, and function metadata for block-specific execution semantics.
+- `Function.Input` is resolved by `kernel/base`: use `$referenceEntity` and `$referenceValue` for whole-object references, `$referenceValue.fieldName` for original typed field values, `$referenceExtData.xxx` for request/runtime metadata, and `{fieldName}` inside ordinary strings for template rendering.
+- Prefer `$referenceExtData.namespace` for current namespace and other request-context values; do not read them from `$referenceValue.xxx` unless they are stable persisted business fields.
+- For the `todo` block, use `pendingStatuses` when a workflow has multiple active states. Keep `pendingStatus` only for legacy single-state compatibility. Use `doneStatuses` for terminal states that should close the todo.
 - Entity create/update paths run block prechecks and postchecks. Do not bypass these checks by writing entity metadata directly.
 - Block HTTP services that require application context must fail closed when the context is missing.
 - Event-only blocks, such as masking-style blocks, may intentionally have no HTTP route.
+- Event projection blocks, such as `todo`, should be attached by the owning business entity through `blockInfo`; existing entity metadata must be repaired during service initialization when the desired `blockInfo` drifts.
 
 ## Service Capability Exposure
 

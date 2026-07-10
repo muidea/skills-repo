@@ -24,29 +24,36 @@ project-root/
 
 如果当前仓库已经把 `<shared-group>` 和 `<orchestration-group>` 命名成 `blocks/kernel` 或其他名字，直接沿用，不要重命名。
 
-## 3. 共享能力分组与编排分组决策规则
+## 3. Module / Block / Initiator 决策规则
 
 先判断能力的职责边界，再创建目录。
 
-放入共享能力分组：
+定义为 module：
+
+- 功能闭环必须组合、聚合、治理或编排多个独立组件合同
+- 可以管理自身协调状态，但不能持有其他组件的 service、repository、adapter 或 callback
+- 与其他 module/block 的运行期交互只能通过 EventHub
+- 不能因为存在 repository、正式状态、route 或较多调用方就自动定义为 module
+
+定义为 block：
 
 - 围绕单一资源或单一技术能力建模
-- 对外提供稳定 CRUD、状态切换、基础校验、资源事件或公共封装
+- 可以管理自己的正式状态或运行时状态，并提供稳定 CRUD、状态切换、基础校验、资源事件或公共封装
 - 被多个上层能力复用，但自身不负责完整业务流程
 - 不主动组合多个其他运行单元来完成审核、准入、授权、发布、安装、治理等闭环
 
-放入编排/治理分组：
+定义为 initiator：
 
-- 组合多个共享能力或外部系统完成完整业务流程
-- 承载策略、模板、审核、准入、授权编排、运行态治理、安装部署、服务治理等核心业务语义
-- 需要保证跨资源一致性
-- 对外暴露的是一个业务入口，而不是单一资源的基础管理入口
+- 只提供一种无业务状态基础设施能力
+- 可以持有该能力所需的单一进程级句柄，但不管理业务状态、业务策略或多能力状态
+- 不得同时聚合 repository set、EventHub wrapper、runtime policy、route registry 等多种职责
 
 不要使用的判断方式：
 
-- 不要因为有 CRUD 表或模型就直接放入共享能力分组
+- 不要用“有状态就是 module、无状态就是 block”判断；block 允许拥有自己的状态
 - 不要因为目录名字更短或历史相似就复用已有分组
 - 不要把跨分组策略流程塞进某个基础能力单元
+- 不要让 module/block 通过直接接口注入互调；它们只能通过 EventHub 的具体事件合同协作
 - 不要在分组根目录下新增孤立 helper 包。只有带 `<unit-entry-file>` 并参与生命周期的目录才属于运行单元；单元私有 helper 放 `{unit}/internal`，跨单元共享 helper 放 `internal/pkg`
 
 ## 4. 运行单元最小结构
@@ -78,4 +85,4 @@ project-root/
 - 不要把跨运行单元公共常量塞进单个业务单元
 - 涉及 `magicOrm` 模型时，优先把模型和 filter 放进 `pkg/models` / `pkg/common`
 - 涉及 `magicEngine` route 时，优先让 `service` 做注册和 handler 适配
-- 涉及 event，先明确事件 ID、source、destination，再落到 `biz`
+- 涉及 event，先由投递组件在自己的 `pkg/events` 明确事件 ID、具体 command/data/result、source、destination，再由消费组件导入并订阅

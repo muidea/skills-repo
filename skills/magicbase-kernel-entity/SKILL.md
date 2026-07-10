@@ -3,7 +3,7 @@ name: magicbase-kernel-entity
 description: "用于处理 `kernel/base` 和 `kernel/public` 内部的应用、实体、Block、值对象和 `extData` 实现逻辑；应用侧定义 Application/Entity/Block 并接入数据存储时优先使用 magicbase-data-capability-definition。"
 compatibility: Compatible with open_code
 metadata:
-  version: 1.0.3
+  version: 1.0.4
   author: "rangh-codespace"
 ---
 # magicbase-kernel-entity
@@ -36,6 +36,9 @@ metadata:
 ## 当前稳定语义
 
 - `$referenceExtData.xxx` 只应返回基础值
+- `blockInfo.function.input` 的解析归属 `kernel/base`：`$referenceEntity`、`$referenceValue`、`$referenceValue.xxx`、`$referenceExtData.xxx` 是精确引用；普通字符串支持 `{fieldName}` 模板替换，未知占位符保留原文。
+- `namespace` 等请求上下文字段优先使用 `$referenceExtData.namespace`；只有确认字段是稳定的业务实例值时才使用 `$referenceValue.xxx`。
+- block function 调用观测归属 `kernel/base`：统一记录 blockID、block owner、eventID、action、checkType、耗时和失败原因；不要在具体 block 里重复实现同类编排日志。
 - 不直接把 `map` / `slice` / `struct` 作为默认字段值注入
 - 涉及 `remote.ObjectValue` 时优先保持字段类型稳定
 - `CreateApplication` 在数据库注册失败时应回滚应用记录

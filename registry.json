@@ -84,7 +84,7 @@
     {
       "id": "go-application-event-runtime",
       "name": "go-application-event-runtime",
-      "version": "1.0.6",
+      "version": "1.0.10",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
       "tags": null,
@@ -106,7 +106,7 @@
     {
       "id": "go-module-initiator-lifecycle",
       "name": "go-module-initiator-lifecycle",
-      "version": "1.1.6",
+      "version": "1.1.9",
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,
@@ -117,9 +117,9 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.2.3",
+      "version": "2.2.7",
       "author": "unknown",
-      "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/` 分层、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
+      "description": "用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/\u003cunit-root\u003e/`、`internal/services`、port/client 契约、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/go-multi-module-dev/SKILL.md"
@@ -157,7 +157,7 @@
     {
       "id": "magicbase-app-bootstrap",
       "name": "magicbase-app-bootstrap",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "unknown",
       "description": "用于处理 `magicBase` 的启动链路、initiator 装配、主入口调整和应用级排障。",
       "tags": null,
@@ -179,7 +179,7 @@
     {
       "id": "magicbase-data-capability-definition",
       "name": "magicbase-data-capability-definition",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "用于基于 magicBase 定义 Application、Entity、Entity fields/constraints、Block 与 serviceExpose 能力并接入数据存储，覆盖 ApplicationDeclare/数据库绑定、Entity remote.Object/schema 注册、字段类型/主键/生成策略/viewDeclare/constraint/defaultValue/relation、blockInfo 能力声明、EntityServiceExpose 能力项开放、pkg/helper DAO 使用、kernel/public 值读写、query/write 语义和恢复校验；在应用端用 magicBase 承载业务数据或开放实体服务能力时使用。",
       "tags": null,
@@ -212,7 +212,7 @@
     {
       "id": "magicbase-kernel-entity",
       "name": "magicbase-kernel-entity",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "用于处理 `kernel/base` 和 `kernel/public` 内部的应用、实体、Block、值对象和 `extData` 实现逻辑；应用侧定义 Application/Entity/Block 并接入数据存储时优先使用 magicbase-data-capability-definition。",
       "tags": null,
@@ -223,7 +223,7 @@
     {
       "id": "magicbase-module-dev",
       "name": "magicbase-module-dev",
-      "version": "1.0.3",
+      "version": "1.0.4",
       "author": "unknown",
       "description": "用于处理 `magicBase` 的 kernel/block 模块开发、路由装配和模块生命周期；如果只是定义应用侧 BlockInfo 能力并接入数据存储，优先使用 magicbase-data-capability-definition。",
       "tags": null,
@@ -299,7 +299,7 @@
     {
       "id": "magiccas-app-bootstrap",
       "name": "magiccas-app-bootstrap",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "author": "unknown",
       "description": "用于处理 `magicCas` 的启动链路、initiator 装配、主入口调整和应用级排障。",
       "tags": null,
@@ -564,7 +564,7 @@
     {
       "id": "magicfile-app-bootstrap",
       "name": "magicfile-app-bootstrap",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "unknown",
       "description": "用于处理 `magicFile` 的启动入口、模块装配和对 `magicModulesRepo` initiator 的依赖。",
       "tags": null,
@@ -607,7 +607,7 @@
     {
       "id": "magicmodulesrepo-app-bootstrap",
       "name": "magicmodulesrepo-app-bootstrap",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": "unknown",
       "description": "用于处理 `magicModulesRepo` 的启动链路、initiator 装配和 listener 生命周期问题。",
       "tags": null,
@@ -1148,7 +1148,7 @@
     {
       "id": "workorch-core-template-boundary",
       "name": "workorch-core-template-boundary",
-      "version": "1.0.2",
+      "version": "1.0.7",
       "author": "unknown",
       "description": "在 WorkOrch 开发、评审或排查中涉及 kernel/orchestrator/appservice、workspaceTemplate、Soul、DoD、evidence policy、prompt/context、ticket/approval、runtime block、memory 或 e2e 时使用；用于强制核对 WorkOrch 基础能力与 workspaceTemplate 业务策略边界，避免把具体场景、语言、工具或模板规则写入 core 通用流程。",
       "tags": null,

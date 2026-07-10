@@ -3,7 +3,7 @@ name: magicbase-module-dev
 description: "用于处理 `magicBase` 的 kernel/block 模块开发、路由装配和模块生命周期；如果只是定义应用侧 BlockInfo 能力并接入数据存储，优先使用 magicbase-data-capability-definition。"
 compatibility: Compatible with open_code
 metadata:
-  version: 1.0.3
+  version: 1.0.4
   author: "rangh-codespace"
 ---
 # magicbase-module-dev
@@ -28,6 +28,7 @@ metadata:
 - [kernel/public/module.go](magicBase/internal/modules/kernel/public/module.go)
 - [internal/modules/blocks](magicBase/internal/modules/blocks)
 - [masking/module.go](magicBase/internal/modules/blocks/masking/module.go)
+- [todo/module.go](magicBase/internal/modules/blocks/todo/module.go)
 
 ## 工作方式
 
@@ -37,8 +38,9 @@ metadata:
 4. HTTP handler 对明显客户端错误优先返回 `IllegalParam`
 5. 对依赖应用上下文的 block 接口，缺上下文时 fail-closed
 6. `masking` 是事件型 block，没有对外 HTTP 路由，不要强行补 service 路由
-7. `blockInfo` 能力声明属于实体能力定义；不要把它当成 block module 路由开发问题处理
-8. 新模块同步更新文档和 skill
+7. `todo` 是事件投影型 block，但提供查询/完成 HTTP 入口；入口必须基于应用上下文 fail-closed，并在 biz 层按应用 UUID 做数据隔离
+8. `blockInfo` 能力声明属于实体能力定义；不要把它当成 block module 路由开发问题处理
+9. 新模块同步更新文档和 skill
 
 ## 验证
 

@@ -3,7 +3,7 @@ name: magiccas-app-bootstrap
 description: "用于处理 `magicCas` 的启动链路、initiator 装配、主入口调整和应用级排障。"
 compatibility: Compatible with open_code
 metadata:
-  version: 1.0.1
+  version: 1.0.2
   author: "rangh-codespace"
 ---
 # magiccas-app-bootstrap
@@ -31,6 +31,8 @@ metadata:
 2. 优先返回 `*cd.Error`，避免把常规错误做成 `panic`
 3. 对监听器类 initiator，要求“先绑定、后启动、可关闭”
 4. 变更后至少运行 initiator 相关测试
+5. `magicCas` 是否已完成自身运行时绑定、缺失时是否需要初始化或直接失败，属于 `magicCas` 自己的启动治理逻辑，不能继续依赖共享 initiator 或 `magicBase` 替它做业务判断。
+6. `persistence` 未就绪时必须在 initiator 或 module 边界直接返回明确错误，禁止让 `role` / `namespace` DAO 在 `baseClient == nil` 的状态下继续运行。
 
 ## 验证
 

@@ -3,7 +3,7 @@ name: magicbase-app-bootstrap
 description: "用于处理 `magicBase` 的启动链路、initiator 装配、主入口调整和应用级排障。"
 compatibility: Compatible with open_code
 metadata:
-  version: 1.0.2
+  version: 1.0.3
   author: "rangh-codespace"
 ---
 # magicbase-app-bootstrap
@@ -36,6 +36,8 @@ metadata:
 4. `timer` 通过后台任务发事件，排障时同时检查 task/event 依赖是否已就绪
 5. 保持应用创建原子失败，避免数据库注册失败后留下半成功状态
 6. 变更后至少运行相关 initiator 包测试
+7. `magicBase` 只承载通用运行时能力，例如 `Application` 查询、绑定和基础 client；不要在 `magicBase` 启动链路里承接具体业务应用“是否已安装、缺失时如何补建”的业务判定。
+8. 如果上层业务应用依赖 `magicBase` client 失败，应该由业务应用自身 fail-fast 或触发自己的恢复逻辑，不要让 `magicBase` 为具体业务应用兜底初始化。
 
 ## 验证
 
