@@ -79,6 +79,8 @@ cat > "$UNIT_DIR/$ENTRY_FILE" <<EOF
 package $PACKAGE_NAME
 
 import (
+    "context"
+
     cd "github.com/muidea/magicCommon/def"
     "github.com/muidea/magicCommon/event"
     "github.com/muidea/magicCommon/framework/plugin/module"
@@ -106,13 +108,13 @@ func (s *$UNIT_PASCAL) ID() string {
     return common.${UNIT_PASCAL}Unit
 }
 
-func (s *$UNIT_PASCAL) Setup(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
+func (s *$UNIT_PASCAL) Setup(_ context.Context, eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
     s.bizPtr = biz.New(eventHub, backgroundRoutine)
     s.servicePtr = service.New(s.bizPtr)
     return nil
 }
 
-func (s *$UNIT_PASCAL) Run() (err *cd.Error) {
+func (s *$UNIT_PASCAL) Run(_ context.Context) (err *cd.Error) {
     err = s.bizPtr.Initialize()
     if err != nil {
         return
@@ -121,7 +123,7 @@ func (s *$UNIT_PASCAL) Run() (err *cd.Error) {
     return
 }
 
-func (s *$UNIT_PASCAL) Teardown() {}
+func (s *$UNIT_PASCAL) Teardown(context.Context) {}
 EOF
 
 cat > "$UNIT_DIR/biz/biz.go" <<EOF

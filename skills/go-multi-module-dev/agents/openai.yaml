@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Multi Module Dev"
-  short_description: "Build runtime units in magicCommon repos"
-  default_prompt: "Use $go-multi-module-dev to add or extend a runtime unit in this magicCommon-based Go repository while preserving the repository's existing entry and grouping conventions."
+  short_description: "Integrate Initiator, Block, Module and EventHub"
+  default_prompt: "Use $go-multi-module-dev to design or migrate this magicCommon/framework Go repository with explicit Initiator, Block, Module, EventHub, process-service, and magicEngine route boundaries."

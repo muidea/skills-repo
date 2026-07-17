@@ -47,6 +47,7 @@ project-root/
 - 只提供一种无业务状态基础设施能力
 - 可以持有该能力所需的单一进程级句柄，但不管理业务状态、业务策略或多能力状态
 - 不得同时聚合 repository set、EventHub wrapper、runtime policy、route registry 等多种职责
+- “无业务状态”不等于零字段；RouteRegistry Initiator 可以持有 router/server/listener，但只服务 HTTP 路由基础设施
 
 不要使用的判断方式：
 
@@ -54,7 +55,17 @@ project-root/
 - 不要因为目录名字更短或历史相似就复用已有分组
 - 不要把跨分组策略流程塞进某个基础能力单元
 - 不要让 module/block 通过直接接口注入互调；它们只能通过 EventHub 的具体事件合同协作
+- 不要把只有一个消费者、没有独立资源生命周期的内存索引或纯 helper 强行拆成 block
 - 不要在分组根目录下新增孤立 helper 包。只有带 `<unit-entry-file>` 并参与生命周期的目录才属于运行单元；单元私有 helper 放 `{unit}/internal`，跨单元共享 helper 放 `internal/pkg`
+
+组件必要性检查：
+
+- 是否有独立资源生命周期或正式状态 owner？
+- 是否需要独立启停、恢复、巡检或限流？
+- 是否有多个真正独立的消费者？
+- 如果删除该运行单元并改为 focused package，是否会破坏 owner 或 lifecycle 边界？
+
+以上均为否时，通常不需要独立 Block。
 
 ## 4. 运行单元最小结构
 
@@ -86,3 +97,5 @@ project-root/
 - 涉及 `magicOrm` 模型时，优先把模型和 filter 放进 `pkg/models` / `pkg/common`
 - 涉及 `magicEngine` route 时，优先让 `service` 做注册和 handler 适配
 - 涉及 event，先由投递组件在自己的 `pkg/events` 明确事件 ID、具体 command/data/result、source、destination，再由消费组件导入并订阅
+- module/block 不得通过 EventHub 返回内部 `*Store`、`*Registry`、`*Recorder` 等实现对象；这会让后续调用绕过 owner
+- process service 只驱动 application lifecycle 和进程信号，不承担业务 owner 或路由声明

@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
-description: 用于基于 magicCommon/framework 的 Go 多运行单元仓库开发，覆盖入口落点、`internal/<unit-root>/`、`internal/services`、port/client 契约、运行单元职责边界、biz/service/pkg 拆分、事件集成、路由注册、文档与测试同步。新增或扩展运行单元、调整分组落点或做跨仓联动开发时使用。
-version: 2.2.7
+description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，入口和 process service 落点，EventHub 合同，HTTP 路由注册，biz/service/pkg 拆分以及结构验收。新增、迁移或收口 framework 运行单元时使用。
+version: 2.3.0
 ---
 
 # Go Multi Module Development
@@ -32,6 +32,7 @@ version: 2.2.7
 
 - 运行单元结构和落点：`references/MODULE_STRUCTURE.md`
 - 事件协同：`references/EVENT_USAGE.md`
+- magicCommon framework 与 magicEngine 集成收口：`references/FRAMEWORK_INTEGRATION.md`
 - 最小模板和脚本：`references/TEMPLATES.md`
 - 如果任务涉及 `initiator` 接线、plugin `module` 生命周期、`Setup` / `Run` / `Teardown` 顺序，配合使用 `go-module-initiator-lifecycle`
 
@@ -62,6 +63,8 @@ version: 2.2.7
    - initiator：只提供一种无业务状态的基础设施能力；可持有该能力所需的单一进程级句柄，但不管理业务状态、策略或多能力状态
    - module 与 block 的区别由职责闭环决定，不由是否存在 repository、状态模型、调用方数量或文件规模决定
    - module/block 之间的运行期交互只能通过同一应用 `EventHub`；禁止直接注入或调用对方 service、repository、adapter、reader callback
+   - “无状态 Initiator”是指不拥有业务状态；RouteRegistry、listener、client factory 可以持有实现该单一基础设施能力所必需的进程级句柄
+   - 单消费者能力若没有独立启停、资源 owner 或后台任务，优先并回调用方或保留为 focused package，不要仅为目录对称创建 Block
 4. 再判断粒度，不要把“拆分”当作默认答案
    - 需要独立 framework module：拥有独立生命周期，且其功能闭环需要组合多个独立组件合同；可拥有协调状态、订阅、route/listener，并可被入口按需启用/禁用
    - 需要 process service：负责一个可执行进程的 mode selection、配置目录、`application.Startup/Run/Shutdown`、CLI/TUI/remote/server 编排；它实现或组合 `framework/service.LifecycleService`，但不注册为 plugin module
@@ -117,7 +120,10 @@ version: 2.2.7
 - 局部 runtime / initiator helper 不能演变成跨 owner `Service` 注册表；不要导出 `ServiceExports`、`SetXService`、`XService()` 这类 facade 给 application/appservice 绕过 owner module。
 - module/block 间需要协同时，事件投递组件在自己的 `pkg/events` 定义稳定 topic 以及具体 `Command`、`Data`、`Result` 类型；消费组件只导入投递组件的事件包、订阅对应 command，并在 handler 内调用自己的内部 service/repository。
 - 同步交互直接使用 magicCommon `event.Hub.Send` 与 `event.Result`；handler 通过 `event.Result.Set(<具体 Result>, err)` 返回结果，调用方必须校验结果存在、错误和值类型，禁止使用 `events.Response`、Envelope 或通用 command wrapper。
+- 异步通知使用 `event.Hub.Post`；Post handler 收到的 `event.Result` 可能为 nil，禁止调用 `result.Set`。需要回执、失败判定或强一致记账时必须使用 `Send`。
 - `Command`、`Data`、`Result` 中禁止用 `map[string]any`、`[]any` 或无约束 `any` 承载组件合同，也禁止通过 JSON marshal/unmarshal、反射类型表或兼容桥完成组件内传输。
+- EventHub 合同只传数据，不传 `io.Writer`、`http.ResponseWriter`、channel、数据库连接、repository、Registry、Recorder 或其它可变资源句柄；大结果使用有界 DTO、分页、游标或专用流式基础设施。
+- owner-specific port 可以作为易用接口存在，但生产实现必须只保存 EventHub、source 和 typed command mapping；不得包装或泄漏 owner 的 service/repository/可变对象。测试可提供 direct adapter，但生产装配必须扫描清零。
 - 基础 EventHub 包只保留与 magicCommon EventHub 直接使用相关的 owner-neutral helper；不要保存业务 topic alias、Envelope、Response、payload mapper、通用 subscribe/send facade 或依赖 `reflect.Type` 的运行期合同分发。
 - runtime block execute 等技术能力 topic 归 block/runtime owner 包定义；如果 contract 聚合需要识别该 topic，基础包只引用无反向依赖的 definitions 包，避免循环依赖。
 - workspace-local ID、run-local ID、ticket ID、approval ID 等跨 workspace 可能重复的对象，在跨 module command、REST handler、CLI/TUI backend 和持久化 resolution/result ID 中必须携带足够 scope；无 scope 的读取/resolve 入口只能在能解析唯一 open 对象时继续，否则必须返回 conflict，不能误操作其他 workspace。
@@ -125,6 +131,10 @@ version: 2.2.7
 - 测试可以用 repository fixture 或 fake port 覆盖局部算法，但生产扫描必须确认 application/appservice 不直接访问 kernel owner repository/service。
 - block 可以管理单一资源或单一技术能力自己的正式状态、运行时状态；一旦需要组合多个独立组件合同完成闭环，应提升为 module 或由现有 module 编排。
 - module/block 的构造参数只接收本组件内部依赖和 framework 基础设施；跨组件运行期依赖只能通过 EventHub 合同表达，不能通过 session/export、repository provider、adapter 或窄接口绕过。
+- 跨 owner 的“保存、校验、激活、通知”若涉及多个组件，由 application Module 的 biz 用例编排；HTTP handler 只做请求响应，单一资源 Block 只修改自己的状态，不能把跨组件流程塞进 handler 或伪装成 Block 内部更新。
+- framework 长期任务、周期巡检和恢复任务应使用 `task.BackgroundRoutine`；请求生命周期内且受 request context 管理的短 goroutine 可以保留，但必须有取消和回收路径。
+- `Weight()` 不能表达路由优先级或隐藏组件依赖。对 first-match router 应注册显式路径、使用路由优先级能力，或集中声明顺序；禁止依赖“某 Module 先 Run，所以 `/**` 不会吞路由”。
+- RouteRegistry Initiator 只向 Module/Block 暴露 `GetRouteRegistry()` 等窄 helper；业务组件不得取得 `http.Server`、listener 或 handler。路由由 service 层声明，listener 的启用时机必须保证路由已就绪，避免启动窗口返回 404。
 - `biz` 负责业务和事件，不直接堆 HTTP 细节。
 - `service` 负责 route / handler / request-response。
 - `pkg/common` 放单元 ID、常量、错误、过滤器、结果。
@@ -139,6 +149,7 @@ version: 2.2.7
 - 生命周期：`Setup` 只接线依赖，`Run` 启动订阅、route、listener 或任务，`Teardown` 幂等释放。
 - 依赖边界：initiator 是否只提供一种无业务状态基础设施能力；module/block 是否未注入其他组件的 service/repository/adapter/callback。
 - 事件边界：同步裁决用 EventHub `Send` 或项目封装的同步发布；通知类事件用 `Post`；同一业务对象需要 lane key。
+- Post 边界：异步 handler 是否完全不依赖 `event.Result`；是否有 result=nil 的直接回归测试。
 - owner 边界：module/block 是否只访问自己的 repository/service；跨组件写入、读取、状态机转换和 evidence 查询是否都走 EventHub。
 - scope 边界：workspace/run/ticket/approval/result/artifact 等 ID 是否携带足够 scope；无 scope API 是否对重复 open 对象返回冲突；生成 resolution/result/artifact ID 时是否避免跨 workspace 碰撞。
 - 契约边界：事件投递组件是否定义了具体 command/data/result；消费组件是否只导入投递组件 `pkg/events`；是否不存在 map/any、JSON、reflect 或兼容桥传输。
@@ -146,6 +157,8 @@ version: 2.2.7
 - 粒度边界：module 是否确实组合多个组件合同，block 是否只承担单一资源/技术能力，initiator 是否单一且无业务状态。
 - facade 扫描：是否不存在 `exports.Services.*`、`ServiceExports`、`SetXService`、`XService()`、appservice 直接 owner repository 访问等生产残留。
 - 后台任务：长期任务、timer、恢复扫描、异步 continuation 是否挂在 framework `BackgroundRoutine` 或统一 scheduler。
+- 路由边界：是否不存在依赖 Module Weight 的 first-match 顺序；RouteRegistry helper 是否没有暴露 server/listener/handler。
+- 资源边界：EventHub payload/result 和 EventHub-backed port 是否都没有泄漏 owner 的可变资源或 I/O 句柄。
 - 状态权威：block 可以维护自己的正式对象；module 只维护编排闭环所需的协调状态，不能直接持有其他组件状态仓库。
 - ViewModel 边界：端侧展示是否只读服务端 projection；projection store 是否带 revision/health；handler 是否只读 store，不做请求时重型聚合。
 - 配置读取：入口、bootstrap、configuration service 可读取全局配置；业务 use-case 优先使用注入的 config accessor。
@@ -162,9 +175,9 @@ version: 2.2.7
 - 加载验收：入口文件应显式 import 本入口选择的 initiator、kernel、blocks、application module；新入口不能靠隐式依赖完成 module 注册。
 - 文档验收：`README.md`、`docs/structure.md` 或状态文档必须描述最终正式路径，不能继续描述已删除的中间态路径。
 
-## 8. WorkOrch 验证过的架构红线
+## 8. Framework 架构红线
 
-这些规则来自 WorkOrch 对 `magicCommon/framework` 与 EventHub 边界的迁移收口，可作为多运行单元项目的通用红线：
+以下规则用于约束 `magicCommon/framework`、EventHub 与运行单元边界，可直接用于设计评审和迁移验收：
 
 - 入口显式选择启用哪些 initiator/module；业务 package 的间接 import 不承担启用责任。
 - 进程级 service 落到 `internal/services/<entry>`；framework plugin module 落到 `internal/modules/...`。不要因为 service 目录里有 CLI/TUI/remote/server 编排就把它定义成 module。
@@ -180,6 +193,10 @@ version: 2.2.7
 - 跨 workspace 的 run/ticket/approval/result/artifact 操作必须有 scope contract；HTTP/CLI/TUI 如果暂时无法提供 workspace scope，只能选择唯一 open 对象或返回 conflict。
 - e2e 暴露的 URL、状态等待、scope 解析、governance resolution 等问题必须回填到架构文档、验证 checklist 和 skill；不要只在脚本中绕过失败。
 - `Weight()` 只表达同类插件的 lifecycle 顺序，不能隐藏架构依赖；依赖应通过 initiator/helper、EventHub contract 或显式构造参数表达。
+- EventHub `Post` 没有同步 Result；Post observer 调用 `result.Set` 会产生 nil pointer panic，而且 Hub 可能只记录告警而不让普通测试失败，必须补直接回归测试。
+- 单消费者的内存索引、归档 helper 等若没有独立生命周期，不应为了“组件化”强行建 Block；独立 Block 必须有清晰 owner、生命周期或多个 EventHub 消费方。
+- Metrics、Usage 等 Block 不得返回 `*Registry`、`*Store`、`*Recorder`；对外提供 typed EventHub command/result 或 EventHub-backed port。
+- magicEngine first-match 路由不应使用依赖注册先后的全局 `/**` 兜底；协议网关优先显式注册允许的 method/path 白名单。
 - 是否继续拆分大文件取决于职责混杂、状态权威不清、复用价值和边界风险，不以行数作为 framework/EventHub 合规标准。
 - 合理粒度通常表现为：单一 owner、单一生命周期、单一通信契约或单一纯算法族；过大通常表现为 catch-all facade，过小通常表现为只有转调 wrapper 且无独立语义。
 
@@ -205,5 +222,5 @@ GOCACHE=/tmp/go-multi-module-gocache go test ./... -count 1
 
 ## Formatter
 
-- Markdown/YAML: run `skill-hub validate go-multi-module-dev --links` before feedback.
+- Markdown/YAML: run `skill-hub validate --pattern go-multi-module-dev --links` before feedback.
 - Go examples: run `gofmt -w <files>` when adding real `.go` example files.
