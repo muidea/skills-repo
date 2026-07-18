@@ -11,15 +11,15 @@
 
 1. 事件投递组件在自己的 `pkg/events` 定义事件 ID 和具体 `Command`、`Data`、`Result`
 2. 消费组件导入投递组件的 `pkg/events`，按需订阅对应 command
-3. 投递与消费直接调用 magicCommon `event.Hub` 的 `Send`、`Post`、`Subscribe`
+3. 投递与消费由具体单元的 `biz` 调用 magicCommon `event.Hub` 的 `Send`、`Post`、`Subscribe`；Biz 必须内嵌 `internal/modules/base/biz.Base`
 4. 同步 handler 使用 `event.Result.Set(<具体 Result>, err)` 返回，不增加通用 response 或 command wrapper
-5. 在 `biz` 层承载订阅、投递和 handler 逻辑，不要在 `service` 层堆复杂事件流程
+5. 在 `biz` 层承载订阅、投递和 handler 逻辑；`module.go` 仅接线，`service` 不接收 Hub、也不堆复杂事件流程
 6. 为 Post handler 单独检查 result=nil，禁止调用 `result.Set`
 
 ## 3. 推荐模式
 
 ```go
-func (s *Unit) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
+func (s *Unit) Setup(_ context.Context, eventHub event.Hub, background task.BackgroundRoutine) (err *cd.Error) {
     s.bizPtr = biz.New(eventHub, background)
     return nil
 }
@@ -27,14 +27,20 @@ func (s *Unit) Setup(eventHub event.Hub, background task.BackgroundRoutine) (err
 
 ```go
 type UnitBiz struct {
-    eventHub   event.Hub
-    background task.BackgroundRoutine
+    basebiz.Base
+}
+
+func New(eventHub event.Hub, background task.BackgroundRoutine) *UnitBiz {
+    return &UnitBiz{
+        Base: basebiz.New(common.UnitID, eventHub, background),
+    }
 }
 ```
 
 ## 4. 经验规则
 
-- `biz` 负责 `Send/Post/Subscribe`
+- 使用 Hub 的 Module/Block 必须有自身 `biz`，并通过内嵌的 `basebiz.Base` 负责 `Send/Post/Subscribe`；禁止在 Module root、service 或其它 adapter 平行保存 Hub/observer
+- Initiator 不使用 Base Biz；它只实现无业务状态的基础设施生命周期
 - module/block 间所有运行期交互只能通过 EventHub，不直接注入或调用对方 service、repository、adapter、reader callback
 - 事件合同必须使用具体类型；禁止用 `map[string]any`、`[]any` 或无约束 `any` 承载 command/data/result
 - 禁止 Envelope、`events.Response`、JSON marshal/unmarshal、reflect 类型表或通用 Send/Subscribe facade 作为组件交互兼容层

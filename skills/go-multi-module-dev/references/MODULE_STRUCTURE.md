@@ -1,101 +1,108 @@
 # Runtime Unit Structure
 
-## 1. 常见目录
+## 1. 默认目录与共享 Biz 基座
+
+目标仓库没有既定约定时，使用下面的默认形态；已有仓库优先沿用已存在的分组名和入口文件名。
 
 ```text
 project-root/
 ├── <entry-root>/<entry-name>/
-├── internal/<unit-root>/<group-path>/<unit>/
+├── internal/
+│   ├── initiators/<capability>/
+│   │   ├── initiator.go
+│   │   ├── pkg/common/
+│   │   └── internal/                 # 可选：该 Initiator 私有实现
+│   └── modules/
+│       ├── base/biz/
+│       │   └── base.go                # 共享业务基座，不是运行单元
+│       ├── blocks/<unit>/
+│       │   ├── module.go
+│       │   ├── biz/
+│       │   ├── service/               # 可选
+│       │   ├── pkg/{common,events,models}/ # 按需创建
+│       │   └── internal/              # 可选
+│       └── {kernel,application}/<unit>/
+│           └── ...                    # 与 Block 相同的单元结构
 ├── internal/pkg/
 ├── pkg/
 └── docs/
 ```
 
-这是常见形态，不是固定标准。
+`internal/modules/base/biz` 是 Module/Block 的共享业务基座：它只封装 owner ID、`event.Hub`、`event.SimpleObserver` 与 `task.BackgroundRoutine` 的 owner-neutral 操作。它没有 `init`、不注册 framework plugin、不声明业务 topic，也不能 import 具体运行单元、HTTP 或业务配置。
 
-## 2. 什么时候放哪里
+## 2. Initiator / Block / Module 决策
 
-- `<entry-root>/<entry-name>`: 可执行程序入口、启动参数、docker、bootstrap
-- `internal/<unit-root>/<shared-group>/<unit>`: 可复用基础能力或单一资源能力
-- `internal/<unit-root>/<orchestration-group>/<unit>`: 编排、治理、策略、准入、授权、安装、运行态控制
-- `internal/<unit-root>/<group-path>/<unit>/internal`: 单个运行单元私有 helper
-- `internal/pkg`: 仓库内部共享但不对外导出
-- `pkg`: 对外可复用公共包
+| 类型 | 根目录 | 核心职责 | EventHub Base Biz |
+| --- | --- | --- | --- |
+| Initiator | `internal/initiators/<capability>` | 一种进程级基础设施能力 | 不使用；不得嵌入 Base |
+| Block | `internal/modules/blocks/<unit>` | 单一资源聚合或单一技术能力 owner | 使用 Hub 时必须在 `biz` 内嵌 Base |
+| Module | `internal/modules/{kernel,application}/<unit>` | 组合多个独立组件合同的业务闭环 | 使用 Hub 时必须在 `biz` 内嵌 Base |
 
-如果当前仓库已经把 `<shared-group>` 和 `<orchestration-group>` 命名成 `blocks/kernel` 或其他名字，直接沿用，不要重命名。
+Initiator 可以持有完成一项基础设施能力所需的 router、listener、client factory 或 scheduler 句柄，但不能持有业务状态、业务策略或多能力容器。若一个“Initiator”需要订阅业务 command、维护业务状态或编排 owner，应将业务部分拆为 Block/Module。
 
-## 3. Module / Block / Initiator 决策规则
+Block 可以拥有自己的正式状态、runtime、repository、后台任务和命令合同；但不编排多个 owner 完成业务闭环。Module 可以拥有协调状态和用例编排，但只能经 EventHub 与其它 owner 协作。
 
-先判断能力的职责边界，再创建目录。
-
-定义为 module：
-
-- 功能闭环必须组合、聚合、治理或编排多个独立组件合同
-- 可以管理自身协调状态，但不能持有其他组件的 service、repository、adapter 或 callback
-- 与其他 module/block 的运行期交互只能通过 EventHub
-- 不能因为存在 repository、正式状态、route 或较多调用方就自动定义为 module
-
-定义为 block：
-
-- 围绕单一资源或单一技术能力建模
-- 可以管理自己的正式状态或运行时状态，并提供稳定 CRUD、状态切换、基础校验、资源事件或公共封装
-- 被多个上层能力复用，但自身不负责完整业务流程
-- 不主动组合多个其他运行单元来完成审核、准入、授权、发布、安装、治理等闭环
-
-定义为 initiator：
-
-- 只提供一种无业务状态基础设施能力
-- 可以持有该能力所需的单一进程级句柄，但不管理业务状态、业务策略或多能力状态
-- 不得同时聚合 repository set、EventHub wrapper、runtime policy、route registry 等多种职责
-- “无业务状态”不等于零字段；RouteRegistry Initiator 可以持有 router/server/listener，但只服务 HTTP 路由基础设施
-
-不要使用的判断方式：
-
-- 不要用“有状态就是 module、无状态就是 block”判断；block 允许拥有自己的状态
-- 不要因为目录名字更短或历史相似就复用已有分组
-- 不要把跨分组策略流程塞进某个基础能力单元
-- 不要让 module/block 通过直接接口注入互调；它们只能通过 EventHub 的具体事件合同协作
-- 不要把只有一个消费者、没有独立资源生命周期的内存索引或纯 helper 强行拆成 block
-- 不要在分组根目录下新增孤立 helper 包。只有带 `<unit-entry-file>` 并参与生命周期的目录才属于运行单元；单元私有 helper 放 `{unit}/internal`，跨单元共享 helper 放 `internal/pkg`
-
-组件必要性检查：
-
-- 是否有独立资源生命周期或正式状态 owner？
-- 是否需要独立启停、恢复、巡检或限流？
-- 是否有多个真正独立的消费者？
-- 如果删除该运行单元并改为 focused package，是否会破坏 owner 或 lifecycle 边界？
-
-以上均为否时，通常不需要独立 Block。
-
-## 4. 运行单元最小结构
+## 3. Module / Block 单元形态
 
 ```text
-{unit}/
-├── <unit-entry-file>
+<unit>/
+├── module.go
 ├── biz/
-│   └── biz.go
-├── service/
-│   └── service.go
-└── pkg/
-    ├── common/
-    │   └── const.go
-    └── models/
+│   ├── biz.go
+│   └── handlers.go                 # 按需拆分
+├── service/                        # 仅在有 HTTP/CLI/TUI 等入站 adapter 时创建
+├── pkg/
+│   ├── common/                     # ID、窄常量、错误、filter
+│   ├── events/                     # 本 owner 的 typed topic/Command/Data/Result
+│   └── models/                     # 稳定 DTO/ViewModel；不放私有可变状态
+└── internal/                       # 私有 repository adapter、实体、helper
 ```
 
-## 5. 分层职责
+只要单元使用 `event.Hub`，`biz/` 就是必需目录，并遵守：
 
-- `<unit-entry-file>`: 运行单元注册、依赖获取、生命周期
-- `biz/`: 业务逻辑、事件处理、后台任务、持久化编排
-- `service/`: HTTP route、handler、session、请求响应
-- `pkg/common`: 单元 ID、常量、错误、result/filter
-- `pkg/models`: 模型、DTO、view
+```go
+type Biz struct {
+    basebiz.Base
+    // 仅本 owner 的状态和依赖
+}
 
-## 6. 经验规则
+func New(hub event.Hub, background task.BackgroundRoutine) *Biz {
+    b := &Biz{Base: basebiz.New(common.UnitID, hub, background)}
+    b.SubscribeFunc(events.TopicCommand, b.handleCommand)
+    return b
+}
+```
 
-- 不要把 HTTP handler 和业务逻辑混在 `biz/`
-- 不要把跨运行单元公共常量塞进单个业务单元
-- 涉及 `magicOrm` 模型时，优先把模型和 filter 放进 `pkg/models` / `pkg/common`
-- 涉及 `magicEngine` route 时，优先让 `service` 做注册和 handler 适配
-- 涉及 event，先由投递组件在自己的 `pkg/events` 明确事件 ID、具体 command/data/result、source、destination，再由消费组件导入并订阅
-- module/block 不得通过 EventHub 返回内部 `*Store`、`*Registry`、`*Recorder` 等实现对象；这会让后续调用绕过 owner
-- process service 只驱动 application lifecycle 和进程信号，不承担业务 owner 或路由声明
+这里的“派生”是 Go 的组合/嵌入，而非把 Base 复制到每个单元。具体 Biz 负责其 topic 的订阅与解除订阅、typed handler、状态和资源清理；Base 不知道任何业务 topic。
+
+## 4. 层级依赖
+
+```text
+module.go ──constructs──> biz.Biz(Base) ──uses──> EventHub / BackgroundRoutine
+       │                         │
+       └──constructs──> service ─┘
+```
+
+- `module.go`：注册、获取 Initiator helper、构造 Biz/Service、生命周期桥接；`Setup` 仅把 Hub 和 BackgroundRoutine 传给 `biz.New`。
+- `biz/`：业务用例、owner 状态、EventHub `Send/Post/Subscribe`、handler、后台任务、持久化决策。
+- `service/`：route、HTTP/CLI/TUI 输入输出和协议适配；只依赖本单元 Biz 或稳定 port，不接收 `event.Hub`。
+- `pkg/events/`：由事件投递 owner 定义具体 topic、Command、Data、Result；禁止 `any`、map、JSON 或通用 envelope。
+- `internal/`：只能被本单元使用的实现细节。
+
+禁止在 `module.go`、`service/` 或其它 adapter 中保存 `event.Hub`、创建 `event.SimpleObserver`、订阅 topic 或直接调用 `Send/Post`。如果该逻辑存在，应下沉到自身 Biz。
+
+## 5. 何时创建可选目录
+
+- 没有入站 HTTP/CLI/TUI adapter，不创建 `service/`。
+- 没有跨 owner 的事件合同，不创建 `pkg/events/`；一旦有合同，必须由该 owner 定义。
+- 私有 entity、repository adapter、mapper 不应放入 `pkg/models`；放入 `internal/` 或 Biz 私有文件。
+- 纯 DTO、view model、filter 可以留在 `pkg/models` / `pkg/common`，但不能借此暴露 owner 的可变资源。
+- 单消费者、无独立 lifecycle 的索引或算法通常是 focused package，不是 Block。
+
+## 6. 验收
+
+- 使用 Hub 的每个 Module/Block 都有 `biz/`，且业务类型内嵌 `internal/modules/base/biz.Base`。
+- 除 Base Biz 与单元 `biz/` 外，`internal/modules` 下没有 `event.Hub` field、`event.NewSimpleObserver` 或订阅调用；`module.go` 的 framework `Setup` 参数是唯一允许的 Hub 接线点。
+- Initiator 没有嵌入 Base Biz，也没有业务 topic/业务 observer。
+- `module.go` 不含业务 handler、状态机或跨 owner 用例；`service/` 不直接访问其它 owner 的 service/repository。
+- `Teardown` 委托 Biz 解除其订阅并关闭自身资源，且可重复调用。

@@ -10,6 +10,8 @@
 
 Initiator 的“无状态”指无业务状态，不要求结构体零字段。RouteRegistry Initiator 可以持有 router、server、listener 和 done channel，但只能围绕 HTTP 路由基础设施这一项能力。
 
+所有使用 EventHub 的 Block/Module 必须把业务事件逻辑放入其 `biz`，并让 Biz 内嵌 `internal/modules/base/biz.Base`。Base 是共享业务基座，只封装 ID、observer、Hub 和 BackgroundRoutine；具体 Biz 仍负责自己的 topic、typed handler、状态和资源。Initiator 不得嵌入 Base。
+
 ## 2. 生命周期落点
 
 - `Setup`：获取 Initiator helper，创建本单元资源，建立下游 Setup 阶段必需的 command subscription，并 fail-fast 校验依赖。
@@ -88,12 +90,14 @@ EventHub-backed port 可用于隐藏重复 Send/Post 代码，但它只能保存
 ## 6. 业务分层
 
 - `module.go`：注册、依赖获取和 lifecycle bridge。
-- `biz/`：用例、事件 handler、跨组件编排、状态转换和持久化决策。
+- `biz/`：用例、事件 handler、跨组件编排、状态转换和持久化决策；一旦使用 Hub，Biz 必须内嵌 Base Biz。
 - `service/`：route、HTTP/CLI 输入输出、协议适配。
 - `pkg/events/`：本 owner 的 topic、Command、Data、Result。
 - `pkg/models/`：稳定 DTO/entity/view model。
 
 HTTP handler 不负责“写文件 -> 更新配置 owner -> 更新代理 -> 更新鉴权”这类流程。它应调用 Module biz 用例；Module 再通过 EventHub 驱动各 owner。单一 Block 也不应越权编排多个 owner。
+
+`module.go` 只在 framework `Setup` 取得 Hub 并传给 `biz.New`，自身不保存 Hub/observer、不订阅 topic、不直接 `Send/Post`。`service/` 也不接收 Hub；需要跨 owner 操作时调用本 owner Biz，再由 Biz 经 typed contract 协作。
 
 ## 7. BackgroundRoutine
 
@@ -102,6 +106,8 @@ HTTP handler 不负责“写文件 -> 更新配置 owner -> 更新代理 -> 更�
 ## 8. 验收
 
 - 入口显式 side-effect import 所需 Initiator、Block、Module。
+- 搜索使用 Hub 的 Module/Block：每个都有 `biz/`，Biz 内嵌 Base；Module root、service 和其它 adapter 没有 Hub field、SimpleObserver 或订阅。
+- 搜索 `internal/modules/base/biz`：没有 `init`、plugin register、业务 topic、业务 contract 或具体单元 import；Initiator 没有嵌入 Base。
 - 搜索跨组件 raw pointer、service/repository import 和 AcquireX 返回实现对象。
 - 搜索 `Payload any`、`map[string]any`、`io.Writer` 等 EventHub 合同。
 - 搜索 Post handler 中的 `result.Set`。

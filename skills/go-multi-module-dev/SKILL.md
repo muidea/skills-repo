@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
-description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，入口和 process service 落点，EventHub 合同，HTTP 路由注册，biz/service/pkg 拆分以及结构验收。新增、迁移或收口 framework 运行单元时使用。
-version: 2.3.0
+description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，基于 shared base biz 的 EventHub 业务层，入口和 process service 落点，HTTP 路由注册，biz/service/pkg 拆分以及结构验收。新增、迁移或收口 framework 运行单元时使用。
+version: 2.4.0
 ---
 
 # Go Multi Module Development
@@ -30,7 +30,7 @@ version: 2.3.0
 
 ## 3. 按任务读取这些 references
 
-- 运行单元结构和落点：`references/MODULE_STRUCTURE.md`
+- 运行单元结构、`internal/modules/base/biz` 基座和落点：`references/MODULE_STRUCTURE.md`
 - 事件协同：`references/EVENT_USAGE.md`
 - magicCommon framework 与 magicEngine 集成收口：`references/FRAMEWORK_INTEGRATION.md`
 - 最小模板和脚本：`references/TEMPLATES.md`
@@ -52,6 +52,7 @@ version: 2.3.0
    - 对外复用公共包常见于 `pkg/`
    - 如果仓库已经使用 `internal/modules/kernel`、`internal/modules/blocks` 这类分组，就沿用，不要改名
    - 如果仓库没有这些名字，不要强行引入
+   - `internal/modules/base/biz` 是 Module/Block 的共享业务基座，不是 framework 运行单元：它不注册、不拥有业务 topic、不依赖具体单元，只封装 owner ID、EventHub observer 与 BackgroundRoutine 基础操作
    - 如果一个目录实现 `framework/plugin/module` 生命周期，且拥有 route/listener、EventHub 订阅或 owner 状态，应落到 `internal/modules/application/<entry-name>/{biz,service,pkg}`，并由 `<unit-entry-file>` 接入 module 生命周期
    - 如果一个目录只负责进程启动模式、参数解析、`framework/application` 启停、CLI/TUI/remote/server 编排，应落到 `<service-root>/<entry-name>`，不要放在 `internal/modules/application`
    - `<entry-root>/<entry-name>` 只保留进程入口、入口测试、启动参数解析或少量进程级文件；不放 appservice、bootstrap、server、observed、presenter 等实现包
@@ -63,6 +64,7 @@ version: 2.3.0
    - initiator：只提供一种无业务状态的基础设施能力；可持有该能力所需的单一进程级句柄，但不管理业务状态、策略或多能力状态
    - module 与 block 的区别由职责闭环决定，不由是否存在 repository、状态模型、调用方数量或文件规模决定
    - module/block 之间的运行期交互只能通过同一应用 `EventHub`；禁止直接注入或调用对方 service、repository、adapter、reader callback
+   - 只要 Module/Block 使用 EventHub，就必须创建自身 `biz/` 并让其业务类型内嵌 `internal/modules/base/biz.Base`；不能把 Hub、SimpleObserver 或订阅逻辑留在 `module.go`、`service/` 或其它实现包
    - “无状态 Initiator”是指不拥有业务状态；RouteRegistry、listener、client factory 可以持有实现该单一基础设施能力所必需的进程级句柄
    - 单消费者能力若没有独立启停、资源 owner 或后台任务，优先并回调用方或保留为 focused package，不要仅为目录对称创建 Block
 4. 再判断粒度，不要把“拆分”当作默认答案
@@ -75,7 +77,7 @@ version: 2.3.0
    - 不应拆：拆分会制造反向依赖、共享可变状态、跨 owner service facade、或让状态机/activation/lifecycle 主流程分散到难以审计
 5. 只补当前任务需要的最小层
    - `<unit-entry-file>`
-   - `biz/`
+   - `biz/`：使用 EventHub 时必需，且业务类型内嵌 `internal/modules/base/biz.Base`
    - `service/`
    - `pkg/common`
    - `pkg/models`
@@ -106,6 +108,9 @@ version: 2.3.0
 - Workspace/detail/list 这类展示 API 不应在 request handler 或端侧逐 workspace 调用重型 owner reader；重型读取只能作为 projection manager 的 baseline/rebuild 内部路径。
 - 如果 detail projection 需要 task progress、context bundle、blocker、usage、artifact summary 等派生数据，应放进同一个 detail projection contract，避免 Web/TUI 主视图再调用多个派生 endpoint 拼装同一屏状态。
 - `internal/modules/application/<entry-name>/module.go` 负责把应用服务接入 plugin module 生命周期；该 module 的实现子包按职责放到 `biz/`、`service/`、`pkg/`，不要平铺在 module 根目录。
+- 所有使用 EventHub 的 Module/Block 必须使用 `module.go -> biz.<Unit>(basebiz.Base) -> service/adapter` 的单向形态。`Setup` 只把 Hub 和 BackgroundRoutine 传给 `biz.New`；`module.go` 不保存 Hub/observer，不调用 `Subscribe`/`Send`/`Post`，`service/` 不接收 Hub。
+- `biz` 内嵌 Base 是 Go 组合而非继承：`type Biz struct { basebiz.Base }`。Base 只保存单元 ID、Hub、SimpleObserver 和 BackgroundRoutine；具体 Biz 负责定义订阅 topic、typed handler、owner 状态和取消订阅。
+- Initiator 不得内嵌 `internal/modules/base/biz.Base`。它是无业务状态的基础设施 owner；若它需要事件驱动，先审查是否应提升为 Block 或拆出单独的业务运行单元。
 - 新增运行单元前先完成 `<entry-root>` / `<unit-root>` / `<group-path>` / `pkg` 落点判断，并把判断写入设计文档或变更说明。
 - 如果仓库存在“基础能力分组”和“编排/治理分组”，沿用现有名字；不要把某个项目里的 `kernel`、`blocks` 当成所有仓库的默认规范。
 - 新 module/block 的判断标准是职责闭环和生命周期，不是是否有状态、文件行数或复用方数量；如果只是为了降低文件长度，优先包内 helper 或 focused package。
@@ -136,6 +141,7 @@ version: 2.3.0
 - `Weight()` 不能表达路由优先级或隐藏组件依赖。对 first-match router 应注册显式路径、使用路由优先级能力，或集中声明顺序；禁止依赖“某 Module 先 Run，所以 `/**` 不会吞路由”。
 - RouteRegistry Initiator 只向 Module/Block 暴露 `GetRouteRegistry()` 等窄 helper；业务组件不得取得 `http.Server`、listener 或 handler。路由由 service 层声明，listener 的启用时机必须保证路由已就绪，避免启动窗口返回 404。
 - `biz` 负责业务和事件，不直接堆 HTTP 细节。
+- `biz` 一旦使用 EventHub，必须以 `internal/modules/base/biz.Base` 为唯一基础入口；禁止平行持有 `event.Hub` 或自行创建 `event.SimpleObserver`。
 - `service` 负责 route / handler / request-response。
 - `pkg/common` 放单元 ID、常量、错误、过滤器、结果。
 - `pkg/models` 放 DTO / entity / view model。
@@ -148,6 +154,7 @@ version: 2.3.0
 - 入口装配：side-effect imports 是否只在入口层，是否能按需启用/禁用 module。
 - 生命周期：`Setup` 只接线依赖，`Run` 启动订阅、route、listener 或任务，`Teardown` 幂等释放。
 - 依赖边界：initiator 是否只提供一种无业务状态基础设施能力；module/block 是否未注入其他组件的 service/repository/adapter/callback。
+- Base Biz 边界：所有使用 Hub 的 Module/Block 是否都有自身 `biz/`，该 Biz 是否内嵌 `internal/modules/base/biz.Base`；是否不存在 `module.go`/`service` 持有 Hub、SimpleObserver 或直接订阅。
 - 事件边界：同步裁决用 EventHub `Send` 或项目封装的同步发布；通知类事件用 `Post`；同一业务对象需要 lane key。
 - Post 边界：异步 handler 是否完全不依赖 `event.Result`；是否有 result=nil 的直接回归测试。
 - owner 边界：module/block 是否只访问自己的 repository/service；跨组件写入、读取、状态机转换和 evidence 查询是否都走 EventHub。
@@ -171,6 +178,7 @@ version: 2.3.0
 - 入口验收：`find <entry-root>/<entry-name> -maxdepth 3 -type f` 应只包含入口、入口测试、启动参数或少量进程级文件。
 - process service 验收：如果存在 `<service-root>/<entry-name>`，它应清楚区分 lifecycle shell、adapter、use-case/session、backend implementation；不能注册为 plugin module，不能直接访问 owner repository/service。
 - 应用 module 验收：如果存在 `internal/modules/application/<entry-name>`，其实现应按 `biz/`、`service/`、`pkg/` 分层，`module.go` 保持生命周期桥接职责。
+- Base Biz 验收：`internal/modules/base/biz` 不含 `init`、plugin 注册、业务 topic 或具体单元 import；使用 Hub 的单元的 `biz/biz.go` 内嵌 Base，且 `Teardown` 会委托 Biz 取消其订阅和释放 owner 资源。
 - 旧路径验收：用 `rg "internal/<entry-name>|<entry-root>/<entry-name>/(appservice|bootstrap|server|observed|presenter|demo)"` 检查中间态实现根和旧路径引用是否清零；历史归档文档可显式排除。
 - 加载验收：入口文件应显式 import 本入口选择的 initiator、kernel、blocks、application module；新入口不能靠隐式依赖完成 module 注册。
 - 文档验收：`README.md`、`docs/structure.md` 或状态文档必须描述最终正式路径，不能继续描述已删除的中间态路径。
@@ -186,6 +194,8 @@ version: 2.3.0
 - 服务端 projection manager 应在启动时全量构建 baseline，并通过 owner notification event 或明确 rebuild task 维护 revision；端侧收到 projection changed event 后刷新 projection，不自行重新推导正式状态。
 - framework plugin manager 用于应用级 lifecycle，不用于组装嵌入式或局部 runtime；局部 runtime 使用显式 lifecycle 列表。
 - initiator 只暴露一种无业务状态基础设施能力；不得把 repository provider、EventHub wrapper、runtime policy、config loader、route registry 等聚合到一个 initiator。
+- `internal/modules/base/biz` 是 Module/Block 的共享业务基座，不是 Initiator 基类，也不是跨 owner 的 Service/Registry。它只能提供 ID、observer、Hub Send/Post/Subscribe 和 BackgroundRoutine 的 owner-neutral 包装。
+- 使用 Hub 的 Module/Block 必须在自己的 Biz 内嵌 Base；Module root、HTTP/CLI service 和其它 adapter 不得保留 Hub、SimpleObserver 或订阅。所有 topic 和 typed message 仍由具体 owner 的 `pkg/events` 定义，Base 不定义业务合同。
 - application/appservice/HTTP/TUI 生产代码访问正式 owner state 时必须走 EventHub-backed port 或 facade，不直接 import owner `biz`/`service`/正式 repository。
 - 每个事件的 topic、具体 command/data/result 由投递组件定义；消费组件导入投递组件 `pkg/events` 并按需订阅，不复制类型或通过共享 alias 获取。
 - module/block 间同步交互直接使用 magicCommon `event.Result` 返回具体 result；缺失结果、类型不匹配或错误都不能当成成功。

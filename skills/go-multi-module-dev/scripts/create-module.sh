@@ -3,15 +3,35 @@
 set -euo pipefail
 
 UNIT_NAME="${1:-}"
-GROUP_PATH="${2:-shared}"
-UNIT_ROOT="${3:-internal/modules}"
-ENTRY_FILE="${4:-module.go}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-PROJECT_ROOT="$(cd "$SKILL_DIR/../../.." && pwd)"
+GROUP_PATH="${2:-}"
+UNIT_ROOT="internal/modules"
+ENTRY_FILE="module.go"
+WITH_SERVICE=false
 
-if [ -z "$UNIT_NAME" ]; then
-    echo "usage: $0 <unit_name> [group_path] [unit_root] [entry_file]"
+usage() {
+    echo "usage: $0 <unit_name> <group_path> [unit_root] [entry_file] [--with-service]"
+}
+
+if [ -z "$UNIT_NAME" ] || [ -z "$GROUP_PATH" ]; then
+    usage
+    exit 1
+fi
+
+shift 2
+if [ "${1:-}" != "" ] && [ "${1:-}" != "--with-service" ]; then
+    UNIT_ROOT="$1"
+    shift
+fi
+if [ "${1:-}" != "" ] && [ "${1:-}" != "--with-service" ]; then
+    ENTRY_FILE="$1"
+    shift
+fi
+if [ "${1:-}" = "--with-service" ]; then
+    WITH_SERVICE=true
+    shift
+fi
+if [ "$#" -ne 0 ]; then
+    usage
     exit 1
 fi
 
@@ -24,6 +44,14 @@ if ! command -v go >/dev/null 2>&1; then
     echo "error: go command not found"
     exit 1
 fi
+
+GO_MOD="$(go env GOMOD)"
+if [ "$GO_MOD" = "/dev/null" ] || [ ! -f "$GO_MOD" ]; then
+    echo "error: run this script from a Go module"
+    exit 1
+fi
+PROJECT_ROOT="$(dirname "$GO_MOD")"
+MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
 
 trim_path() {
     local path="$1"
@@ -47,33 +75,37 @@ to_pascal_case() {
 
 to_package_name() {
     local input="$1"
-    input="${input//-/_}"
-    echo "$input"
+    echo "${input//-/_}"
 }
 
 GROUP_PATH="$(trim_path "$GROUP_PATH")"
 UNIT_ROOT="$(trim_path "$UNIT_ROOT")"
 UNIT_PASCAL="$(to_pascal_case "$UNIT_NAME")"
 PACKAGE_NAME="$(to_package_name "$UNIT_NAME")"
-MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
-
-UNIT_DIR="$PROJECT_ROOT/$UNIT_ROOT"
-IMPORT_ROOT="$MODULE_PATH/$UNIT_ROOT"
-
-if [ -n "$GROUP_PATH" ]; then
-    UNIT_DIR="$UNIT_DIR/$GROUP_PATH"
-    IMPORT_ROOT="$IMPORT_ROOT/$GROUP_PATH"
-fi
-
-UNIT_DIR="$UNIT_DIR/$UNIT_NAME"
-IMPORT_ROOT="$IMPORT_ROOT/$UNIT_NAME"
+UNIT_DIR="$PROJECT_ROOT/$UNIT_ROOT/$GROUP_PATH/$UNIT_NAME"
+IMPORT_ROOT="$MODULE_PATH/$UNIT_ROOT/$GROUP_PATH/$UNIT_NAME"
+BASE_BIZ_IMPORT="$MODULE_PATH/internal/modules/base/biz"
 
 if [ -d "$UNIT_DIR" ]; then
     echo "error: runtime unit already exists: $UNIT_DIR"
     exit 1
 fi
 
-mkdir -p "$UNIT_DIR/biz" "$UNIT_DIR/service" "$UNIT_DIR/pkg/common" "$UNIT_DIR/pkg/models"
+mkdir -p "$UNIT_DIR/biz" "$UNIT_DIR/pkg/common"
+
+SERVICE_IMPORT=""
+SERVICE_FIELD=""
+SERVICE_SETUP=""
+SERVICE_RUN=""
+SERVICE_TEARDOWN=""
+if [ "$WITH_SERVICE" = true ]; then
+    mkdir -p "$UNIT_DIR/service"
+    SERVICE_IMPORT="    \"$IMPORT_ROOT/service\""
+    SERVICE_FIELD="    servicePtr *service.$UNIT_PASCAL"
+    SERVICE_SETUP="    s.servicePtr = service.New(s.bizPtr)"
+    SERVICE_RUN=$'    if s.servicePtr != nil {\n        s.servicePtr.RegisterRoutes()\n    }'
+    SERVICE_TEARDOWN="    s.servicePtr = nil"
+fi
 
 cat > "$UNIT_DIR/$ENTRY_FILE" <<EOF
 package $PACKAGE_NAME
@@ -81,78 +113,78 @@ package $PACKAGE_NAME
 import (
     "context"
 
+    "$IMPORT_ROOT/biz"
+    "$IMPORT_ROOT/pkg/common"
+$SERVICE_IMPORT
     cd "github.com/muidea/magicCommon/def"
     "github.com/muidea/magicCommon/event"
     "github.com/muidea/magicCommon/framework/plugin/module"
     "github.com/muidea/magicCommon/task"
-
-    "$IMPORT_ROOT/biz"
-    "$IMPORT_ROOT/pkg/common"
-    "$IMPORT_ROOT/service"
 )
 
-func init() {
-    module.Register(New())
-}
+func init() { module.Register(New()) }
 
 type $UNIT_PASCAL struct {
-    bizPtr     *biz.$UNIT_PASCAL
-    servicePtr *service.$UNIT_PASCAL
+    bizPtr *biz.$UNIT_PASCAL
+$SERVICE_FIELD
 }
 
-func New() *$UNIT_PASCAL {
-    return &$UNIT_PASCAL{}
-}
+func New() *$UNIT_PASCAL { return &$UNIT_PASCAL{} }
+func (s *$UNIT_PASCAL) ID() string { return common.UnitID }
 
-func (s *$UNIT_PASCAL) ID() string {
-    return common.${UNIT_PASCAL}Unit
-}
-
-func (s *$UNIT_PASCAL) Setup(_ context.Context, eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) (err *cd.Error) {
-    s.bizPtr = biz.New(eventHub, backgroundRoutine)
-    s.servicePtr = service.New(s.bizPtr)
+func (s *$UNIT_PASCAL) Setup(_ context.Context, hub event.Hub, background task.BackgroundRoutine) *cd.Error {
+    s.bizPtr = biz.New(hub, background)
+$SERVICE_SETUP
     return nil
 }
 
-func (s *$UNIT_PASCAL) Run(_ context.Context) (err *cd.Error) {
-    err = s.bizPtr.Initialize()
-    if err != nil {
-        return
+func (s *$UNIT_PASCAL) Run(ctx context.Context) *cd.Error {
+    if s.bizPtr == nil {
+        return cd.NewError(cd.IllegalParam, "unit biz is not configured")
     }
-    s.servicePtr.RegisterRoute()
-    return
+    if err := s.bizPtr.Run(ctx); err != nil {
+        return err
+    }
+$SERVICE_RUN
+    return nil
 }
 
-func (s *$UNIT_PASCAL) Teardown(context.Context) {}
+func (s *$UNIT_PASCAL) Teardown(ctx context.Context) {
+    if s.bizPtr != nil {
+        s.bizPtr.Teardown(ctx)
+    }
+    s.bizPtr = nil
+$SERVICE_TEARDOWN
+}
 EOF
 
 cat > "$UNIT_DIR/biz/biz.go" <<EOF
 package biz
 
 import (
+    "context"
+
+    basebiz "$BASE_BIZ_IMPORT"
+    "$IMPORT_ROOT/pkg/common"
     cd "github.com/muidea/magicCommon/def"
     "github.com/muidea/magicCommon/event"
     "github.com/muidea/magicCommon/task"
 )
 
 type $UNIT_PASCAL struct {
-    eventHub          event.Hub
-    backgroundRoutine task.BackgroundRoutine
+    basebiz.Base
 }
 
-func New(eventHub event.Hub, backgroundRoutine task.BackgroundRoutine) *$UNIT_PASCAL {
-    return &$UNIT_PASCAL{
-        eventHub:          eventHub,
-        backgroundRoutine: backgroundRoutine,
-    }
+func New(hub event.Hub, background task.BackgroundRoutine) *$UNIT_PASCAL {
+    return &$UNIT_PASCAL{Base: basebiz.New(common.UnitID, hub, background)}
 }
 
-func (s *$UNIT_PASCAL) Initialize() (err *cd.Error) {
-    return nil
-}
+func (s *$UNIT_PASCAL) Run(context.Context) *cd.Error { return nil }
+func (s *$UNIT_PASCAL) Teardown(context.Context) {}
 EOF
 
-cat > "$UNIT_DIR/service/service.go" <<EOF
+if [ "$WITH_SERVICE" = true ]; then
+    cat > "$UNIT_DIR/service/service.go" <<EOF
 package service
 
 import "$IMPORT_ROOT/biz"
@@ -161,24 +193,23 @@ type $UNIT_PASCAL struct {
     bizPtr *biz.$UNIT_PASCAL
 }
 
-func New(bizPtr *biz.$UNIT_PASCAL) *$UNIT_PASCAL {
-    return &$UNIT_PASCAL{bizPtr: bizPtr}
-}
-
-func (s *$UNIT_PASCAL) RegisterRoute() {}
+func New(bizPtr *biz.$UNIT_PASCAL) *$UNIT_PASCAL { return &$UNIT_PASCAL{bizPtr: bizPtr} }
+func (s *$UNIT_PASCAL) RegisterRoutes() {}
 EOF
+fi
 
 cat > "$UNIT_DIR/pkg/common/const.go" <<EOF
 package common
 
-const (
-    ${UNIT_PASCAL}Unit = "$UNIT_NAME"
-)
+const UnitID = "$UNIT_NAME"
 EOF
+
+find "$UNIT_DIR" -type f -name '*.go' -exec gofmt -w {} +
 
 echo "created runtime unit: $UNIT_DIR"
 echo "import root: $IMPORT_ROOT"
 echo "next steps:"
-echo "  1. add route registration in service/"
-echo "  2. add models and common definitions"
-echo "  3. add tests and docs"
+echo "  1. add typed cross-owner contracts in pkg/events only when needed"
+echo "  2. add route registration only when an Initiator helper is available"
+echo "  3. add Biz subscriptions and matching Teardown cleanup"
+echo "  4. add tests and docs"
