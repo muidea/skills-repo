@@ -86,4 +86,4 @@ func (s *Biz) handleRecorded(ev event.Event, _ event.Result) {
 
 - `magicCommon/event`
 - `magicCommon/task`
-- 如果事件会驱动 ORM 或 HTTP，再看 `magicOrm` / `magicEngine`
+- 如果事件会驱动持久化或协议适配，再看对应基础库

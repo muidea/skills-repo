@@ -151,11 +151,11 @@ Module Setup 获取 helper 后，将 Registry 传给 Service；不要在 helper 
 ## 7. EventHub-backed port
 
 ```go
-type UsagePort interface {
-    Start(context.Context, events.StartCommand) error
+type UnitPort interface {
+    Execute(context.Context, events.ExecuteCommand) error
 }
 
-type usageClient struct {
+type unitClient struct {
     hub    event.Hub
     source string
 }

@@ -50,11 +50,11 @@ Block 可以拥有自己的正式状态、runtime、repository、后台任务和
 ├── biz/
 │   ├── biz.go
 │   └── handlers.go                 # 按需拆分
-├── service/                        # 仅在有 HTTP/CLI/TUI 等入站 adapter 时创建
+├── service/                        # 仅在有入站协议适配时创建
 ├── pkg/
 │   ├── common/                     # ID、窄常量、错误、filter
 │   ├── events/                     # 本 owner 的 typed topic/Command/Data/Result
-│   └── models/                     # 稳定 DTO/ViewModel；不放私有可变状态
+│   └── models/                     # 稳定 DTO/读模型；不放私有可变状态
 └── internal/                       # 私有 repository adapter、实体、helper
 ```
 
@@ -85,7 +85,7 @@ module.go ──constructs──> biz.Biz(Base) ──uses──> EventHub / Bac
 
 - `module.go`：注册、获取 Initiator helper、构造 Biz/Service、生命周期桥接；`Setup` 仅把 Hub 和 BackgroundRoutine 传给 `biz.New`。
 - `biz/`：业务用例、owner 状态、EventHub `Send/Post/Subscribe`、handler、后台任务、持久化决策。
-- `service/`：route、HTTP/CLI/TUI 输入输出和协议适配；只依赖本单元 Biz 或稳定 port，不接收 `event.Hub`。
+- `service/`：route、请求响应和协议适配；只依赖本单元 Biz 或稳定 port，不接收 `event.Hub`。
 - `pkg/events/`：由事件投递 owner 定义具体 topic、Command、Data、Result；禁止 `any`、map、JSON 或通用 envelope。
 - `internal/`：只能被本单元使用的实现细节。
 
@@ -93,7 +93,7 @@ module.go ──constructs──> biz.Biz(Base) ──uses──> EventHub / Bac
 
 ## 5. 何时创建可选目录
 
-- 没有入站 HTTP/CLI/TUI adapter，不创建 `service/`。
+- 没有入站协议 adapter，不创建 `service/`。
 - 没有跨 owner 的事件合同，不创建 `pkg/events/`；一旦有合同，必须由该 owner 定义。
 - 私有 entity、repository adapter、mapper 不应放入 `pkg/models`；放入 `internal/` 或 Biz 私有文件。
 - 纯 DTO、view model、filter 可以留在 `pkg/models` / `pkg/common`，但不能借此暴露 owner 的可变资源。

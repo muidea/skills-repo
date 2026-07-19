@@ -1,4 +1,4 @@
 interface:
   display_name: "Go Multi Module Dev"
-  short_description: "Integrate Initiator, Block, Module and EventHub"
-  default_prompt: "Use $go-multi-module-dev to design or migrate this magicCommon/framework Go repository with explicit Initiator, Block, Module, EventHub, process-service, and magicEngine route boundaries."
+  short_description: "Design framework units and custom process services"
+  default_prompt: "Use $go-multi-module-dev to design or migrate this magicCommon/framework Go repository with explicit Initiator, Block, Module, EventHub, process Service, and optional magicEngine route boundaries."
