@@ -52,6 +52,13 @@ if [ "$GO_MOD" = "/dev/null" ] || [ ! -f "$GO_MOD" ]; then
 fi
 PROJECT_ROOT="$(dirname "$GO_MOD")"
 MODULE_PATH="$(cd "$PROJECT_ROOT" && go list -m -f '{{.Path}}')"
+BASE_BIZ_FILE="$PROJECT_ROOT/internal/modules/base/biz/base.go"
+
+if [ ! -f "$BASE_BIZ_FILE" ]; then
+    echo "error: shared Base Biz not found: $BASE_BIZ_FILE"
+    echo "create internal/modules/base/biz/base.go from references/BASE_BIZ.md before generating a runtime unit"
+    exit 1
+fi
 
 trim_path() {
     local path="$1"

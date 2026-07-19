@@ -30,6 +30,8 @@ project-root/
 
 `internal/modules/base/biz` 是 Module/Block 的共享业务基座：它只封装 owner ID、`event.Hub`、`event.SimpleObserver` 与 `task.BackgroundRoutine` 的 owner-neutral 操作。它没有 `init`、不注册 framework plugin、不声明业务 topic，也不能 import 具体运行单元、HTTP 或业务配置。
 
+创建或迁移该目录时，`base.go` 的完整代码、Teardown 责任和测试清单以 [BASE_BIZ.md](BASE_BIZ.md) 为准；不要从结构示例中推导或删减 Base API。
+
 ## 2. Initiator / Block / Module 决策
 
 | 类型 | 根目录 | 核心职责 | EventHub Base Biz |

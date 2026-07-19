@@ -6,25 +6,7 @@
 
 仓库应先提供 `internal/modules/base/biz/base.go`。它是共享 library，不是 Plugin Module：没有 `init`、`Register`、业务 topic 或具体运行单元 import。
 
-```go
-type Base struct {
-    id                string
-    eventHub          event.Hub
-    simpleObserver    event.SimpleObserver
-    backgroundRoutine task.BackgroundRoutine
-}
-
-func New(id string, hub event.Hub, background task.BackgroundRoutine) Base {
-    return Base{
-        id:                id,
-        eventHub:          hub,
-        simpleObserver:    event.NewSimpleObserver(id, hub),
-        backgroundRoutine: background,
-    }
-}
-```
-
-它可以提供 `ID`、`SubscribeFunc`、`UnsubscribeFunc`、`SendEvent`、`PostEvent` 和 BackgroundRoutine 包装；不得提供业务 topic alias、`any`/map payload helper、跨 owner Service registry 或业务状态。
+完整 `base.go` 必须采用 [BASE_BIZ.md](BASE_BIZ.md) 中的标准实现，不要只复制字段与构造函数片段。它提供 `ID`、`EventHub`、`BackgroundRoutine`、自定义 Observer 与 ObserverFunc 的订阅/解除订阅、`SendEvent`、`PostEvent`、`SyncTask`、`AsyncTask` 和 `Timer`；不得提供业务 topic alias、`any`/map payload helper、跨 owner Service registry 或业务状态。
 
 ## 2. Module / Block Biz 骨架
 
