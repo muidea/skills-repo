@@ -3,7 +3,7 @@ name: skillhub-skill-lifecycle
 description: 用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.1.1"
+  version: "1.1.2"
   author: "rangh-codespace"
   created_at: "2026-04-24T20:05:43+08:00"
 ---
@@ -29,7 +29,7 @@ metadata:
 - 只要任务直接触达当前项目 `.agents/skills/`，优先先加载本 skill，再决定是否需要额外的内容设计 skill。
 - 不要把“内容编辑”和“skill 生命周期管理”拆成互不相关的两步；只要修改了工作区 skill，就必须至少补 `status`、`validate`、`feedback` 这条链。
 - 不要绕过 `skill-hub` 直接写 `~/.skill-hub/state.json` 来登记 skill。
-- 对尚未在项目本地工作区登记的 skill，必须先运行 `skill-hub create <id>`。
+- 对尚未在项目本地工作区登记、但目录已存在的 skill，必须先运行 `skill-hub register <id>`；只有需要新建模板时才运行 `skill-hub create <id>`。
 - `feedback` 只用于把已登记的项目本地 skill 归档到默认本地仓库。
 - 缺少 frontmatter 的旧格式 `SKILL.md`，先补齐必要元数据，再运行 `create`。
 - 批量操作前先备份将要修改的 `.agents/skills` 目录或相关 skill 目录。
@@ -65,24 +65,24 @@ metadata:
 
 ### 2. 先创建登记项
 
-对不是通过 `skill-hub create` 生成的 skill，先执行：
+对不是通过 `skill-hub create` 生成、且目录与 `SKILL.md` 已存在的 skill，先执行：
 
 ```bash
-skill-hub create <id> --target open_code
+skill-hub register <id>
 ```
 
 这一步的作用是：
 
-- 刷新项目状态
 - 把 skill 登记到当前项目工作区
 - 建立工作区 skill 和仓库 skill 的映射
+- 保留现有 skill 内容，不创建或覆盖文件
 
-如果目录和 `SKILL.md` 已存在，`create` 不会覆盖内容，只会完成登记。
+只有在需要创建新的标准模板时，才运行 `skill-hub create <id>`。
 
 ### 3. 检查状态
 
 ```bash
-skill-hub status <id>
+skill-hub status --pattern <id>
 ```
 
 关注状态：
@@ -99,7 +99,7 @@ skill-hub status <id>
 ### 4. 验证结构
 
 ```bash
-skill-hub validate <id>
+skill-hub validate --pattern <id> --links
 ```
 
 至少保证：
@@ -111,7 +111,7 @@ skill-hub validate <id>
 ### 5. 先 dry-run 归档
 
 ```bash
-skill-hub feedback <id> --dry-run
+skill-hub feedback --pattern <id> --dry-run
 ```
 
 确认：
@@ -123,7 +123,7 @@ skill-hub feedback <id> --dry-run
 ### 6. 正式归档到本地仓库
 
 ```bash
-skill-hub feedback <id> --force
+skill-hub feedback --pattern <id> --force
 ```
 
 `--force` 适合批处理或已完成人工确认的场景。归档后，skill 会写入默认归档仓库，并刷新 registry。
@@ -131,10 +131,22 @@ skill-hub feedback <id> --force
 ### 7. 推送到远程
 
 ```bash
-skill-hub push
+skill-hub push --dry-run --json
 ```
 
-这一步会把默认本地仓库里的新 skill 提交并推送到远程仓库。
+仅在用户明确要求发布后，才执行 `skill-hub push --message "..."`；本地归档不等于远程发布。
+
+## 提交历史与偏差信息修复
+
+当 `status`、全局 manifest、项目副本或 `registry.json` 之间出现版本、正文或资源偏差时，按下面顺序处理：
+
+1. 以默认本地仓库 `skills/<id>/` 的 Git 提交历史为内容依据：`git -C ~/.skill-hub/repositories/<default> log --follow -- skills/<id>/SKILL.md`。
+2. 核对当前 `SKILL.md` 的显式 `version` 与 `registry.json` 的同 ID 记录；缺失版本导致的 `1.0.0` 回退属于待修复的信息缺失。
+3. 先修复默认仓库中的权威副本，再用 `skill-hub apply --pattern <id>` 刷新项目副本，或用 `skill-hub apply --pattern <id> --global --dry-run` 预览并刷新 agent 全局副本。
+4. 用 `status --global --pattern <id> --json` 核对 source、applied、actual hash；项目副本使用 `validate --pattern <id> --links` 核对。
+5. 若需重建索引，先查看 `registry.json` 的 Git diff，只保留与本次修复相关的条目，避免把全量索引格式变化混入修复。
+
+不要把旧项目副本直接 `feedback` 回仓库来“修复”偏差。归档保护会拒绝删除版本、核心 frontmatter、工作章节或资源的更新，`--force` 也不会绕过该保护。
 
 ## 批量收集和归档流程
 
