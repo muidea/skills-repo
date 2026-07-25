@@ -1,6 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，共享 Base Biz、EventHub 合同、入口与进程级 Service、内置 Service 替换、路由接线、目录拆分和结构验收。新增、迁移或收口 framework 运行单元及定制进程生命周期时使用。
+version: 2.5.1
 ---
 
 # Go Multi Module Development
