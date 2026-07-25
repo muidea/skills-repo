@@ -1,7 +1,6 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，共享 Base Biz、EventHub 合同、入口与进程级 Service、内置 Service 替换、路由接线、目录拆分和结构验收。新增、迁移或收口 framework 运行单元及定制进程生命周期时使用。
-version: 2.5.1
 ---
 
 # Go Multi Module Development
@@ -118,13 +117,13 @@ version: 2.5.1
 - 拆分后的 package 必须能用一句话说明职责；如果一个名字需要同时解释“读、写、治理、投影、运行期调度”，说明粒度过大。
 - 如果两个 package 总是双向调用、共享同一批私有数据或必须按固定顺序修改同一状态，它们不应拆成两个 owner/module；应保留在一个 owner 内部，或抽出纯 helper。
 - 如果一个 package 只包含一个很小的 wrapper、没有独立测试价值、没有清晰复用场景，也没有隔离边界价值，说明拆分过度。
-- 不带业务归属的 runtime policy、执行状态等基础值类型可放在 `internal/pkg/<runtime-contract>`；事件 command/data/result 必须由事件投递组件自己的 `pkg/events` 定义，消费组件按需导入该包。
+- 跨合同复用且不可变的 owner-neutral 纯值类型（例如稳定 ID、时间范围、分页游标）可放在小粒度 `internal/pkg/<value-domain>`；它不得承载 topic、`Command`、`Data`、`Result`、业务逻辑或可变资源。事件合同必须由维护对应资源或状态的能力 owner 在自己的 `pkg/events` 定义，调用方按需导入该包。
 - initiator 只能提供一种基础设施能力；如果同时需要 repository、EventHub、runtime policy、route registry 等能力，应拆成多个 initiator 或直接使用 framework 注入的基础设施，不能建立综合 runtime 容器。
 - “当前业务运行时缺失时如何处理”属于具体服务自己的启动治理逻辑，应放在该服务自己的 startup / persistence / system 类运行单元中，不要下沉到共享基础层。
 - 如果启动链路中的必需 client、持久化能力或 Initiator helper 未就绪，后续运行单元必须 fail-fast 返回明确错误，禁止继续执行到低层实现再发生 nil pointer panic。
 - `biz/bootstrap` 可以显式组合当前运行域所需对象，但不要复用 framework plugin manager 扫描全局注册表来装配局部 runtime；局部 runtime 应使用显式 lifecycle 列表和窄接口 exports。
 - 局部 runtime 或 Initiator helper 不能演变成跨 owner Service 注册表；不要通过全局 facade 让调用方绕过 owner Module。
-- module/block 间需要协同时，事件投递组件在自己的 `pkg/events` 定义稳定 topic 以及具体 `Command`、`Data`、`Result` 类型；消费组件只导入投递组件的事件包、订阅对应 command，并在 handler 内调用自己的内部 service/repository。
+- module/block 间需要协同时，维护对应资源或状态的能力 owner 在自己的 `pkg/events` 定义稳定 topic 以及具体 `Command`、`Data`、`Result` 类型；调用方导入该能力合同并投递或订阅。不得因调用方不同复制同一能力的 topic、DTO 或 handler。
 - 同步交互直接使用 magicCommon `event.Hub.Send` 与 `event.Result`；handler 通过 `event.Result.Set(<具体 Result>, err)` 返回结果，调用方必须校验结果存在、错误和值类型，禁止使用 `events.Response`、Envelope 或通用 command wrapper。
 - 异步通知使用 `event.Hub.Post`；Post handler 收到的 `event.Result` 可能为 nil，禁止调用 `result.Set`。需要回执、失败判定或强一致记账时必须使用 `Send`。
 - `Command`、`Data`、`Result` 中禁止用 `map[string]any`、`[]any` 或无约束 `any` 承载组件合同，也禁止通过 JSON marshal/unmarshal、反射类型表或兼容桥完成组件内传输。
@@ -159,8 +158,8 @@ version: 2.5.1
 - Post 边界：异步 handler 是否完全不依赖 `event.Result`；是否有 result=nil 的直接回归测试。
 - owner 边界：module/block 是否只访问自己的 repository/service；跨组件写入、读取和状态转换是否都走 EventHub。
 - scope 边界：局部唯一 ID 跨 owner 或协议边界时是否携带足够 scope；缺少 scope 时是否拒绝歧义解析。
-- 契约边界：事件投递组件是否定义了具体 command/data/result；消费组件是否只导入投递组件 `pkg/events`；是否不存在 map/any、JSON、reflect 或兼容桥传输。
-- topic 边界：业务 topic 是否只在事件投递组件 `pkg/events` 定义；基础 events 包是否没有业务 topic alias 或通用投递/订阅封装。
+- 契约边界：维护资源或状态的能力 owner 是否定义了具体 command/data/result；调用方是否只导入能力 owner 的 `pkg/events`，且没有为不同调用方复制合同或 handler；是否不存在 map/any、JSON、reflect 或兼容桥传输。
+- topic 边界：业务 topic 是否只在能力 owner 的 `pkg/events` 定义；基础 events 包是否没有业务 topic alias 或通用投递/订阅封装。
 - 粒度边界：module 是否确实组合多个组件合同，block 是否只承担单一资源/技术能力，initiator 是否单一且无业务状态。
 - facade 扫描：是否不存在跨 owner Service 注册表、全局实现导出或 application 层直接访问 owner repository 等生产残留。
 - 后台任务：长期任务、timer、恢复扫描和异步作业是否挂在 framework `BackgroundRoutine` 或统一 scheduler。
@@ -196,7 +195,7 @@ version: 2.5.1
 - `internal/modules/base/biz` 是 Module/Block 的共享业务基座，不是 Initiator 基类，也不是跨 owner 的 Service/Registry。它只能提供 ID、observer、Hub Send/Post/Subscribe 和 BackgroundRoutine 的 owner-neutral 包装。
 - 使用 Hub 的 Module/Block 必须在自己的 Biz 内嵌 Base；Module root、协议 service 和其它 adapter 不得保留 Hub、SimpleObserver 或订阅。所有 topic 和 typed message 仍由具体 owner 的 `pkg/events` 定义，Base 不定义业务合同。
 - 入站适配器和进程 service 访问正式 owner state 时必须走 EventHub-backed port 或本 Module 的窄 facade，不直接 import owner `biz`/`service`/正式 repository。
-- 每个事件的 topic、具体 command/data/result 由投递组件定义；消费组件导入投递组件 `pkg/events` 并按需订阅，不复制类型或通过共享 alias 获取。
+- 每项能力的 topic、具体 command/data/result 由维护资源或状态的能力 owner 定义；调用方导入 owner 的 `pkg/events` 并按需投递或订阅，不复制类型、topic 或 handler，也不通过共享 alias 获取。
 - module/block 间同步交互直接使用 magicCommon `event.Result` 返回具体 result；缺失结果、类型不匹配或错误都不能当成成功。
 - 禁止 Envelope、`events.Response`、`map[string]any`/`[]any` payload、JSON 编解码、反射合同和通用 Send/Subscribe facade 作为组件交互兼容层。
 - 跨作用域对象操作必须在合同中携带可消除歧义的 scope；无法提供时只能唯一解析或返回冲突。

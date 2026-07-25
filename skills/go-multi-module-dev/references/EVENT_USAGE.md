@@ -9,8 +9,8 @@
 
 ## 2. 处理顺序
 
-1. 事件投递组件在自己的 `pkg/events` 定义事件 ID 和具体 `Command`、`Data`、`Result`
-2. 消费组件导入投递组件的 `pkg/events`，按需订阅对应 command
+1. 维护对应资源或状态的能力 owner 在自己的 `pkg/events` 定义事件 ID 和具体 `Command`、`Data`、`Result`
+2. 调用方导入能力 owner 的 `pkg/events`，按需投递或订阅对应合同；同一能力不能因调用方不同复制 topic、DTO 或 handler
 3. 投递与消费由具体单元的 `biz` 调用 magicCommon `event.Hub` 的 `Send`、`Post`、`Subscribe`；Biz 必须内嵌 `internal/modules/base/biz.Base`
 4. 同步 handler 使用 `event.Result.Set(<具体 Result>, err)` 返回，不增加通用 response 或 command wrapper
 5. 在 `biz` 层承载订阅、投递和 handler 逻辑；`module.go` 仅接线，`service` 不接收 Hub、也不堆复杂事件流程
@@ -44,7 +44,7 @@ func New(eventHub event.Hub, background task.BackgroundRoutine) *UnitBiz {
 - module/block 间所有运行期交互只能通过 EventHub，不直接注入或调用对方 service、repository、adapter、reader callback
 - 事件合同必须使用具体类型；禁止用 `map[string]any`、`[]any` 或无约束 `any` 承载 command/data/result
 - 禁止 Envelope、`events.Response`、JSON marshal/unmarshal、reflect 类型表或通用 Send/Subscribe facade 作为组件交互兼容层
-- 共享基础包可以提供 owner-neutral 值类型或 EventHub helper，但不能定义业务 topic alias 或代替投递组件拥有事件合同
+- 共享基础包只能提供跨合同复用且不可变的 owner-neutral 纯值类型或 EventHub helper；纯值包不得定义 topic、`Command`、`Data`、`Result`、业务逻辑或可变资源，业务合同仍由能力 owner 拥有
 - EventHub payload/result 只传数据，不传 `io.Writer`、`http.ResponseWriter`、channel、store、repository、Registry、Recorder 或其它可变资源句柄
 - owner-specific EventHub-backed port 可以封装重复调用，但只能保存 hub/source 和 typed mapping，不得保存 owner 实现
 - `Post` handler 的 `event.Result` 可能为 nil；普通 Hub 会恢复 panic 并记录告警，因此必须补直接调用 handler(result=nil) 的回归测试
