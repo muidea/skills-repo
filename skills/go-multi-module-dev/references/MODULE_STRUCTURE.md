@@ -88,7 +88,7 @@ module.go ──constructs──> biz.Biz(Base) ──uses──> EventHub / Bac
 - `module.go`：注册、获取 Initiator helper、构造 Biz/Service、生命周期桥接；`Setup` 仅把 Hub 和 BackgroundRoutine 传给 `biz.New`。
 - `biz/`：业务用例、owner 状态、EventHub `Send/Post/Subscribe`、handler、后台任务、持久化决策。
 - `service/`：route、请求响应和协议适配；只依赖本单元 Biz 或稳定 port，不接收 `event.Hub`。
-- `pkg/events/`：由事件投递 owner 定义具体 topic、Command、Data、Result；禁止 `any`、map、JSON 或通用 envelope。
+- `pkg/events/`：由维护资源或状态的能力 owner 定义具体 topic、Command、Data、Result；调用方导入并使用该合同，不得复制同一能力的 topic、DTO 或 handler。禁止 `any`、map、JSON 或通用 envelope。
 - `internal/`：只能被本单元使用的实现细节。
 
 禁止在 `module.go`、`service/` 或其它 adapter 中保存 `event.Hub`、创建 `event.SimpleObserver`、订阅 topic 或直接调用 `Send/Post`。如果该逻辑存在，应下沉到自身 Biz。
