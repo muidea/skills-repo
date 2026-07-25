@@ -1,11 +1,10 @@
 ---
 name: skill-hub-skill-authoring
 description: "Primary workflow when creating or updating skills in an environment where skill-hub is installed, available, or used to manage skills. Use this before the generic skill-creator for skill-hub managed skills. Covers creating, repairing, validating, registering, importing, archiving, and otherwise managing reusable local skills with skill-hub; authoring Chinese-by-default SKILL.md files; declaring the matching formatter; maintaining .agents/skills content; syncing local project skill edits back to the default skill repository; and previewing remote push without publishing unless explicitly requested."
-compatibility: "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub"
 metadata:
   author: skill-hub Team
   tags: skill-hub,skill-authoring,skills,validation,feedback
-  version: 1.0.5
+  version: 1.0.6
 ---
 
 # Skill Hub Skill Authoring
@@ -37,7 +36,7 @@ skill-hub feedback --pattern <skill-id> --dry-run
 - `import <skills-dir> --archive --archive-only --force` is the archive path for existing skill directories outside the standard project workspace, including release-bundled `agent-skills/*`, when they should not be registered in the current project state.
 - `repo rebuild-index [repo]` repairs stale `registry.json` indexes; do not use manual directory copies as an archive workflow.
 - `push` publishes local repository changes to a remote and must only run after explicit user approval.
-- Compatibility metadata is descriptive. Do not create target-specific branches or write `preferred_target`.
+- Do not create target-specific branches or write `preferred_target`.
 
 ## Start Or Inspect A Skill Workspace
 
@@ -210,7 +209,7 @@ After feedback, confirm the project and repository copies are synced:
 skill-hub status --pattern <skill-id> --json
 ```
 
-The archive guard rejects updates that drop an existing explicit version, frontmatter field, first- or second-level section, or a resource under `references/`, `scripts/`, `assets/`, or `agents/`. `--force` does not bypass this integrity protection. If an intentional removal is required, first record and review the canonical repository change rather than using an incomplete project copy as the source.
+The archive guard rejects updates that drop an existing explicit version, required frontmatter, a first- or second-level section, or a resource under `references/`, `scripts/`, `assets/`, or `agents/`. `--force` does not bypass this integrity protection. Retired metadata with no consumer may be removed through a normal update. If an intentional removal is required, first record and review the canonical repository change rather than using an incomplete project copy as the source.
 
 `repo rebuild-index` can rewrite metadata for many skills. Review `git -C ~/.skill-hub/repositories/<default> diff -- registry.json` after rebuilding; keep the repair scoped to the intended skills instead of accepting unrelated index churn.
 

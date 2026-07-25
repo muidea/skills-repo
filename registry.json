@@ -88,7 +88,6 @@
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/application 的 Go 服务中创建、接线和管理应用运行时、service、event.Hub 与 task.BackgroundRoutine，覆盖 Startup/Run/Shutdown、EventHub Post/Send、lane 顺序、后台任务、关闭重建、健康状态和验证；处理应用框架与事件运行时协同时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/go-application-event-runtime/SKILL.md"
     },
@@ -99,7 +98,6 @@
       "author": "unknown",
       "description": "用于初始化类似现有 Go 多应用、多运行单元服务套件的新项目骨架，覆盖仓库结构、应用入口、运行单元生命周期、配置、路由、健康检查、测试与文档基线；创建通用服务框架项目时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/go-modular-project-bootstrap/SKILL.md"
     },
@@ -110,7 +108,6 @@
       "author": "unknown",
       "description": "用于在基于 magicCommon framework/plugin 的 Go 服务中创建、接线和管理 initiator 与运行单元生命周期，覆盖 ID/Weight、Setup/Run/Teardown、依赖获取、启动顺序、listener/后台任务生命周期和验证；新增或调整插件生命周期时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/go-module-initiator-lifecycle/SKILL.md"
     },
@@ -161,7 +158,6 @@
       "author": "unknown",
       "description": "用于处理 `magicBase` 的启动链路、initiator 装配、主入口调整和应用级排障。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-app-bootstrap/SKILL.md"
     },
@@ -172,7 +168,6 @@
       "author": "unknown",
       "description": "用于处理 `pkg/client` 的请求封装、接口对接和集成测试。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-client-integration/SKILL.md"
     },
@@ -183,7 +178,6 @@
       "author": "unknown",
       "description": "用于基于 magicBase 定义 Application、Entity、Entity fields/constraints、Block 与 serviceExpose 能力并接入数据存储，覆盖 ApplicationDeclare/数据库绑定、Entity remote.Object/schema 注册、字段类型/主键/生成策略/viewDeclare/constraint/defaultValue/relation、blockInfo 能力声明、EntityServiceExpose 能力项开放、pkg/helper DAO 使用、kernel/public 值读写、query/write 语义和恢复校验；在应用端用 magicBase 承载业务数据或开放实体服务能力时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-data-capability-definition/SKILL.md"
     },
@@ -194,7 +188,6 @@
       "author": "unknown",
       "description": "Use when implementing or reviewing thin HTTP CRUD shells on top of magicBase/pkg/toolkit/http_crud.go, including standard request decode, REST id handling, model-to-view conversion, and deciding when generic CRUD helpers are appropriate.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on services built on magicBase that want to reuse generic HTTP CRUD shell helpers without moving business semantics into the toolkit layer.",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-http-crud-toolkit/SKILL.md"
     },
@@ -205,7 +198,6 @@
       "author": "unknown",
       "description": "用于处理 `magicBase` 的 HTTP handler、请求解码、错误包装和分页响应。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-http-handlers/SKILL.md"
     },
@@ -216,7 +208,6 @@
       "author": "unknown",
       "description": "用于处理 `kernel/base` 和 `kernel/public` 内部的应用、实体、Block、值对象和 `extData` 实现逻辑；应用侧定义 Application/Entity/Block 并接入数据存储时优先使用 magicbase-data-capability-definition。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-kernel-entity/SKILL.md"
     },
@@ -227,7 +218,6 @@
       "author": "unknown",
       "description": "用于处理 `magicBase` 的 kernel/block 模块开发、路由装配和模块生命周期；如果只是定义应用侧 BlockInfo 能力并接入数据存储，优先使用 magicbase-data-capability-definition。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-module-dev/SKILL.md"
     },
@@ -238,7 +228,6 @@
       "author": "unknown",
       "description": "Use when wiring modules, startup order, dependency registration, or runtime initialization in services built on magicBase. Covers module boundaries, bootstrap flow, and startup-safe extension patterns.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that build services on magicBase module and startup conventions. Assumes local repository access and application bootstrap code; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-module-startup/SKILL.md"
     },
@@ -249,7 +238,6 @@
       "author": "unknown",
       "description": "Use when implementing or reviewing magicBase monitoring, operational dashboards, data-accuracy checks, or service health workflows. Covers monitoring semantics, metric correctness, and operational debugging patterns.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that use magicBase monitoring, health, or operational dashboards. Assumes local repository access and monitoring-related code or docs; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-monitoring-operations/SKILL.md"
     },
@@ -260,7 +248,6 @@
       "author": "unknown",
       "description": "用于在 magicBase 中定义和管理普通路由、CAS 认证路由、RoleRouteRegistry 权限路由、Privilege 权限项、session 绑定和鉴权中间件；新增带权限 HTTP API、定义权限值、排查 401/403 或 register privilege failed 时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-role-routing/SKILL.md"
     },
@@ -271,7 +258,6 @@
       "author": "unknown",
       "description": "Use when reviewing magicBase routing, request entry handling, auth boundaries, or endpoint-level request processing after routes and privileges are defined. Covers route ownership, auth checks, and the rule that entrypoint behavior must not distort magicOrm and magicBase service contracts; use magicbase-role-routing for route and privilege definition.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that expose HTTP services through magicBase routing and auth layers. Assumes local repository access and handler code; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-routing-auth/SKILL.md"
     },
@@ -282,7 +268,6 @@
       "author": "unknown",
       "description": "Use when building or reviewing business data access on top of magicBase and magicOrm after Application/Entity capability is already defined. Covers DAO/helper usage, query endpoint behavior, ignored query mask params, and the rule that business services must not bypass magicOrm contracts; use magicbase-data-capability-definition for Application, Entity, Block and storage capability definition.",
       "tags": null,
-      "compatibility": "Designed for agent clients working in repositories that expose business CRUD through magicBase on top of magicOrm. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicbase-service-access/SKILL.md"
     },
@@ -303,7 +288,6 @@
       "author": "unknown",
       "description": "用于处理 `magicCas` 的启动链路、initiator 装配、主入口调整和应用级排障。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-app-bootstrap/SKILL.md"
     },
@@ -314,7 +298,6 @@
       "author": "unknown",
       "description": "用于处理 `magicCas` 与 `magicBase` 之间的应用绑定、模型初始化和 client 集成。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-base-integration/SKILL.md"
     },
@@ -325,7 +308,6 @@
       "author": "unknown",
       "description": "用于处理 `magicCas` 的基础 block 模块，包括 `account`、`endpoint`、`namespace`、`role`、`totalizator`；不用于承载 `kernel/registration` 这类基于基础 block 编排的 CAS 治理流程。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-block-module/SKILL.md"
     },
@@ -336,7 +318,6 @@
       "author": "unknown",
       "description": "用于处理 `magicCas` 的登录、刷新、JWT / endpoint 会话、命名空间校验、账号/端点角色绑定演进、注册准入治理，以及 `kernel/cas` / `kernel/registration` 与 `account` / `role` / `namespace` / `endpoint` 授权链路的联动逻辑。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-cas-auth/SKILL.md"
     },
@@ -347,7 +328,6 @@
       "author": "unknown",
       "description": "用于处理 `magicCas` 的 HTTP handler、请求体解析、REST ID 解析和返回语义；登录、刷新、JWT、endpoint token 或角色授权链路优先使用 magiccas-cas-auth。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magiccas-http-handlers/SKILL.md"
     },
@@ -568,7 +548,6 @@
       "author": "unknown",
       "description": "用于处理 `magicFile` 的启动入口、模块装配和对 `magicModulesRepo` initiator 的依赖。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicfile-app-bootstrap/SKILL.md"
     },
@@ -579,7 +558,6 @@
       "author": "unknown",
       "description": "用于处理 `magicFile/pkg/client` 的调用约定、URL 构造和上下文参数传递。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicfile-client-integration/SKILL.md"
     },
@@ -590,7 +568,6 @@
       "author": "unknown",
       "description": "用于处理 `magicFile` 的文件上传、下载、浏览、元数据管理和清理逻辑。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicfile-file-service/SKILL.md"
     },
@@ -611,7 +588,6 @@
       "author": "unknown",
       "description": "用于处理 `magicModulesRepo` 的启动链路、initiator 装配和 listener 生命周期问题。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-app-bootstrap/SKILL.md"
     },
@@ -622,7 +598,6 @@
       "author": "unknown",
       "description": "用于处理 `magicModulesRepo` 里 `cas` 模块的事件桥接和 `magicCas` 客户端调用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-cas-bridge/SKILL.md"
     },
@@ -633,7 +608,6 @@
       "author": "unknown",
       "description": "用于处理 `magicModulesRepo` 的 metrics 模块装配和后续扩展。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-metrics-module/SKILL.md"
     },
@@ -654,7 +628,6 @@
       "author": "unknown",
       "description": "用于处理 `magicModulesRepo` 的 totalizator 模块，包括事件入口、BaseClient 调用和 namespace 语义。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicmodulesrepo-totalizator/SKILL.md"
     },
@@ -665,7 +638,6 @@
       "author": "unknown",
       "description": "Use when investigating long-run slowdown or aging warnings on services built with magicOrm and magicBase. Covers distinguishing functional correctness from performance drift, request-level versus full-flow latency, and framework-safe diagnosis steps.",
       "tags": null,
-      "compatibility": "Designed for agent clients diagnosing aging or long-run performance behavior in repositories built on magicOrm and magicBase. Assumes local repository access and runtime logs; network access is not required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-aging-diagnosis/SKILL.md"
     },
@@ -676,7 +648,6 @@
       "author": "unknown",
       "description": "Use when defining, reviewing, or fixing magicOrm entity models in struct tags or entity JSON. Covers viewDeclare, constraints, readonly/default fields, and the rule that framework behavior must follow entity definitions rather than app-side patches.",
       "tags": null,
-      "compatibility": "Designed for agent clients working in repositories that use magicOrm model definitions and magicBase-based services. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-entity-definition/SKILL.md"
     },
@@ -687,7 +658,6 @@
       "author": "unknown",
       "description": "Use when diagnosing magicOrm failures, error-code handling, metrics output, or instrumentation behavior. Covers framework error boundaries, metrics interpretation, and observability-safe debugging.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that expose magicOrm metrics or error flows and need framework-level diagnostics. Assumes local repository access and runtime logs or tests; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-error-observability/SKILL.md"
     },
@@ -718,7 +688,6 @@
       "author": "unknown",
       "description": "用于在应用端正确使用 magicOrm Local Provider、Remote Provider、remote.Object、ObjectValue、SliceObjectValue 和 provider/helper 转换，覆盖模型注册、GetObject/GetObjectValue、UpdateEntity、Query/Insert/Update 输入边界、nil/empty/assigned 语义和验证；接入 magicOrm 动态模型或远端对象时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-provider-object-usage/SKILL.md"
     },
@@ -729,7 +698,6 @@
       "author": "unknown",
       "description": "Use when defining or reviewing magicOrm local or remote provider behavior, relation modeling, relation response shape, and spec generation. Covers relation-lite rules and the rule that relationView is not a public capability.",
       "tags": null,
-      "compatibility": "Designed for agent clients working with magicOrm local or remote providers and relation-heavy entity models. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-provider-relation/SKILL.md"
     },
@@ -750,7 +718,6 @@
       "author": "unknown",
       "description": "Use when implementing or reviewing magicOrm query and write behavior. Covers Query vs BatchQuery semantics, ValueMask and view precedence, relation-lite rules, and insert/update response projection.",
       "tags": null,
-      "compatibility": "Designed for agent clients working in repositories that use magicOrm query and write paths directly or through magicBase. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-query-write-contract/SKILL.md"
     },
@@ -761,7 +728,6 @@
       "author": "unknown",
       "description": "Use when validating that business services still follow magicOrm and magicBase contracts. Covers definition-alignment checks, module tests, framework regressions, and how to distinguish test expectation bugs from framework bugs.",
       "tags": null,
-      "compatibility": "Designed for agent clients validating repositories that use magicOrm definitions and magicBase service plumbing. Assumes local repository access and project test tooling; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-regression-testing/SKILL.md"
     },
@@ -772,7 +738,6 @@
       "author": "unknown",
       "description": "Use when creating, dropping, reviewing, or evolving magicOrm database schema behavior. Covers Create and Drop semantics, relation tables, type mapping, and the rule that schema changes must follow model declarations.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that rely on magicOrm to manage database schema and relation tables. Assumes local repository access and database-facing source code; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-schema-lifecycle/SKILL.md"
     },
@@ -793,7 +758,6 @@
       "author": "unknown",
       "description": "Use when implementing or reviewing magicOrm mutation and transaction behavior. Covers Insert, Update, Delete, Count, transaction boundaries, relation persistence, and the rule that mutation semantics must stay inside magicOrm rather than app-side wrappers.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on repositories that use magicOrm for transactional mutation and relation persistence. Assumes local repository access and test tooling; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-transaction-operations/SKILL.md"
     },
@@ -814,7 +778,6 @@
       "author": "unknown",
       "description": "Use when implementing or reviewing magicOrm validation, readonly handling, defaults, and insert or update write safety. Covers req or ro or range or enum or format constraints and framework-level enforcement.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on magicOrm validation and persistence safety in repositories that rely on framework-enforced model constraints. Assumes local repository access; no network access is required.",
       "repository": "skills-repo",
       "repository_path": "skills/magicorm-validation-write-safety/SKILL.md"
     },
@@ -845,7 +808,6 @@
       "author": "unknown",
       "description": "DEPRECATED: 旧的项目专属应用启动 skill。新建通用 Go 多应用、多模块服务套件时改用 go-modular-project-bootstrap；仅维护既有 magicRunner 项目入口时临时参考。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-app-bootstrap/SKILL.md"
     },
@@ -856,7 +818,6 @@
       "author": "unknown",
       "description": "用于处理 magicRunner 的应用运行生命周期，覆盖 ApplicationDefinition/Package/Release 到 ApplicationRuntime 的安装、schema 创建回滚、installer 实体数据导入、compose 配置和 docker-compose 产物、Traefik 动态暴露、启动停止、卸载清理与操作记录；排查安装、启停、卸载、运行产物或数据库资源一致性时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-application-runtime-lifecycle/SKILL.md"
     },
@@ -867,7 +828,6 @@
       "author": "unknown",
       "description": "用于处理 `blocks/installer` 的离线安装、路径配置和应用包检查；完整应用运行生命周期、schema、compose、启停卸载链路优先使用 magicrunner-application-runtime-lifecycle。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-installer-offline/SKILL.md"
     },
@@ -878,7 +838,6 @@
       "author": "unknown",
       "description": "用于处理 `kernel/mcp` 的 SSE 接入和 MCP 路由装配。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-mcp-service/SKILL.md"
     },
@@ -889,7 +848,6 @@
       "author": "unknown",
       "description": "Use when reviewing or implementing standard CRUD handling for magicRunner native business models owned by panel or portal, or when deciding whether to reuse the thin magicBase/pkg/toolkit HTTP CRUD helpers instead of Runner fallback routes.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on magicRunner panel or portal native models. Assumes local repository access and no network access.",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-native-crud-toolkit/SKILL.md"
     },
@@ -900,7 +858,6 @@
       "author": "unknown",
       "description": "用于处理 `kernel/panel/service` 的 handler、鉴权上下文和管理台入口语义；服务治理主链优先使用 magicrunner-service-governance，应用安装启停卸载主链优先使用 magicrunner-application-runtime-lifecycle。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-panel-service/SKILL.md"
     },
@@ -911,7 +868,6 @@
       "author": "unknown",
       "description": "用于处理 `kernel/portal/service` 的门户接口、订阅入口和鉴权边界；服务治理主链和订阅凭据语义优先使用 magicrunner-service-governance，gateway 访问授权优先使用 magicrunner-service-gateway-auth。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-portal-service/SKILL.md"
     },
@@ -922,7 +878,6 @@
       "author": "unknown",
       "description": "用于处理 `kernel/runner` 的公开值代理路由注册和请求头注入。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-runner-proxy/SKILL.md"
     },
@@ -933,7 +888,6 @@
       "author": "unknown",
       "description": "Use when reviewing, implementing, or fixing magicRunner runtime-object routing, business-module CRUD route ownership, apps or panel or portal module RegisterRoute definitions, Runner.RegisterEntityRoute fallback behavior, 404 route mismatches, or URL constants that may violate magicRunner framework conventions. Covers route contract design, NormalizeURI effects, canonical CRUD routes, frontend REST paths, and quick diagnosis or repair of route deviations.",
       "tags": null,
-      "compatibility": "Designed for agent clients working on magicRunner modules that expose runtime objects through panel, portal, gateway, or other application-layer services. Assumes local repository access and no network access.",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-runtime-routing/SKILL.md"
     },
@@ -944,7 +898,6 @@
       "author": "unknown",
       "description": "Use when implementing, reviewing, or diagnosing magicRunner service gateway access, portal or panel service debugging, endpoint Sig token authorization, ServicePublication or ServiceSubscription access checks, and entity capability forwarding through gateway. Covers the boundary between gateway authorization, CAS sessions, subscription credentials, and magicBase public-value execution; use magicrunner-service-governance for the broader service definition, capability, publication, subscription, and credential governance chain.",
       "tags": null,
-      "compatibility": "Designed for agents working on magicRunner, magicCas, magicBase, and magicWebPortal service-access flows. Assumes local repository access and, when debugging runtime issues, access to docker logs or database access logs.",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-service-gateway-auth/SKILL.md"
     },
@@ -955,7 +908,6 @@
       "author": "unknown",
       "description": "用于处理 magicRunner 的服务治理主链，覆盖 EntityDefinition.serviceExpose、CapabilityDefinition 自动生成、ServiceDefinition 服务项、ServiceCapabilityBinding 聚合、ServicePublication 发布治理、ServiceSubscription 订阅、SubscriptionCredential 凭据、portal/panel 进入服务语义和 gateway 访问边界；排查能力项、服务项、发布、订阅、凭据或服务调试链路时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/magicrunner-service-governance/SKILL.md"
     },
@@ -1036,7 +988,6 @@
       "author": "unknown",
       "description": "Implement comprehensive testing strategies with pytest, fixtures, mocking, and test-driven development. Use when writing Python tests, setting up test suites, or implementing testing best practices.",
       "tags": null,
-      "compatibility": "opencode",
       "repository": "skills-repo",
       "repository_path": "skills/python-testing-patterns/SKILL.md"
     },
@@ -1047,7 +998,6 @@
       "author": "unknown",
       "description": "用于在当前任务中选择唯一主 skill 并降低重复触发歧义，覆盖 skill 管理、通用 Go 服务初始化、运行单元生命周期、应用运行时、基础框架能力与通用重构场景；当任务可能同时命中多个 skill 或需要判断 canonical/supporting skill 时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/skill-capability-index/SKILL.md"
     },
@@ -1064,33 +1014,30 @@
     {
       "id": "skill-hub-project-usage",
       "name": "skill-hub-project-usage",
-      "version": "1.0.7",
+      "version": "1.0.8",
       "author": "unknown",
       "description": "Use when helping an application or business project consume skills already managed by skill-hub, or when enabling managed skills globally on this machine for Codex, OpenCode, or Claude. Guides agents through initializing the project when needed, syncing repositories, listing/searching managed skills before use, selecting a suitable skill only when one exists, enabling skills with use or use --global, applying them to .agents/skills or agent global skills directories, checking status, and feeding project-local improvements back to the local skill repository without pushing remotely unless explicitly requested.",
       "tags": null,
-      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
       "repository": "skills-repo",
       "repository_path": "skills/skill-hub-project-usage/SKILL.md"
     },
     {
       "id": "skill-hub-skill-authoring",
       "name": "skill-hub-skill-authoring",
-      "version": "1.0.5",
+      "version": "1.0.6",
       "author": "unknown",
       "description": "Primary workflow when creating or updating skills in an environment where skill-hub is installed, available, or used to manage skills. Use this before the generic skill-creator for skill-hub managed skills. Covers creating, repairing, validating, registering, importing, archiving, and otherwise managing reusable local skills with skill-hub; authoring Chinese-by-default SKILL.md files; declaring the matching formatter; maintaining .agents/skills content; syncing local project skill edits back to the default skill repository; and previewing remote push without publishing unless explicitly requested.",
       "tags": null,
-      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
       "repository": "skills-repo",
       "repository_path": "skills/skill-hub-skill-authoring/SKILL.md"
     },
     {
       "id": "skill-hub-workflow",
       "name": "skill-hub-workflow",
-      "version": "1.1.9",
+      "version": "1.1.10",
       "author": "unknown",
       "description": "Use when deciding which skill-hub workflow applies or when the user asks broadly how to use skill-hub for skill management. When skill-hub is installed, available, or managing the project, route skill creation/update work to skill-hub-skill-authoring before generic skill-creator. Routes between creating/managing reusable local skills, consuming managed skills inside projects, and enabling managed skills globally on this machine. Prefer skill-hub-skill-authoring for authoring work and skill-hub-project-usage for project or global consumption work.",
       "tags": null,
-      "compatibility": "Designed for Claude Code, Cursor, OpenCode, and other AI coding assistants using skill-hub",
       "repository": "skills-repo",
       "repository_path": "skills/skill-hub-workflow/SKILL.md"
     },
@@ -1101,7 +1048,6 @@
       "author": "unknown",
       "description": "用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。",
       "tags": null,
-      "compatibility": "Compatible with open_code",
       "repository": "skills-repo",
       "repository_path": "skills/skillhub-skill-lifecycle/SKILL.md"
     },
