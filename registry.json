@@ -114,7 +114,7 @@
     {
       "id": "go-multi-module-dev",
       "name": "go-multi-module-dev",
-      "version": "2.5.1",
+      "version": "2.5.2",
       "author": "unknown",
       "description": "用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，共享 Base Biz、EventHub 合同、入口与进程级 Service、内置 Service 替换、路由接线、目录拆分和结构验收。新增、迁移或收口 framework 运行单元及定制进程生命周期时使用。",
       "tags": null,
@@ -1044,9 +1044,9 @@
     {
       "id": "skillhub-skill-lifecycle",
       "name": "skillhub-skill-lifecycle",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "author": "unknown",
-      "description": "用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。",
+      "description": "用于通过 skill-hub 创建、登记、补齐元数据、校验、归档、刷新项目本地或全局托管 skill。覆盖 .agents/skills 与全局 agent 引用的分流、归档和状态核对。",
       "tags": null,
       "repository": "skills-repo",
       "repository_path": "skills/skillhub-skill-lifecycle/SKILL.md"
