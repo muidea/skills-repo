@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，共享 Base Biz、EventHub 合同、入口与进程级 Service、内置 Service 替换、路由接线、目录拆分和结构验收。新增、迁移或收口 framework 运行单元及定制进程生命周期时使用。
-version: 2.5.1
+version: 2.5.2
 ---
 
 # Go Multi Module Development
@@ -230,5 +230,8 @@ GOCACHE=/tmp/go-multi-module-gocache go test ./... -count 1
 
 ## Formatter
 
-- Markdown/YAML: run `skill-hub validate --pattern go-multi-module-dev --links` before feedback.
+- 仅当本次修改了本 skill 自身的 `SKILL.md`、其 Markdown/YAML 引用资源或技能元数据时：在反馈前运行
+  `skill-hub validate --pattern go-multi-module-dev --links`。
+- 普通业务项目只是使用本 skill、而未修改 skill 文件时：不运行 `skill-hub validate`；应只执行项目自身适用的
+  格式检查、静态检查、测试和构建验证。
 - Go examples: run `gofmt -w <files>` when adding real `.go` example files.
