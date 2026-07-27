@@ -1,16 +1,16 @@
 ---
 name: skillhub-skill-lifecycle
-description: 用于通过 skill-hub 创建、登记、补齐元数据、校验、归档和推送项目本地 skill。涉及批量收集 .agents/skills、去重保留最新版本、补齐 SKILL.md frontmatter、先 create 登记再 feedback 归档，以及 status/validate/push 等 skill-hub 工作流时使用。
+description: 用于通过 skill-hub 创建、登记、补齐元数据、校验、归档、刷新项目本地或全局托管 skill。覆盖 .agents/skills 与全局 agent 引用的分流、归档和状态核对。
 compatibility: Compatible with open_code
 metadata:
-  version: "1.1.2"
+  version: "1.1.3"
   author: "rangh-codespace"
   created_at: "2026-04-24T20:05:43+08:00"
 ---
 
 # skill-hub Skill Lifecycle
 
-这个 skill 关注 `skill-hub` 的实际使用流程和仓库生命周期，也负责把“当前项目中对 skill 的编辑任务”纳入 `skill-hub` 流程。只要任务直接涉及当前项目 `.agents/skills/` 下的 skill 更新、刷新、批量同步、归档或发布，就应优先使用本 skill，再决定是否需要配合其他内容类 skill。
+这个 skill 关注 `skill-hub` 的实际使用流程和仓库生命周期，覆盖当前项目 `.agents/skills/` 与机器全局托管 skill 的更新、归档、刷新与发布。先按作用域分流，再决定是否需要配合内容类 skill。
 
 ## 适用场景
 
@@ -23,6 +23,7 @@ metadata:
 - 需要把工作区 skill 归档到默认本地仓库
 - 需要检查 skill 在项目工作区和本地仓库之间的状态
 - 需要把已归档 skill 推送到远程仓库
+- 需要更新 `~/.skill-hub/global/skills/<id>` 对应的全局 skill，并刷新 Codex、OpenCode、Claude 等 agent 引用
 
 ## 核心规则
 
@@ -34,6 +35,39 @@ metadata:
 - 缺少 frontmatter 的旧格式 `SKILL.md`，先补齐必要元数据，再运行 `create`。
 - 批量操作前先备份将要修改的 `.agents/skills` 目录或相关 skill 目录。
 - 如果 `skill-hub` 不在 `PATH` 中，先从当前环境的本地 skill-hub checkout 或安装目录定位二进制，不要把用户 home 下的绝对路径写入 skill。
+- 先判定作用域：项目本地 skill 使用 `register` / `validate` / `feedback`；全局托管 skill 使用“全局托管 Skill 流程”。两条链不可混用。
+- 禁止直接编辑 `~/.codex/skills`、`~/.config/opencode/skills`、`~/.claude/skills` 中由 skill-hub 管理的副本；它们只能由 `skill-hub apply --global` 刷新。
+
+## 全局托管 Skill 流程
+
+当 `skill-hub status --global --pattern <id> --json` 显示某 skill 由本地仓库管理时，使用以下顺序：
+
+1. 确认全局管理目录、默认归档仓库和 agent 副本：
+
+   ```bash
+   skill-hub status --global --pattern <id> --json
+   skill-hub repo list
+   ```
+
+2. 在 `~/.skill-hub/global/skills/<id>/` 更新全局 skill 内容；不要修改 agent 副本。
+3. 将同一内容归档到 `~/.skill-hub/repositories/<default>/skills/<id>/`，提升 patch 版本，并只提交本次 skill 文件：
+
+   ```bash
+   git -C ~/.skill-hub/repositories/<default> add skills/<id>
+   git -C ~/.skill-hub/repositories/<default> commit -m "<skill update>"
+   ```
+
+4. 先预览再刷新 agent 引用：
+
+   ```bash
+   skill-hub apply --global --pattern <id> --dry-run
+   skill-hub apply --global --pattern <id> --force
+   ```
+
+5. 用 `status --global` 核对 `source_hash`、`applied_hash`、`actual_hash` 一致且所有 agent 为 `ok`。
+
+全局目录与归档仓库内容有偏差时，以本次明确更新的全局目录为内容输入，同步归档后再刷新引用；不使用
+`feedback`，也不从 agent 副本反向归档。远程 `push` 仍需用户明确授权。
 
 ## 单个 Skill 流程
 
@@ -142,7 +176,7 @@ skill-hub push --dry-run --json
 
 1. 以默认本地仓库 `skills/<id>/` 的 Git 提交历史为内容依据：`git -C ~/.skill-hub/repositories/<default> log --follow -- skills/<id>/SKILL.md`。
 2. 核对当前 `SKILL.md` 的显式 `version` 与 `registry.json` 的同 ID 记录；缺失版本导致的 `1.0.0` 回退属于待修复的信息缺失。
-3. 先修复默认仓库中的权威副本，再用 `skill-hub apply --pattern <id>` 刷新项目副本，或用 `skill-hub apply --pattern <id> --global --dry-run` 预览并刷新 agent 全局副本。
+3. 项目副本偏差先修复默认仓库中的权威副本，再用 `skill-hub apply --pattern <id>` 刷新；全局托管 skill 按“全局托管 Skill 流程”从全局目录归档后使用 `skill-hub apply --global` 刷新 agent 副本。
 4. 用 `status --global --pattern <id> --json` 核对 source、applied、actual hash；项目副本使用 `validate --pattern <id> --links` 核对。
 5. 若需重建索引，先查看 `registry.json` 的 Git diff，只保留与本次修复相关的条目，避免把全量索引格式变化混入修复。
 
