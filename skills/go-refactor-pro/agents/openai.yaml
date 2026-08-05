@@ -1,0 +1,4 @@
+interface:
+  display_name: "Go Refactor Pro"
+  short_description: "Behavior-preserving Go refactoring"
+  default_prompt: "Use $go-refactor-pro only for evidence-backed internal Go refactoring where configuration, APIs, data formats, routing, persistence, permissions, and observable runtime behavior stay unchanged. Preserve the target repository's conventions, avoid pattern-driven rewrites, and verify behavioral equivalence with existing tests and focused characterization tests."

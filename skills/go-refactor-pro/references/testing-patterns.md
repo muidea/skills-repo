@@ -1,30 +1,28 @@
-# Go 重构测试模式
+# Go 重构测试与行为刻画
 
-## 1. 表格驱动测试 (Table-Driven Tests)
-重构后的代码必须通过表格驱动测试验证其稳健性。
+重构测试的目标是证明行为等价，而不是统一测试写法。
 
-```go
-func TestExample(t *testing.T) {
-    tests := []struct {
-        name    string
-        input   string
-        want    int
-        wantErr bool
-    }{
-        {"success", "valid-data", 200, false},
-        {"empty-input", "", 0, true},
-    }
-    for _, tt := range tests {
-        t.Run(tt.name, func(t *testing.T) {
-            got, err := MyFunc(tt.input)
-            if (err != nil) != tt.wantErr {
-                t.Errorf("error = %v, wantErr %v", err, tt.wantErr)
-                return
-            }
-            if got != tt.want {
-                t.Errorf("got = %v, want %v", got, tt.want)
-            }
-        })
-    }
-}
-```
+## 优先级
+
+1. 先运行目标包已有测试，记录基线。
+2. 为当前重构可能破坏的公开行为补最小刻画测试。
+3. 覆盖错误、边界值、顺序、并发、取消或资源释放等实际风险。
+4. 重构后运行相同测试，并按影响范围扩大到集成或全量测试。
+
+## 测试形式
+
+- 多组输入共享同一断言结构时使用表格驱动测试。
+- 状态机、并发或生命周期行为可以使用更明确的分阶段测试，不强制表格化。
+- 外部依赖优先使用仓库已有 fake、stub、fixture 或测试服务器。
+- 不为了 Mock 给生产代码增加无业务价值的接口。
+- 不在纯重构中顺带重写全部测试风格。
+
+## 等价性核对
+
+- 返回值、错误类型和 `errors.Is` / `errors.As` 行为是否一致。
+- 序列化结果、字段缺省值和顺序要求是否一致。
+- 日志、指标、事件和持久化副作用是否保持原合同。
+- `context.Context` 取消、超时和资源释放是否未退化。
+- 并发代码是否通过已有 race 检查约定；不要未经证据默认增加全仓 `-race` 成本。
+
+没有足够测试证明等价时，应明确将工作标记为行为变更风险，而不是宣称重构完成。

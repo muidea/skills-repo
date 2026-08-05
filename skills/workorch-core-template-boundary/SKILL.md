@@ -1,8 +1,8 @@
 ---
 name: workorch-core-template-boundary
-description: "在 WorkOrch 开发、评审或排查中涉及 kernel/orchestrator/appservice、workspaceTemplate、Soul、DoD、evidence policy、prompt/context、ticket/approval、runtime block、memory 或 e2e 时使用；用于强制核对 WorkOrch 基础能力与 workspaceTemplate 业务策略边界，避免把具体场景、语言、工具或模板规则写入 core 通用流程。"
+description: "在 WorkOrch 开发、评审或排查中涉及 Goal/DoD、workspaceTemplate、唯一 Runtime、kernel/orchestrator/appservice、Soul、evidence、prompt/context、governance、capability owner、TUI/Web 或 live/e2e 时使用；用于锁定 Goal/DoD 用户合同，审计 planning、CWI、proof、四状态机 owner 和端到端合同传播，并禁止版本化 Runtime、旧路径或跨 owner 状态迁移。"
 metadata:
-  version: "1.0.7"
+  version: 1.0.10
   author: "rangh"
   created_at: "2026-05-09T17:01:44+08:00"
 ---
@@ -11,20 +11,86 @@ metadata:
 
 本技能用于在 WorkOrch 代码开发、代码评审、缺陷排查和需求收口时，先确认“基础能力”和“模板业务策略”的职责边界，再决定修改落点。
 
+## 产品目标与用户合同
+
+WorkOrch 的标准用户合同固定为：用户只需要提供 Goal、DoD、Workspace（含当前工作目录）并选择 template。WorkOrch 必须根据 template 的领域方法和 Workspace owner 的真实资源清单，自动完成 planning、CWI 拆解、设计、目标落地、执行、收口与验收。
+
+- Template 定义任务拆解方法、能力边界、质量门禁、可接受的 proof 类型和领域指导；它不能预置某个具体 Workspace 的 CWI、文件名、target、operation recipe、check 或业务答案。
+- Goal/DoD 是用户意图与验收合同，不要求用户把它手工翻译成 CWI、semantic proof、target selector、validation recipe、operation graph 或 execution contract。
+- 空 Workspace 是合法输入，必须能进入 planning。没有现存文件不能直接形成 `owner-grounded target unavailable`、`coverage_binding_unavailable` 或要求用户声明交付目标的终止结果。
+- Workspace execution contract、逐 CWI proof、target/selector、recipe/check 都是 WorkOrch 内部产物或 owner fact，不是普通用户在首次 activation 前必须配置的字段。
+- TUI/Web 可以展示系统推导结果并在真正缺少外部权限、凭证、不可推导业务选择时请求用户介入；不能通过表单、activation preflight 或 Decision ticket 把内部 planning 责任转移给用户。
+- 当前实现、旧 live 数据、旧 active/archive plan 或既有测试若与本节冲突，应先判定为设计/实现偏差并刷新权威 SoT，不能反向削弱产品目标。
+
+## Planning / CWI / Proof 生成与封存时序
+
+严格 evidence/coverage gate 是必要安全不变量，但必须建立在系统已经生成并封存 planning 结果之后。正确时序固定为：
+
+```text
+Goal + DoD + Workspace + Template
+  -> typed RuntimeBootstrap（只封存用户定义、模板方法与能力边界）
+  -> SM-2 seal planning authority + typed required output
+  -> SM-3 request session -> LLM 提出 planning/CWI/proof candidate
+  -> capability owner 对 target/selector/recipe/check 做 grounding 或返回 typed prerequisite
+  -> SM-2 validate/commit plan + CoverageEvidenceBinding + binding set/hash
+  -> RuntimeCandidateContractManifest
+  -> SM-3 candidate / SealedDispatch / owner receipt
+  -> SM-2 evidence and coverage ledger / assessment / terminal
+```
+
+- LLM 可以提出 plan、CWI、target 和 proof candidate，但不能自行授予 operation 权限、写入 coverage credit、裁决 evidence 或选择 Runtime terminal。
+- planning request 仍属于 SM-3 candidate transaction：SM-2 只封存 planning required output 并消费返回事实，不能直接调 provider；SM-3 只管理 request/candidate transaction，不能自行提交 plan 或选择后续 action。
+- capability owner 只提供资源事实、admission、feasibility 与 operation receipt；不解释 Goal/DoD，不拥有 CWI lifecycle，也不选择下一 action。
+- Orchestrator 是 planning、CWI、binding、coverage、evidence 与 convergence 的唯一 owner；只有 owner-grounded、Orchestrator-sealed 的 binding 才能进入 operation/evidence gate。
+- proof 的 exact binding、target/selector、recipe/check 必须在对应 operation 获得 credit 前封存；不能要求它们在 planning 之前已由用户或静态 template 提供。
+- `/run resume` 基于当前 Run 已选中的 Goal/DoD/CWI 和最新 Workspace facts 重新 reconciliation；`/run restart` 基于整个 Workspace 的 Goal/DoD、template 和最新资源重新 planning/reconciliation。两者都不能沿用陈旧 proof，也不能要求用户补 exact binding。
+- 在 plan seal 之前允许 Run owner activation、SM-4 drive、SM-2 planning 与 LLM planning request，但禁止任何 capability 副作用；在 plan/proof seal 之后继续保持严格 manifest、receipt、binding、effect 和 coverage gate。
+- 当前合同若规定“activation/preflight 缺逐 CWI binding 即零 LLM 终止”，必须先重构该设计合同和 producer/consumer，再收口实现；不能增加旁路掩盖时序错误。
+
+## 四状态机与单 Owner 不可越权
+
+Runtime 只允许四个协调状态机，不因 planning、reconciliation、recovery、projection 或 governance 增加第五个状态机：
+
+| ID | Owner | 唯一职责 | 禁止行为 |
+| --- | --- | --- | --- |
+| SM-1 | `blocks/run` | Run lifecycle 与 lineage | 选择下一 Runtime action、解释 aggregate、直接重建 authority |
+| SM-2 | `kernel/orchestrator` | planning、CWI/focus、authority、coverage/evidence、governance/terminal decision | 调 provider、执行 operation、修改其他 owner state |
+| SM-3 | `kernel/orchestrator` | request session、candidate、transaction、seal、dispatch、receipt/evidence commit | 选择下一 action、绕过 manifest/owner receipt |
+| SM-4 | `kernel/orchestrator` | drive、singleflight、restart recovery、terminal delivery ledger | 重建 authority、直接写 Run/Workspace/Result state |
+
+- Workspace、Result、Decision、Approval 及各 capability block 仍各自拥有自己的资源状态；跨 owner 只发送带 workspace/run scope 的 typed intent、immutable fact、concrete result 或 acknowledgement。
+- 正式迁移只能由 owner Biz 的内部事件触发并持久化。EventHub command/result、LLM output、projection、TUI/Web、错误 message/code 都不能直接选择 owner transition。
+- Workspace scope 从 EventHub context 获取并沿调用链传递；组件实例、全局 cache、后台任务和无 scope ID 不得保存“当前 Workspace”。
+- `internal/pkg/workorchruntimecontract` 及所有组件 `pkg` 只允许 DTO、合同、enum 和纯无状态 normalize/validate/clone/hash/match helper；禁止 EventHub、I/O、CAS、retry/action/terminal 决策或状态迁移。
+- Runtime 只有无版本的 current schema 与唯一生产路径。非 current persisted state 必须返回明确的 current-schema/fresh-activation 事实；禁止双路由、旧字段、旧 topic、alias、历史状态推导或隐式转换。
+
+## 权威来源与冲突处理
+
+每次 Runtime 工作必须按以下顺序读取并对齐：
+
+1. 产品目标与用户合同：本 skill 的“产品目标与用户合同”及用户当前明确要求。
+2. Runtime 设计合同：`docs/00-core/runtime-stage-contract.md`。
+3. Request/cache 合同：`docs/00-core/runtime-request-cache-note.md`。
+4. 实现 SoT：`internal/modules/kernel/orchestrator/readme.md` 与 `internal/pkg/workorchruntimecontract`。
+5. 当前事实与未关项：`docs/01-overview/current-state.md`、`docs/01-overview/current-unclosed-matrix.md`、`docs/70-roadmap/active/overview.md`。
+
+Archive、历史 live 记录和旧 closure plan 只能作为回归样本。若第 2～4 层仍要求用户或静态 template 在 planning 前给出具体 CWI/proof/target/recipe/check，则它们与产品目标冲突：先输出传播矩阵并同步修订设计合同、实现 SoT 和 current-unclosed 记录，再修改代码。禁止挑选较方便的一份旧文档作为第二权威。
+
 ## 强制入口：合同审计先行
 
 凡是准备修改 WorkOrch 代码、模板、Soul、TUI/Web 交互、EventHub 流转、LLM prompt/context、runtime 收敛、e2e 验证或 skill 规则时，必须先完成 `Contract Audit`。该审计是改代码前的准入门禁，不是修改后的总结。
 
 执行顺序固定为：
 
-1. 冻结事实：记录当前 workspace/run/step/ticket/approval、权威状态、最后事件、checkpoint、accepted/rejected evidence、实际 blocker 和复现证据。
-2. 判定 owner：明确问题归属 `core`、`workspaceTemplate/Soul/policy`、`TUI/Web`、`LLM context/provider` 或 `runtime environment`，不能用单个 live workspace 现象直接反推通用代码应修改。
-3. 拉通事件链路：写清 command/event -> owner state -> projection，或 LLM input -> contract validation -> evidence ledger -> next action 的完整路径。
-4. 定义合同缺口：说明当前设计预期是什么、实际偏差是什么、缺失的是状态机规则、上下文字段、evidence、投影刷新、模板策略还是环境能力。
-5. 选择最小落点：只修改直接命中 blocker 的 owner 模块；若缺少证据，先补审计、测试或观测，不补下游兜底。
-6. 绑定验证：每个代码改动必须对应失败样本测试、边界搜索、e2e/live verification、投影验证或 cache/context 验证之一。
+1. 锁定产品目标：写明标准用户只提供 Goal、DoD、Workspace 与 template 选择；WorkOrch 负责 planning、CWI 拆解、设计、执行、收口和验收。不得用实现现状反向改写该用户合同。
+2. 冻结事实：记录当前 workspace/run、definition/state/evidence revision、canonical convergence state、focus、candidate/dispatch、ticket/approval、accepted/rejected evidence、owner receipt、实际 blocker 和复现证据。
+3. 判定 owner：明确问题归属 `core`、`workspaceTemplate/Soul/policy`、`TUI/Web`、`LLM context/provider` 或 `runtime environment`，不能用单个 live workspace 现象直接反推通用代码应修改。
+4. 拉通事件链路：写清 command/event -> owner-private event -> owner state -> immutable fact -> projection，或 Goal/DoD -> planning candidate -> owner grounding -> sealed plan/binding -> operation receipt -> coverage 的完整路径。
+5. 定义合同缺口：说明当前设计预期、实际偏差、缺失的状态机规则、planning、上下文字段、evidence、投影、模板策略或环境能力，并区分“安全不变量”与“产生该不变量的阶段/来源”。
+6. 选择最小完整合同边界：修改必须覆盖同一假设在设计合同、DTO、producer、consumer、状态 owner、UI 和验证中的全部传播点；不能只修改当前报错函数。
+7. 绑定验证：每个代码改动必须对应失败样本测试、边界搜索、e2e/live verification、投影验证或 cache/context 验证之一，并增加“Goal/DoD-only 标准用户旅程”回归。
 
-未完成 `Owner`、`Event path`、`Contract gap`、`Proposed change` 和 `Verification` 五项时，不得进入代码修改；如果连续两次修改后同一问题仍未改善，停止继续局部补丁，重新执行完整合同审计。
+未完成 `Product objective`、`User contract`、`Owner`、`Event path`、`Contract gap`、`Propagation matrix`、`Proposed change` 和 `Verification` 时，不得进入代码修改。只要发现方案要求用户补充内部 CWI/proof/target/recipe，或与权威产品目标冲突，立即暂停代码收口并先刷新设计 SoT；不得等到多轮 live 失败后再回溯。
 
 ## 适用场景
 
@@ -44,7 +110,7 @@ metadata:
 - 如果需要支持某类场景规则，优先把规则做成数据配置，再由通用能力读取数据执行。
 - 不为了快速修复在 core 中加入临时兼容、场景特判或 “contains xxx” 逻辑。
 - LLM cache 是 core runtime 合同的一部分。任何 prompt/context/request rendering 修改都必须保持 provider-facing 稳定前缀稳定，不能为了当前阶段、repair、provider retry 或某个模板的执行效果污染 C0。
-- Runtime 必须维持贯穿 planning、execution、follow-up、repair、validation、acceptance、resume 的强一致 Goal/DoD coverage contract；任何阶段不得丢失当前定义、未关闭缺口、已接受证据、被拒绝证据和下一步收敛约束。
+- Runtime 必须维持贯穿 planning、candidate、dispatch、repair、validation、assessment、reconciliation 与 recovery 的强一致 Goal/DoD coverage contract；任何阶段不得丢失当前定义、未关闭缺口、已接受证据、被拒绝证据和下一步收敛约束。
 - Memory 是当前决策的参考资产，不是事件日志搬运。无法作为后续决策参考、缺少 provenance、已过期、已被 superseded、纯诊断流水或低价值的 memory 不应进入 LLM 可见上下文。
 - Contract violation 输出可以记录、投影和反馈给 LLM 重试，但未通过合同的输出只能作为 rejected diagnostic evidence；不能执行，不能作为 accepted result/artifact，也不能写成长期可召回 memory。
 
@@ -52,7 +118,7 @@ metadata:
 
 WorkOrch core 可以包含：
 
-- 通用状态：Goal、DoD、Run、Step、Ticket、Approval、Memory、Artifact、EvidenceQuality。
+- 通用状态与事实：Goal、DoD、Run、planning/CWI/focus、Ticket、Approval、Memory、Artifact、EvidenceQuality、owner receipt 与 coverage ledger。
 - 通用机制：事件发布订阅、异步回调、上下文预算、traceability、质量门禁、repository clone、read model 投影。
 - 进程壳和适配器：`internal/services/workorch` 负责 mode selection、CLI/TUI/remote/server 编排和 backend 选择，但不拥有正式业务状态。
 - 契约包：`internal/pkg/workorchport` 定义 CLI/TUI/agent port DTO，`internal/pkg/workorchclient` 定义 REST client DTO、path 构建和 error mapping。
@@ -70,41 +136,42 @@ WorkOrch core 不应包含：
 
 Template / Soul / policy 可以包含：
 
-- 模板 ID、阶段 Soul、默认 Goal、默认 DoD、业务提示词和执行约束。
+- 模板 ID、阶段 Soul、默认 Goal/DoD 示例、任务拆解方法、业务提示词和执行约束。
 - template-bound policy，例如 `workspaceTemplate.evidencePolicies`。
-- 特定模板的验收标准、e2e fixtures、示例仓库、场景化测试数据。
+- proof 类型、能力边界、质量门禁、特定模板的验收方法、e2e fixtures、示例仓库和场景化测试数据。
+- 不包含具体 Workspace 的预解 CWI、文件路径、target、recipe/check 或标准答案；这些必须结合 Goal/DoD 与 owner facts 在 planning 中生成。
 
 ## LLM Context / Cache 约束
 
 涉及 `prompt_messages.go`、`http_provider.go`、`sdk_provider.go`、`provider_context_budget.go`、`provider_cache_plan.go`、`runtime_adapter.go`、LLM usage/read model、memory recall、context budget 或 request log 的修改时，必须额外遵守本节。
 
 - C0 只能表达长期稳定的 system prompt、语言规则、输出 JSON schema、字段边界和中立 runtime 合同。
-- C0 禁止包含 workspaceId、runId、stepId、Goal/DoD 正文、capability catalog、当前阶段、当前失败、当前进展、memory recall、provider retry、recovery mode、`assessmentOnly`、`stateChangingOutputRequired`、`repairObjective`、`repairActionPackage` 或 requested action。
-- `stateChangingOutputRequired`、`repairObjective`、`stateChangingRecoveryMode`、provider timeout retry、assessment-only、requiredOutput / forbiddenActions 等运行期动态约束必须进入 C3 stage contract 或 C4 current-action。
+- C0 禁止包含 workspaceId、runId、Goal/DoD 正文、当前 focus、capability inventory、当前失败/进展、memory recall、provider retry、recovery mode、`ConvergenceState`、`RuntimeRepairDirective`、`RuntimeCandidateContractManifest`、`CorrectionDirective` 或 requested output。
+- `ConvergenceState`、`RuntimeRepairDirective`、provider recovery、assessment requirement、`RequiredOutputContract`、`RuntimeCandidateContractManifest` 与 `CorrectionDirective` 等运行期动态约束必须进入 C3 current-focus contract 或 C4 diagnostic/correction tail。
 - C1 只能承载当前 Goal/DoD 定义及 definition revision / definitionChangeImpact；Goal/DoD 变化应改变 `workspaceDefinitionHash`，不应改变 `stablePrefixHash`。
 - C2 只能承载声明式 runtime capability、governance、Soul/policy 能力合同；当前阶段临时允许或禁止 executable output 不得改写 C2 能力目录。
-- C3/C4/C5 承载运行期易变信息，包括 workspace/run identity、stage contract、repair action package、current failure/progress、process evidence timeline、memory recall、tool results、snapshots、trace refs 和 current requested action。
-- 同一 run 内仅因 repair/follow-up/assessment/provider retry/state-changing 模式变化导致 `stablePrefixHash` 变化，必须视为 request rendering 缺陷。
+- C3/C4/C5 承载运行期易变信息，包括 workspace/run identity、current planning/focus、`ConvergenceState`、`RequiredOutputContract`、manifest/binding identity、`RuntimeRepairDirective`、current failure/progress、accepted/rejected evidence lineage、memory recall、owner receipts、snapshots、trace refs 和 candidate correction。
+- 同一 run 内仅因 focus、repair、assessment、candidate correction、provider retry 或 recovery 变化导致 `stablePrefixHash` 变化，必须视为 request rendering 缺陷。
 - Provider 私有 cache-control 只能由 adapter 基于中立 `cachePlan.adapterHint` 转换；core runtime 不直接写入 provider 私有缓存字段，也不把 provider 私有缓存状态作为业务恢复状态。
 
 ## 强一致收敛合同约束
 
-涉及 orchestrator、runtime repair、graph follow-up、completion gate、DoD gate、decision ticket、resume/replan、provider retry 或 LLM step input 的修改时，必须额外遵守本节。
+涉及 orchestrator、planning、runtime repair、completion/DoD gate、decision ticket、resume/restart、provider retry 或 typed candidate input 的修改时，必须额外遵守本节。
 
-- 每个 LLM step input 必须能重建当前有效 Goal/DoD、definition revision、coverage baseline、unresolved coverage、current progress、failure surface、process evidence timeline、accepted evidence、rejected evidence、requiredOutput / allowedOutputs 和 current requested action。
-- Goal/DoD 通过 Web/TUI/API 补充或变更后，必须形成新的 definition revision，并触发后续 run/step 基于最新定义重新评估；不得把新增 Goal 追加成低显著性的历史文本，也不得继续按旧基线完成。
+- 每个 planning/candidate request 必须能重建当前有效 Goal/DoD、definition revision、template planning policy、current focus、coverage baseline、unresolved coverage、current progress、failure surface、accepted/rejected evidence、sealed manifest/binding 与当前 required output。
+- Goal/DoD 通过 Web/TUI/API 补充或变更后，必须形成新的 definition revision，并触发后续 planning/convergence 基于最新定义重新评估；不得把新增 Goal 追加成低显著性的历史文本，也不得继续按旧基线完成。
 - 新 definition 是 cumulative latest。除非存在显式冲突，新的 Goal/DoD 只能补充或细化，不得弱化旧约束、删除仍有效证据或降低验收目标。
-- Repair / follow-up / provider retry / resume 必须继承原失败 step 的阶段语义和收敛合同；decision resolution 只能补充恢复上下文，不能覆盖原 step 的 `runtimeStage`、`runtimeStageMode`、`repairObjective`、`stateChangingOutputRequired` 或 required output。
-- `repairActionPackage` 是 primary actionable contract。governanceHistory、memory、旧 executionGraph、旧 rejected patch、旧 decision question 只能作为证据或 lineage，不得与当前 repairActionPackage 竞争。
+- Repair / candidate correction / provider retry / resume 必须继承同一 authority transaction、definition/evidence revision、current focus、sealed binding 与 required output；decision resolution 只能补充匹配的 governance fact，不能覆盖 `ConvergenceState`、`RuntimeRepairDirective` 或 `RuntimeCandidateContractManifest`。
+- SM-2 persisted planning authority，或 execution 阶段的 `ConvergenceState + RuntimeRepairDirective + RuntimeCandidateContractManifest`，是各自阶段唯一当前行动合同。governance history、memory、旧 plan/candidate、旧 rejected operation、旧 decision question 只能作为 evidence/diagnostic lineage，不得形成第二 action authority。
 - 当 runtime 已具备可自动继续的 evidence、capability 和 requiredOutput 时，LLM 返回 `blocked_on_decision` 应先经过中立的 decision ticket gate；不应在可机械修复、可继续验证或可 runtime repair 的场景直接阻塞。
 - 上下文门禁失败属于 provider 前准入失败，不能被包装成普通 state-changing repair 交给 LLM 自修；应按 read_required / fail_fast 等结构化 gate action 处理。
 
 ## Context / Memory 质量约束
 
-涉及 memory 写入、memory recall、selectedContext、processEvidenceTimeline、currentProgressDigest、request log、context budget 裁剪或摘要时，必须额外遵守本节。
+涉及 memory 写入、memory recall、selected context、accepted/rejected evidence lineage、current progress、request log、context budget 裁剪或摘要时，必须额外遵守本节。
 
 - LLM 可见上下文必须按事件发生顺序、定义修订顺序、工具调用顺序和验证顺序保序；只有无语义顺序的集合才允许按 stable id 排序。
-- 裁剪上下文时，禁止裁掉当前 Goal/DoD、requiredOutput、current failure、latest actionable diagnostics、target snapshot hash、accepted/rejected evidence、processEvidenceTimeline 中的关键 sourceRef。
+- 裁剪上下文时，禁止裁掉当前 Goal/DoD、template planning method、current focus、required output、sealed authorization、current failure、latest actionable diagnostics、target snapshot hash、accepted/rejected evidence 与关键 source/receipt ref。
 - 脱敏和摘要不能改变语义。被 redacted/truncated 的内容不得被标记为可用于 complete file_write / exact patch 的安全快照。
 - Memory 写入必须包含可追溯 sourceRef、类型、用途、confidence/importance 或等价质量字段；不能把 provider retry 流水、泛化失败摘要、无行动价值的日志片段写成可召回 memory。
 - Memory recall 只能注入当前 retrieval 选中的高价值参考；excluded、stale、superseded、diagnostic-only、低置信或低重要度 memory 只能保留审计摘要，不能进入 LLM 正文。
@@ -127,13 +194,14 @@ Template / Soul / policy 可以包含：
    - 使用 `rg` 检查目标通用目录是否已有或即将加入场景字符串。
    - 对涉及证据、prompt、DoD、ticket、approval 的修改，检查是否有按文本内容推断业务语义。
    - 对涉及 LLM request/context/cache 的修改，检查动态运行期字段是否进入 C0，检查 provider 私有 cache 字段是否进入 core。
-   - 对涉及 repair/follow-up/resume/definition change 的修改，检查是否仍能继承最新 Goal/DoD、coverage、requiredOutput、accepted/rejected evidence 和 current requested action。
+   - 对涉及 planning/repair/resume/restart/definition change 的修改，检查是否仍能继承最新 Goal/DoD、template policy、current focus、coverage、sealed binding、required output 与 accepted/rejected evidence。
    - 对涉及 CLI/TUI/agent/backend/client 的修改，检查是否仍满足 process service、port、client、EventHub owner 边界，以及 REST query string 是否与 handler/脚本一致。
 
 ```bash
 rg -n "software-dev|weather-query|code-review|go test|npm test|no tests to run|city|ssh|server" internal/modules/kernel internal/modules/application/workorchd/biz/appservice internal/pkg
 rg -n "stateChangingOutputRequired|repairObjective|providerTimeoutStateChangingRetry|assessmentOnly|runtimeRepairFollowUp|currentProgressDigest|memoryRecall|Cache-Control|cache_control" internal/modules/blocks/llm internal/modules/kernel
-rg -n "definitionChangeImpact|coverageTargetSet|repairActionPackage|processEvidenceTimeline|requiredOutput|blocked_on_decision|contextGate" internal/modules/kernel internal/modules/blocks/llm
+rg -n "RuntimeBootstrap|ConvergenceState|RuntimeRepairDirective|RuntimeCandidateContractManifest|SealedDispatch|CoverageEvidenceBinding|blocked_on_decision" internal/modules/kernel internal/modules/blocks/llm internal/pkg/workorchruntimecontract
+rg -n "StagePacket|NextAction|DispatchNextStep|ExecutionContextPatch|executionGraph|repairActionPackage|runtimeStage|checkpoint" application internal docs/00-core docs/20-runtime-flow docs/30-module-architecture
 rg -n "internal/modules/application/workorch(?!d)" application internal scripts Makefile README.md --pcre2
 rg -n "workorchclient|biz/backends" internal/services/workorch/service internal/services/workorch/biz/agent internal/services/workorch/biz/session -g "*.go"
 rg -n "internal/services/workorch|internal/pkg/workorchclient|biz/backends" internal/pkg/workorchport -g "*.go"
@@ -142,9 +210,10 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
 ```
 
 3. 选择正确落点。
-   - 通用字段和状态：放在 `internal/pkg/common`、kernel model、repository、read model。
+   - DTO、enum、合同与纯 helper：可放在相应组件 `pkg` 或 `internal/pkg/workorchruntimecontract`；不得在 `pkg` 放 reducer、状态迁移、I/O、EventHub 或 retry/action 决策。
+   - 正式状态和迁移：放在唯一 owner 的 `biz` reducer/controller 与 owner repository；read model 只保存派生投影。
    - 通用执行与门禁：放在 orchestrator 或 block 通用解释器。
-   - 模板策略：放在 `internal/modules/application/workorchd/biz/bootstrap/defaults/templates.json`、`souls.json`、Skill/MCP 配置或 e2e fixture。
+   - 模板策略：放在 `internal/pkg/workorchdefaults/defaults/templates.json`、相应 Soul/Skill/MCP 配置或 e2e fixture；先核对实际 canonical loader，禁止在 application/runtime core 复制第二份 defaults。
    - workspace 创建期绑定：模板数据需要随 workspace 固化时，创建 workspace 时从 template 拷贝到 workspace，运行期只读取 workspace 绑定数据。
 
 4. 修改中保持数据化。
@@ -157,21 +226,21 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
    - 确认 template 专项内容只出现在 `templates.json`、`souls.json`、template/e2e 测试或专用 fixture。
    - 确认新增单测至少覆盖：通用解释器、template 数据绑定、非目标模板不被影响。
    - 如果修改了 LLM request rendering，新增或更新 cache 相关回归测试，至少证明动态阶段字段不会改变 C0 `stablePrefixHash`。
-   - 如果修改了 Goal/DoD、repair、follow-up、resume、memory 或 context budget，新增或更新回归测试证明最新定义、未关闭 coverage、requiredOutput 和关键 evidence 未丢失且顺序正确。
+   - 如果修改了 Goal/DoD、planning、repair、resume/restart、memory 或 context budget，新增或更新回归测试证明最新定义、未关闭 coverage、sealed binding、required output 和关键 evidence 未丢失且顺序正确。
 
 ## 合同审计防偏流程
 
-当任务涉及 workspace 执行不收敛、LLM 合同违例、TUI/Web 状态不一致、EventHub 流转异常、CPU/IO 异常、replan/resume 不推进或多轮 repair 循环时，必须先完成合同审计，再决定是否改代码。
+当任务涉及 workspace 执行不收敛、LLM 合同违例、TUI/Web 状态不一致、EventHub 流转异常、CPU/IO 异常、planning/resume/restart 不推进或多轮 repair 循环时，必须先完成合同审计，再决定是否改代码。
 
 ### 修改前冻结证据
 
 每次改动前必须记录可复核的当前事实：
 
-- `workspaceId`、`runId`、`stepId`、`ticketId` 或 `approvalId`。
-- 当前状态、最后事件时间、最新 checkpoint、最新 accepted/rejected evidence refs。
+- `workspaceId`、`runId`、current focus/CWI、authority/dispatch/operation identity、`ticketId` 或 `approvalId`。
+- 当前 `ConvergenceState`、definition/state/evidence revision、最后事件时间、最新 accepted/rejected evidence refs 与 owner receipt refs。
 - 当前真实 blocker：运行中无目标产出、等待 decision/approval、合同违例、provider transient failure、projection 展示滞后、端侧命令未提交成功、EventHub 未投递或未消费。
 - 预期状态和实际状态的差异。
-- 涉及 owner：coverage ledger、convergence contract、repair action package、execution contract、evidence recorder、projection、TUI/Web port、workspaceTemplate/Soul/policy。
+- 涉及 owner：planning/CWI ledger、`ConvergenceState`、`RuntimeRepairDirective`、`RuntimeCandidateContractManifest`、`SealedDispatch`、evidence/coverage ledger、owner receipt、SM-4 delivery、projection、TUI/Web port、workspaceTemplate/Soul/policy。
 
 如果无法说明“旧失败会进入哪个函数或事件处理器、当前实现会输出什么、改动后应输出什么”，不得开始改代码。
 
@@ -193,14 +262,14 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
 
 1. 命令来源：TUI/Web/REST/agent 是否只产生 scoped command/event。
 2. EventHub：command/event 是否投递到 owner，是否同步等待同 lane 或发生丢失。
-3. Owner state：workspace/run/ticket/approval/coverage 的权威状态是否只由 owner 更新。
-4. Coverage ledger：当前 Goal/DoD、definition revision、required evidence、accepted/rejected evidence、missing evidence 是否一致。
-5. Convergence contract：ledger 状态是否映射为唯一下一步 action。
-6. Repair action package：是否只渲染当前 action 的 requiredOutput。
-7. LLM input：是否包含最新 Goal/DoD、当前 gap、requiredOutput、process evidence timeline、target snapshot 和 rejected diagnostics。
-8. Execution contract：LLM 输出是否通过合同验证，违例是否只作为 rejected diagnostic evidence。
-9. Evidence recorder：accepted evidence 是否回写 ledger 并触发下一轮状态重算。
-10. Projection：workorchd 是否刷新 ViewModel，TUI/Web 是否只展示投影。
+3. Owner state：Workspace/Run/Ticket/Approval/Result 与 capability 资源状态是否只由各自 owner 更新。
+4. Planning authority：SM-2 是否根据 Goal/DoD、template planning policy 与 owner facts 生成并封存 CWI/focus/binding，而不是要求用户或静态 template 提供具体答案。
+5. Coverage ledger：当前 definition revision、focus/CWI、required evidence、accepted/rejected evidence、owner receipt 与 missing evidence 是否一致。
+6. Convergence contract：`ConvergenceState` 与 `RuntimeRepairDirective` 是否从 persisted facts 产生唯一下一步 required state。
+7. Candidate contract：`RuntimeCandidateContractManifest` 是否仅从 sealed plan/binding 与 owner facts 编译，renderer/decoder/evaluator 是否消费同一合同。
+8. LLM input：是否包含最新 Goal/DoD、template method、current focus/gap、required output、sealed authorization、target snapshot 和 rejected diagnostics，且没有把裁决权交给 LLM。
+9. Dispatch/evidence：`SealedDispatch -> owner receipt -> evidence/coverage ledger` 是否逐字段匹配；违例是否只作为 rejected diagnostic evidence。
+10. Delivery/projection：SM-4 是否只投递 sealed terminal fact，Result/Workspace/Run 是否 owner-local 迁移，workorchd/TUI/Web 是否只展示投影。
 
 任何环节缺少证据，都先补审计或测试，不直接改下游兜底。
 
@@ -211,13 +280,16 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
 ```markdown
 ## Contract Audit
 
-- Scope: <workspaceId/runId/stepId/ticketId/approvalId 或代码路径>
-- Observed state: <当前状态、最后事件、checkpoint、accepted/rejected evidence refs>
+- Scope: <workspaceId/runId/focus/CWI/authority/dispatch/operation/ticket/approval 或代码路径>
+- Product objective: <Goal/DoD-only 用户合同，以及 WorkOrch 应自动承担的 planning/CWI/proof 职责>
+- User contract: <用户实际提供的信息；确认没有要求用户补内部 target/recipe/check/binding>
+- Observed state: <ConvergenceState、definition/state/evidence revision、最后事件、accepted/rejected evidence 与 owner receipt refs>
 - Expected state: <按设计合同应发生的状态变化或输出>
 - Deviation: <实际偏差，避免泛化成“执行失败”>
 - Owner: <core | template/Soul/policy | TUI/Web | LLM context/provider | runtime environment>
-- Event path: <command/event -> owner -> state -> projection 或 LLM step -> contract -> evidence>
+- Event path: <command/event -> owner-private event -> owner state -> immutable fact -> projection，或 planning/candidate -> manifest -> dispatch -> receipt -> evidence>
 - Contract gap: <缺失的状态机规则、上下文字段、evidence、投影刷新或模板策略>
+- Propagation matrix: <design/DTO/producer/consumer/owner/UI/test 的受影响点与一致性要求>
 - Proposed change: <待改函数/模块/配置，说明为什么直接命中 blocker>
 - Boundary check: <说明是否保持 core 业务中立，是否有模板/语言/命令特判>
 - Verification: <失败样本测试、边界搜索、e2e/live verification、缓存或投影验证>
@@ -231,7 +303,7 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
 
 - 改动必须直接命中当前 blocker 路径；未命中时不能声明修复 live blocker。
 - 若连续两次修改后同一 workspace 仍未正向推进，停止追加局部补丁，回到完整链路审计。
-- 修改 prompt、Soul 或 template 时，必须说明它如何绑定到 workspace、如何进入 run executionContext、如何进入 LLM input；只改文档但没有绑定路径不算收口。
+- 修改 prompt、Soul 或 template 时，必须说明它如何绑定到 Workspace、如何进入 typed `RuntimeBootstrap` / persisted planning context、如何进入 LLM input；只改文档但没有绑定路径不算收口。
 - 修改 core 合同时，必须新增失败样本单测，证明原错误会被提前拒绝、正确分类或转入唯一下一步 action。
 - 修改 projection/TUI 时，必须证明 workorchd 是 ViewModel owner，TUI/Web 不保留另一套业务推断状态。
 - 修改 contract violation recovery 时，必须证明 rejected output 没有 state-changing side effect、没有进入 accepted evidence/result/artifact，也没有写成高价值 memory。
@@ -240,8 +312,8 @@ rg -n "kernel/.*/(biz|service|repository)|repository\\." internal/services/worko
 
 LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状态转移。
 
-- Runtime 负责 deterministic state transition：coverage 分类、missing evidence 计算、assessment-ready 检测、focus binding、requiredOutput 渲染、accepted/rejected evidence 记录、decision/approval gate eligibility、completion gate。
-- LLM 只负责 candidate content generation：state-changing output、validation evidence graph、assessment with evidence refs、structured blocker。
+- Runtime 负责 deterministic state transition：planning/CWI lifecycle、coverage 分类、missing evidence 计算、assessment-ready 检测、focus/binding seal、required output 渲染、accepted/rejected evidence 记录、decision/approval gate eligibility 与 completion gate。
+- LLM 只负责 bounded candidate generation：planning/CWI/proof candidate、operation candidate、assessment candidate 或 structured external blocker。
 - 违例输出只能记录为 rejected diagnostic evidence；不能执行、不能接受、不能写 artifact/result，也不能成为长期 memory。
 - 只有当下一步仍需要 LLM 生成内容时才允许 bounded retry；如果 ledger 已经能确定下一步 action，runtime 必须确定性推进。
 
@@ -252,15 +324,16 @@ LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状
 - 失败样本单测或集成测试证明旧错误路径被正确收敛。
 - 边界搜索证明 core 没有新增业务/模板/语言/工具特判。
 - EventHub/owner/projection 测试证明状态由 owner 管理，端侧只消费投影。
-- LLM request/cache 测试证明动态运行期字段没有污染 C0，且关键 Goal/DoD/requiredOutput/evidence 没有被裁剪。
-- live verification 记录二进制版本、进程启动时间、run id、decision/replan/resume 时间和最终状态。
+- LLM request/cache 测试证明动态运行期字段没有污染 C0，且关键 Goal/DoD/template method/current focus/required output/sealed authorization/evidence 没有被裁剪。
+- Goal/DoD-only 用户旅程证明：非空与空 Workspace 都能先进入 planning；plan seal 前零副作用；用户无需配置 CWI/proof/target/recipe/check。
+- live verification 记录二进制版本、进程启动时间、run id、planning/decision/resume/restart 时间、有效 owner receipt/Workspace effect 和最终状态。
 
 ## 收口修改规范
 
 当任务来自线上 workspace 执行异常、TUI/Web 状态异常、CPU/IO 异常或多轮 repair 不推进时，必须先完成下列核对，再改代码：
 
 1. 记录真实 blocker。
-   - 写明 workspaceId、runId、currentStep、ticket/approval id、failureClass、failureSignature、最后事件时间、最新 evidence refs、实际变更文件和缺失 Goal/DoD。
+   - 写明 workspaceId、runId、current focus/CWI、authority/dispatch/operation、ticket/approval id、failureClass、failureSignature、最后事件时间、最新 evidence/receipt refs、实际 Workspace effect 和缺失 Goal/DoD。
    - 区分“还在运行但无目标产出”、“等待 decision/approval”、“validation 合同失败”、“provider transient failure”、“projection 展示滞后”和“端侧输入未提交成功”。
 
 2. 对齐改动落点。
@@ -269,26 +342,27 @@ LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状
    - 某个 live workspace 的交付代码缺口只能作为现象和测试样本，不能把目标项目的文件名、语言、端口、协议或工具名写入 core 判定。
 
 3. 优先修正直接阻塞路径。
-   - 若 live blocker 是 validation graph 被 shell policy 拒绝，优先修正 concrete validation contract / Soul 验证策略；不要继续泛化改 context、cache 或 TUI。
+   - 若 live blocker 是 plan/proof 尚未生成却被 activation preflight 拒绝，先修正 planning 时序与权威设计，不得要求用户补 CWI/proof/target/recipe/check。
+   - 若 live blocker 是 sealed validation candidate 被 capability policy 拒绝，核对 planning 生成的 recipe、owner grounding、manifest 与 capability admission 的完整传播；不要只放宽当前报错参数。
    - 若 live blocker 是处于 decision 但 TUI prompt 不刷新，优先核对 workorchd projection、port DTO、TUI Presenter/ViewModel 订阅链；不要让 TUI 自行推断业务状态。
    - 若 live blocker 是 CPU/IO 持续过高，优先核对 request-time scan、projection rebuild 去重、watchdog 周期、事件订阅泄漏；不要靠扩大超时或压低日志绕过。
 
-4. Concrete validation graph 规范。
-   - `repairActionPackage.requiredOutput.mustProduceConcreteValidationEvidence=true` 时，LLM 输出必须是 bounded validation evidence graph 或 satisfied assessment with concrete evidenceRefs。
-   - `shell/command` 验证节点必须声明 `validationEvidence.mode` 与 `validationEvidence.observationType`。
+4. Sealed validation evidence 规范。
+   - `RuntimeRepairDirective.RequiredState=need_validation` 时，`RequiredOutputContract` 与 manifest 必须来自系统 planning 后封存的 CWI proof shape；LLM 只能选择已授权的 bounded validation operation 或提交引用 current-run accepted evidence 的 assessment candidate。
+   - validation operation 必须携带 manifest 要求的 binding、target/selector、recipe/check 及适用的 metric/artifact；具体 capability 参数由 owner 合同定义，不能用 prompt 自创字段补充。
    - 禁止用 `nohup`、`setsid`、后台 `&` 常驻、`kill` / `pkill` / `killall` / `fuser -k` 或进程终止 approval 作为验证策略。
    - 服务、代理、流式、长运行入口的验证应由 template/Soul 指导为前台 timeout harness、项目测试、临时端口、fake/stub、fixture 或等价 MCP/tool 证据。
 
 5. 反打圈审核。
    - 每次修改前后比较当前 blocker 是否直接命中新代码路径；若没有命中，不能把改动描述为“已解决 live blocker”。
-   - 修改 prompt/Soul 时必须说明它如何进入 workspace activation / run executionContext / LLM input；只改 markdown 但没有绑定路径的变更不算收口。
+   - 修改 prompt/Soul 时必须说明它如何进入 Workspace binding / typed `RuntimeBootstrap` / persisted planning context / LLM input；只改 markdown 但没有绑定路径的变更不算收口。
    - 修改 core 合同时必须补充至少一个失败样本单测，证明原错误会被提前拒绝或正确转入下一阶段。
    - 修改 projection/TUI 时必须证明 workorchd 是 ViewModel owner，TUI 只消费 projection/port DTO，不保留另一套业务状态机。
    - 修改 contract violation recovery 时必须证明 rejected output 没有 state-changing side effect、没有进入 accepted evidence/result/artifact，也没有被持久化为高价值 memory。
 
 ## 排查流程
 
-1. 先复盘异常来自哪个层级：template 数据、workspace 绑定数据、run executionContext、block 输出、orchestrator 门禁、read model 展示。
+1. 先复盘异常来自哪个层级：template 数据、Workspace 绑定、`RuntimeBootstrap`、planning/CWI seal、candidate manifest、capability receipt、orchestrator evidence gate、SM-4 delivery 或 read model 展示。
 2. 如果通用层误判业务语义，优先删除通用层判断，并改为结构化 metadata 或 template-bound policy。
 3. 如果 template 数据未生效，检查创建 workspace 时是否已绑定到 workspace；不要在激活 run 时按模板名临时补策略。
 4. 如果 e2e 依赖某个具体场景，测试名和 fixture 可以具体，但断言应证明通用能力消费的是结构化字段或模板数据。
@@ -297,14 +371,16 @@ LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状
 
 - `go test ./... -count=1` 通过，或至少先跑受影响包再跑全量。
 - 通用目录搜索没有新增不该出现的具体业务/模板/语言/命令特判。
-- 新增模板策略能从 template 创建期绑定到 workspace，并能在 run executionContext 中追溯。
+- 新增模板策略能从 template 创建期绑定到 Workspace，并能在 `RuntimeBootstrap` 与 persisted planning context 中追溯；具体 CWI/target/recipe/check 仍由运行期 planning 生成。
 - Web/TUI/CLI 只展示业务模型字段，不复制后端的业务推断逻辑。
 - CLI/TUI/agent 只依赖 `workorchport`；REST client 不依赖 port/service/framework/EventHub；embedded backend 对同步 command/result 缺失或错误返回失败。
 - REST URL 的 path/query 与前端、client、handler、e2e 脚本一致；新增状态等待或列表分页参数时必须确认使用 `?` 开始 query string。
 - 跨 workspace 可能重复的 run/ticket/approval/result/artifact 操作已绑定 workspace scope；无 scope API 对重复 open 对象返回 conflict。
 - 文档同步说明策略归属：core 通用能力、template 数据、Soul 约束或 e2e fixture。
-- 涉及 LLM context/cache 时，必须补充或更新 `docs/workorch-llm-request-cache-aware-context-design.md` / `docs/workorch-runtime-stage-contract-neutrality-design.md` 中的对应约束。
-- 涉及 Goal/DoD 变更、repair/follow-up/resume、memory/context 裁剪时，必须证明 LLM request 中仍包含完整收敛合同和可追溯 evidence。
+- 涉及 Runtime 语义时，先同步 `docs/00-core/runtime-stage-contract.md`、`internal/modules/kernel/orchestrator/readme.md` 与 `internal/pkg/workorchruntimecontract`；涉及 LLM context/cache 时同步 `docs/00-core/runtime-request-cache-note.md` 及其直接引用的 flow/module/verifier 文档。
+- 涉及 Goal/DoD 变更、planning、repair、resume/restart、memory/context 裁剪时，必须证明 LLM request 中仍包含完整收敛合同、sealed authorization 和可追溯 evidence。
+- Goal/DoD-only 回归必须覆盖空 Workspace、已有 Workspace、resume current-run、restart workspace-full、duplicate/stale、candidate rejection、crash reload 与并发 Workspace scope 隔离。
+- plan seal 前断言零 capability side effect；proof seal 后断言严格 receipt/binding/effect gate 不被旁路放宽。
 - 涉及 live workspace 阻塞收口时，必须补充“修改命中 blocker 路径”的说明：旧失败进入哪个函数、现在会得到什么分类/合同/投影输出、下一步自动恢复路径是什么。
 - 涉及服务/代理/长运行验证时，必须搜索 `nohup|setsid|kill|pkill|killall|fuser -k| &`，确认 core 只做中立 shell 形态限制，profile/Soul 承载具体验证策略。
 
@@ -312,8 +388,8 @@ LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状
 
 - `go test ./internal/modules/blocks/llm/biz -count=1` 通过。
 - 若修改 request log / usage / read model，补跑相关 appservice 或脚本验证。
-- 对历史或新 workspace request log 使用 `./scripts/verify-llm-cache-aware-request-log.sh <workspaceId>`；历史旧日志可作为问题样本，新日志必须满足同一 run 内 `stablePrefixHash` 不随动态阶段变化。
-- 单测应覆盖至少一种动态输入变化，例如 `assessmentOnly`、`stateChangingOutputRequired`、provider retry、repair objective 或 Goal/DoD definition revision；其中动态阶段变化不得改变 `stablePrefixHash`，Goal/DoD revision 变化只能改变 `workspaceDefinitionHash`。
+- 对历史或新 Workspace request log 使用仓库当前 verifier（先以 `rg --files scripts` 确认入口）；历史旧日志只作为问题样本，新日志必须满足同一 Run 内 `stablePrefixHash` 不随 dynamic focus/repair/correction/recovery 变化。
+- 单测应覆盖至少一种动态输入变化，例如 `ConvergenceState`、`RuntimeRepairDirective`、candidate correction、provider retry 或 Goal/DoD definition revision；其中动态运行期变化不得改变 `stablePrefixHash`，Goal/DoD revision 变化只能改变 `workspaceDefinitionHash`。
 - Review diff 时明确确认 C0/C1/C2/C3/C4/C5 归属，没有把当前 failure/progress/memory/repair guidance 拼进稳定前缀。
 
 ## Formatter
@@ -339,6 +415,9 @@ LLM 输出一定可能不稳定，runtime 不能依赖 LLM 自己选择正确状
 - 禁止用无 scope 的 run/ticket/approval ID 直接 resolve/get 跨 workspace 对象；不能确定唯一对象时必须 conflict。
 - 禁止把 e2e fixture 中的业务文本复制到 core 作为判断依据。
 - 禁止把运行期动态字段、repair guidance、provider retry guidance、当前失败/进展、memory recall 或 requested action 拼入 C0 stable prompt。
-- 禁止为了缓存命中删除 Goal/DoD、requiredOutput、failure evidence、target snapshot、process evidence timeline 等 LLM 必需上下文；缓存优化必须通过分区稳定性和有序裁剪实现。
-- 禁止把旧 Goal/DoD、旧 graph、旧 memory 或旧 decision resolution 当作当前权威合同，覆盖最新 definition revision。
+- 禁止为了缓存命中删除 Goal/DoD、template planning method、current focus、required output、sealed authorization、failure evidence、target snapshot 或 receipt lineage；缓存优化必须通过分区稳定性和有序裁剪实现。
+- 禁止把旧 Goal/DoD、旧 plan/candidate、旧 memory 或旧 decision resolution 当作当前权威合同，覆盖最新 definition revision 与 persisted authority。
 - 禁止把可自动继续的 validation/repair gap 直接转成人工 ticket，除非结构化 blocker 表明缺少 runtime 无法获得的外部信息、权限、凭证、审批或配置。
+- 禁止以 activation/preflight、Workspace execution-contract 配置、TUI/Web 表单或 Decision ticket 要求普通用户提供 CWI、semantic proof、target、selector、recipe、check、binding 或 operation shape。
+- 禁止 Template/默认配置包含某个具体 Workspace 或样例项目的业务答案；template 只能声明生成方法、能力和质量边界。
+- 禁止在 planning/CWI/proof 尚未由 SM-2 owner-grounding 并 seal 前执行 capability side effect；也禁止在 seal 后为了容忍 LLM 不稳定而放宽 manifest、receipt、binding、effect 或 coverage gate。

@@ -1,80 +1,101 @@
 ---
 name: go-refactor-pro
-description: 资深 Go 语言架构重构专家。专注于代码去重 (DRY)、模块解耦、现代特性迁移 (slog/泛型/errors.Join) 以及性能优化。在代码复杂、逻辑重复或需要从旧版本升级时使用。
-version: 1.0.2
+description: 用于在外部行为与业务合同明确保持不变时，对既有 Go 代码实施证据驱动的内部重构，例如消除真实重复、收紧模块边界、降低不必要耦合或优化已测量热点。不得用于功能开发、配置/API/数据语义变更，也不因请求出现“重构、清理、收口、优化”等词自动触发。
+metadata:
+  version: "2.0.0"
+  author: "rangh-codespace"
+  tags: "go,refactoring,behavior-preserving,code-quality"
 ---
 
-# Go Refactor Pro (God-tier Edition)
+# Go Refactor Pro
 
-测试内容看看
+本 skill 只处理行为保持的 Go 内部重构。重构方案必须来自仓库事实、现有合同和可验证问题，不预设泛型、Functional Options、接口、`slog` 或 `errors.Join` 一定更好。
 
-你现在是具备工程敬畏心的顶级 Go 架构师。你的任务是在不破坏业务逻辑的前提下，将代码提升至高性能、可移植且符合地道风格（Idiomatic Go）的状态。
+## 准入条件
 
-## 1. 重构安全守则 (Safety Rules)
+开始前必须同时确认：
 
-- **Git 预检**: 开始前必须执行 `git status`。若存在未提交改动，提示用户先 commit 以防重构无法回滚。
-- **分支建议**: 建议用户在大规模改动前创建 `refactor/` 分支。
-- **测试覆盖**: 优先运行现有测试。若无测试，必须先使用 `testing-patterns.md` 补齐关键路径的基础测试。
-- **小步原子化**: 每次 commit 只解决一个逻辑问题（如：仅优化错误处理），严禁跨模块的大规模混合重构。
+- 主要目标是内部代码结构、重复、依赖方向、可测试性或已有性能热点。
+- 配置格式、公开 API、数据格式、持久化语义、路由、权限和运行期可观察行为保持不变。
+- 已识别需要保持的合同，并存在测试、失败样本、基准或可重复检查作为证据。
+- 没有更精确的项目本地或领域 skill 应作为主流程。
 
-## 2. 核心重构动作
+任一条件不满足时停止使用本 skill，回到功能领域流程或普通仓库工作流。
 
-- **逻辑收敛 (DRY)**: 合并重复代码，高频通用逻辑应用 **Generics**。
-- **配置重构**: 将参数超过 3 个的构造函数迁移至 **Functional Options** 模式。
-- **现代特性迁移**: 迁移日志至 `slog`，迁移多错误处理至 `errors.Join`。
-- **解耦设计**: 识别硬编码依赖，实施接口注入以支持 Mock 测试。
+## 不适用场景
 
-## 3. 执行工作流
+- 新增功能、修复会改变行为的缺陷或调整产品语义。
+- 重命名、删除、迁移配置项或改变默认值。
+- 修改 API、协议、endpoint、模型来源、数据所有权或生命周期。
+- 兼容性迁移、数据库 schema 演进、权限策略或部署合同调整。
+- 单纯代码评审、诊断、文档更新、测试补齐或非 Go 脚本修改。
+- 仅根据参数数量、文件长度、重复行数等表面指标套用设计模式。
 
-1. **分析提议**: 识别代码异味（Code Smells），对照 `./references/` 给出重构方案及影响评估。
-2. **实施重构**: 执行改动，遵循 `./references/go-conventions.md` 规范。
-3. **性能核验**: 核心算法按 `./references/benchmarking.md` 编写并运行基准测试。
-4. **自动化验证**: 运行 `./scripts/quality-check.sh` 进行全量检测（Lint/Vuln/Build）。
+## 安全基线
 
-## 4. 禁用行为
+1. 先执行 `git status --short`，识别并保护现有用户修改；工作区非干净不等于必须停止。
+2. 读取仓库约定、目标包、调用方和直接测试，写清必须保持的外部合同。
+3. 先运行受影响范围的现有测试；缺少关键保护时，先补最小行为刻画测试。
+4. 将改动限制在能够直接解释当前结构问题的最小边界，不顺带迁移无关模式。
+5. 未经用户要求不创建分支、不提交、不修改公开合同，也不做全仓现代化迁移。
 
-- 严禁为了抽象而抽象（拒绝过度工程化）。
-- 严禁在未透传 `context.Context` 的情况下重构 IO 调用逻辑。
+测试选择见 [测试与行为刻画](references/testing-patterns.md)，目录和所有权判断见 [项目布局与边界](references/project-layout.md)。
 
-## 5. 代码规范 (Import Grouping)
+## 执行流程
 
-本项目采用严格的import分组规范，**同一库的不同组件必须按路径字母顺序排序**，不同库之间用空行分隔。
+### 1. 建立证据
 
-**分组顺序（自上而下）：**
+- 指出具体重复、依赖倒置、循环依赖、不可测试耦合或性能数据。
+- 列出受影响调用方、公开符号、配置/API/序列化边界和错误语义。
+- 区分“看起来不整洁”和“已经产生维护、正确性或性能成本”。
 
-1. **标准库**（Go标准包）
-2. **第三方包**（外部依赖库）
-   - 同一库的不同组件按路径字母顺序排序
-   - 不同库之间用**一个空行**分隔
-3. **本项目内部包**（当前仓库的代码）
-   - 必须放置在最底端
+没有具体证据时只给出评审结论，不实施重构。
 
-**示例：**
+### 2. 选择最小方案
 
-```go
-import (
-	"context"
-	"fmt"
-	"strings"
+- 优先删除不需要的抽象、合并真实重复和澄清所有权。
+- 新抽象必须至少消除已存在的重复变化点或隔离真实外部依赖。
+- 保持现有仓库的目录、命名、错误、日志和测试风格，除非它们正是被证明的问题。
+- 先修改一个完整边界并验证，再扩展到下一边界。
 
-	cd "github.com/example/magicCommon/def"
-	"github.com/example/magicCommon/event"
-	"github.com/example/magicCommon/task"
+具体语言决策见 [Go 重构约定](references/go-conventions.md)。
 
-	bc "github.com/example/magicBase/pkg/common"
+### 3. 实施与验证
 
-	"github.com/example/magicModulesRepo/modules/base/biz"
-	mbcc "github.com/example/magicModulesRepo/modules/blocks/cas/pkg/common"
-	mbtc "github.com/example/magicModulesRepo/modules/blocks/totalizator/pkg/common"
+- 使用项目已有 formatter、lint、test 和 build 命令。
+- 先跑受影响包，再按风险运行全量检查。
+- 对公开行为做前后对比；无法证明等价时，不得把结果称为纯重构。
+- 只有性能是目标或结论包含性能改善时才运行基准，见 [基准测试](references/benchmarking.md)。
 
-	imkpc "github.com/example/project/internal/modules/kernel/panel/pkg/common"
-	imkpm "github.com/example/project/internal/modules/kernel/panel/pkg/models"
-	"github.com/example/project/internal/modules/kernel/portal/config"
-	"github.com/example/project/internal/modules/kernel/portal/pkg/common"
-)
+仓库没有统一质量入口时，可运行只读脚本：
+
+```bash
+./scripts/quality-check.sh ./...
 ```
 
-**关键原则：**
-- **必须排序**：同一库下的多个import必须按路径字母顺序排列
-- **必须分组**：不同库之间必须用空行分隔
-- **本项目最末**：内部包必须放在import块的最底部
+该脚本不执行 `go mod tidy`、`go fmt` 或其它源文件改写。
+
+## 设计模式准入
+
+- **泛型**：只在多个已存在实现共享同一类型安全算法，且泛型版本更清晰时使用。
+- **Functional Options**：只在构造参数可选、组合会持续扩展且兼容性收益明确时使用；参数超过三个不是充分条件。
+- **接口**：优先由消费者定义，用于真实替换点或外部依赖边界；不要只为 Mock 给单一实现增加接口。
+- **`slog`**：只在任务明确要求日志迁移或仓库已采用统一 `slog` 合同时使用。
+- **`errors.Join`**：只用于必须同时保留的多个独立错误；普通包装继续遵循仓库既有错误合同。
+- **性能优化**：必须有基准或 profile 证明热点，并比较前后数据；不以减少 `allocs/op` 作为唯一目标。
+
+## 完成标准
+
+- 外部合同与可观察行为保持不变。
+- 结构问题有明确证据，改动直接消除了该问题。
+- 新抽象没有扩大公开面或制造第二套所有权。
+- 受影响测试与必要的全量门禁通过。
+- 性能结论附带可复现的前后数据。
+- 文档只在内部结构或维护方式确实变化时更新。
+
+## Formatter
+
+- Markdown/YAML：保持现有格式，并运行 `skill-hub validate --pattern go-refactor-pro --links`。
+- Shell：运行 `bash -n scripts/quality-check.sh`；若仓库提供 Shell formatter/linter，再遵循仓库命令。
+- Go 示例遵循 `gofmt`，但 skill 自带质量脚本保持只读，不自动改写目标仓库。
+- 在 `skill-hub feedback --pattern go-refactor-pro --force` 前完成格式、脚本语法和链接校验。

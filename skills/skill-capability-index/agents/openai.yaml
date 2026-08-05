@@ -1,4 +1,4 @@
 interface:
   display_name: "Skill Capability Index"
-  short_description: "Choose a local-first primary skill"
-  default_prompt: "Use $skill-capability-index to choose the primary skill for a task. Prefer project-local skills under .agents/skills when they exist. If the task edits, refreshes, syncs, archives, or publishes anything under .agents/skills, select $skillhub-skill-lifecycle as the main skill before any content-specific skill."
+  short_description: "Resolve ambiguity among available skills"
+  default_prompt: "Use $skill-capability-index only when two or more currently available skills plausibly match. Verify availability before selection, prefer an exact project-local skill, allow primary=none, and never classify behavior-changing feature or contract work as go-refactor-pro merely because the request says refactor, cleanup, unify, or converge."
