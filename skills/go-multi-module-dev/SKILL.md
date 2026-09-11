@@ -1,7 +1,7 @@
 ---
 name: go-multi-module-dev
 description: 用于基于 magicCommon/framework 与可选 magicEngine 的 Go 多运行单元仓库开发，覆盖 Initiator、Block、Module 决策，共享 Base Biz、EventHub 合同、入口与进程级 Service、内置 Service 替换、路由接线、目录拆分和结构验收。新增、迁移或收口 framework 运行单元及定制进程生命周期时使用。
-version: 2.5.2
+version: 2.6.0
 ---
 
 # Go Multi Module Development
@@ -37,6 +37,8 @@ version: 2.5.2
 - framework 内置 Service 不满足要求时的进程级定制：`references/CUSTOM_SERVICE.md`
 - 最小模板和脚本：`references/TEMPLATES.md`
 - 如果任务涉及 `initiator` 接线、plugin `module` 生命周期、`Setup` / `Run` / `Teardown` 顺序，配合使用 `go-module-initiator-lifecycle`
+
+本版运行时合同基于 magicCommon v1.5.16。该库版本包含接口变化；不能仅刷新 vendor 而不核对自定义 Hub/Application/BackgroundRoutine、测试替身和 Base Biz 的错误传播。
 
 ## 4. 工作流
 
@@ -104,7 +106,9 @@ version: 2.5.2
 - 默认生命周期顺序满足要求时使用 `service.DefaultService()`；只需在标准生命周期前后增加进程级动作时，优先包装并委托 DefaultService。
 - 需要改变 Initiator/Module 的 Setup、Run、Teardown 顺序，或需要使用注入的 Hub/BackgroundRoutine 完成特殊装配时，实现完整的 `service.Service`。
 - 仅有独立前台生命周期、且不需要 framework plugin 编排和 runtime 注入时，才使用 `service.AdaptLifecycle`；它不是 DefaultService 的等价替代。
-- 定制 Service 必须跟踪已完成的启动阶段，启动失败按逆序回滚；`Shutdown` 必须幂等，并先停止新输入，再释放 Module、Initiator 和进程级资源。
+- 定制 Service 必须跟踪已进入的启动阶段（包括部分失败的 Setup）；失败先经过全进程停止输入和排空屏障，再按逆序检查式清理。超时/失败保留未释放依赖，重试跳过已完成阶段，不能在 Startup/Run 错误分支提前释放。
+- 生产入口优先使用 `application.Execute`，或显式实现同等的 `ShutdownChecked` 重试；停机使用独立于已取消运行 context 的预算。未真实排空不报告成功、不重启、不强行关闭依赖。
+- 包装 DefaultService 时同步委托 `service.Quiescer` 和 `service.CheckedShutdown`，不能只转调无返回值 Shutdown。自定义 Service 未实现 Quiescer 时，必须在自身检查式 Shutdown 内完成完整输入/排空屏障。
 - 进程级适配器只依赖稳定 port 或本进程 use-case，不直接访问其它 owner 的 repository/service。
 - 稳定 port 只放接口、DTO 和纯 helper；具体协议 client 或本地 adapter 不反向依赖进程 service。
 - 复杂查询需要缓存或读模型时，把它作为 focused package，并保持正式状态写入仍由对应 owner 负责。
@@ -126,6 +130,8 @@ version: 2.5.2
 - 局部 runtime 或 Initiator helper 不能演变成跨 owner Service 注册表；不要通过全局 facade 让调用方绕过 owner Module。
 - module/block 间需要协同时，维护对应资源或状态的能力 owner 在自己的 `pkg/events` 定义稳定 topic 以及具体 `Command`、`Data`、`Result` 类型；调用方导入该能力合同并投递或订阅。不得因调用方不同复制同一能力的 topic、DTO 或 handler。
 - 同步交互直接使用 magicCommon `event.Hub.Send` 与 `event.Result`；handler 通过 `event.Result.Set(<具体 Result>, err)` 返回结果，调用方必须校验结果存在、错误和值类型，禁止使用 `events.Response`、Envelope 或通用 command wrapper。
+- Hub/SimpleObserver 的 Subscribe/Unsubscribe 返回 `*def.Error`，共享 Base Biz 不得吞掉它；必需订阅失败必须中止 Setup，取消失败保留状态供重试。无返回值必需订阅包装可由框架 guard 将明确错误 panic 转为生命周期错误，但普通可恢复业务错误仍优先直接返回。
+- Send 的取消/超时不是已执行 handler 的完成回执；已开始执行必须等真实结束。同步子事件保留父事件 context 以建立同 Hub 活动 lane 祖先链；独立循环等待返回错误，不能通过丢弃 context 绕过顺序约束。
 - 异步通知使用 `event.Hub.Post`；Post handler 收到的 `event.Result` 可能为 nil，禁止调用 `result.Set`。需要回执、失败判定或强一致记账时必须使用 `Send`。
 - `Command`、`Data`、`Result` 中禁止用 `map[string]any`、`[]any` 或无约束 `any` 承载组件合同，也禁止通过 JSON marshal/unmarshal、反射类型表或兼容桥完成组件内传输。
 - EventHub 合同只传数据，不传 `io.Writer`、`http.ResponseWriter`、channel、数据库连接、repository、Registry、Recorder 或其它可变资源句柄；大结果使用有界 DTO、分页、游标或专用流式基础设施。
@@ -138,6 +144,7 @@ version: 2.5.2
 - module/block 的构造参数只接收本组件内部依赖和 framework 基础设施；跨组件运行期依赖只能通过 EventHub 合同表达，不能通过 session/export、repository provider、adapter 或窄接口绕过。
 - 跨 owner 的“保存、校验、激活、通知”若涉及多个组件，由 application Module 的 biz 用例编排；HTTP handler 只做请求响应，单一资源 Block 只修改自己的状态，不能把跨组件流程塞进 handler 或伪装成 Block 内部更新。
 - framework 长期任务、周期巡检和恢复任务应使用 `task.BackgroundRoutine`；请求生命周期内且受 request context 管理的短 goroutine 可以保留，但必须有取消和回收路径。
+- SyncTask/SyncFunction 的提交失败、panic 和完成等待超时必须向上传递；超时不取消已接受任务，完成等待预算不覆盖入队。需要约束入队时使用 AsyncTaskContext，Timer/Shutdown 仍跟踪真实退出。
 - `Weight()` 不能表达路由优先级或隐藏组件依赖。对 first-match router 应注册显式路径、使用路由优先级能力，或集中声明顺序；禁止依赖“某 Module 先 Run，所以 `/**` 不会吞路由”。
 - RouteRegistry Initiator 只向 Module/Block 暴露 `GetRouteRegistry()` 等窄 helper；业务组件不得取得 `http.Server`、listener 或 handler。路由由 service 层声明，listener 的启用时机必须保证路由已就绪，避免启动窗口返回 404。
 - `biz` 负责业务和事件，不直接堆 HTTP 细节。
@@ -152,7 +159,7 @@ version: 2.5.2
 新增或调整运行单元时，至少核对：
 
 - 入口装配：side-effect imports 是否只在入口层，是否能按需启用/禁用 module。
-- 生命周期：`Setup` 只接线依赖，`Run` 启动订阅、route、listener 或任务，`Teardown` 幂等释放。
+- 生命周期：Setup 建立下游启动必需的 command 订阅并检查失败，Run 激活入口/任务；BeginShutdown 停止输入，Quiesce 等待真实排空，最终 Teardown 幂等、可重试，保留未完成依赖。
 - 依赖边界：initiator 是否只提供一种无业务状态基础设施能力；module/block 是否未注入其他组件的 service/repository/adapter/callback。
 - Base Biz 边界：所有使用 Hub 的 Module/Block 是否都有自身 `biz/`，该 Biz 是否内嵌 `internal/modules/base/biz.Base`；是否不存在 `module.go`/`service` 持有 Hub、SimpleObserver 或直接订阅。
 - 事件边界：同步裁决用 EventHub `Send` 或项目封装的同步发布；通知类事件用 `Post`；同一业务对象需要 lane key。

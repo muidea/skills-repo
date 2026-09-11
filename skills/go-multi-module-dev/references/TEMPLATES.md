@@ -44,6 +44,8 @@ func (s *Unit) Teardown(context.Context) {
 
 `module.go` 不嵌入 Base，不保存 Hub/observer，也不实现 handler；它只构造 Biz、Service 和调用 Biz 生命周期。
 
+此最小模板没有后台工作或自有资源。增加 listener、timer、在途 command 或 store 时，必须补 BeginShutdown/Quiesce 的 Biz 委托，让 Application 完成全局排空后才执行 Teardown；不能把取消订阅直接当作排空。Base 的必需订阅包装会在失败时中断 Setup，返回错误的任务包装必须显式检查。
+
 ## 3. Module / Block 入口骨架
 
 ```go

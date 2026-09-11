@@ -16,7 +16,13 @@ Initiator 的“无状态”指无业务状态，不要求结构体零字段。R
 
 - `Setup`：获取 Initiator helper，创建本单元资源，建立下游 Setup 阶段必需的 command subscription，并 fail-fast 校验依赖。
 - `Run`：启动 route、listener、BackgroundRoutine、定时任务或对外服务。
-- `Teardown`：先停止新请求和事件订阅，再取消后台任务，最后关闭 store、listener、文件和 client；必须幂等。
+- `BeginShutdown`：关闭新输入、请求取消，不释放在途操作依赖，也不阻塞等待。
+- `Quiesce`：返回真实排空回执；失败保留依赖供重试。
+- `Teardown`：全进程屏障和共享任务/事件排空成功后，取消订阅并关闭资源；按逆序遇错即停，重试跳过已完成阶段。
+
+`application.Execute` 统一执行 Startup/Run 和检查式停机重试，每次停机预算独立于已取消的运行 context。Startup 失败已进入的插件（包括部分失败项）也参加统一清理；不能在局部 Setup/Run 错误分支提前销毁资源。直接调用 DefaultService/PluginMgr 的 owner 要自行完成屏障及检查式清理。
+
+Application 的 `ShutdownChecked` 失败保持 stopping，不允许重新 Run/Startup；成功后保留已关闭 runtime，下一次 Startup 才建立新一代自有 runtime。重新使用 Application 自有的外部注入 runtime 时必须提供新实例。
 
 如果 Initiator.Run 会在 Module.Run 注册 route 前启动 listener，需要调整其中一侧：在 Setup 完成路由声明，或把 listener activation 延后。不能接受启动瞬间的随机 404。
 
@@ -66,6 +72,7 @@ publisher -> Hub.Post(data) -> owner handler
 
 关键约束：
 
+- Subscribe/Unsubscribe 必须检查 `*def.Error`，必需订阅失败中止启动；具体回执和重入语义见 [EVENT_USAGE.md](EVENT_USAGE.md)。
 - Post handler 的 `event.Result` 可能为 nil，禁止调用 `Set`。
 - 强一致写入、鉴权裁决、配置激活和需要错误反馈的操作必须使用 Send。
 - 允许丢失且可重建的观测或刷新通知才适合 Post。
@@ -103,6 +110,11 @@ EventHub-backed port 可用于隐藏重复 Send/Post 代码，但它只能保存
 
 长期 goroutine、ticker、周期巡检和恢复任务应交给 framework `task.BackgroundRoutine`。自行启动 goroutine 时至少确认它属于单次请求、有 request context 取消、不会越过 Teardown 存活。
 
+- SyncTask/SyncFunction 返回提交失败、panic（Unexpected）或真实完成结果，包装层不能吞掉错误。
+- SyncTaskWithTimeOut 的预算只覆盖入队成功后的完成等待，`-1` 无限等待，其他负值拒绝；Timeout 不取消已接受任务，不等于完成。
+- AsyncTaskContext 约束入队等待，已接受任务自行处理取消与清理。
+- Timer 成功只证明注册成功；关闭应取消其 context，BackgroundRoutine.Shutdown 同时跟踪 timer 退出与实际任务排空。返回 false 时不得释放任务依赖。
+
 ## 8. 验收
 
 - 入口显式 side-effect import 所需 Initiator、Block、Module。
@@ -113,4 +125,5 @@ EventHub-backed port 可用于隐藏重复 Send/Post 代码，但它只能保存
 - 搜索 Post handler 中的 `result.Set`。
 - 搜索依赖 `Weight()` 或 `/**` 的路由顺序。
 - 对 Post nil Result、缺失同步 Result、错误类型、Teardown 幂等和启动路由可用性补直接测试。
+- 对 Setup 必需订阅失败、部分 Setup 清理、任务 panic/超时、取消不等于完成、排空失败保留依赖、关闭重试和重启资源代际补直接测试。
 - 运行 `gofmt`、`go vet ./...`、`go test ./... -count=1` 和目标平台 build。

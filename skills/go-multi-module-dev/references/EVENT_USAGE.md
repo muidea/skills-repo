@@ -84,6 +84,19 @@ func (s *Biz) handleRecorded(ev event.Event, _ event.Result) {
 
 ## 6. 跨仓联动时先核对
 
+### v1.5.16 的订阅与完成合同
+
+- Hub/SimpleObserver 的 Subscribe/Unsubscribe 返回 `*def.Error`。控制队列拒绝为 `ResourceExhausted`，Hub 关闭为 `InvalidOperation`；拒绝后不会稍后偷偷执行。已入队操作等待真实完成，回执不能超时丢弃。
+- SimpleObserver 仅在 Hub 完成后更新本地回调，失败保留原状态供重试；重复注册返回 `Duplicated`，重复取消已不存在回调是幂等成功。
+- 共享 Base Biz 必须传播订阅失败；必需订阅的无返回值包装必须 fail-fast，由 framework guard 转成 Setup/Teardown 错误，不能记日志后继续。
+- Observer ID 和 destination matcher 必须稳定、无副作用且不阻塞，不得在其中再次调用 Hub。
+- Send 仅在尚未执行时允许取消；handler 已经开始则等实际结束。父事件 context 必须传给同步子事件，才能识别同 Hub 活动祖先 lane 重入；独立调用链循环等待返回错误。Post 不使用同步重入路径。
+- Unsubscribe 不是已选取/在途通知的排空回执。释放依赖前需先停止输入，再由 owner/`event.DrainingHub.Drain` 确认真实完成；关闭用 `TerminateChecked` 检查回执，失败保留依赖并重试。
+- 测试至少覆盖拒绝后状态与重试、延迟回执、并发取消/订阅、旧匹配缓存失效、关闭时在途依赖、同链重入及独立环路拒绝。
+
+### 源码与依赖交付
+
 - `magicCommon/event`
 - `magicCommon/task`
 - 如果事件会驱动持久化或协议适配，再看对应基础库
+- 同步更新自定义 Hub/mock 和 Base Biz；分别验证本地源码依赖与实际 vendor。不得手改 vendor；刷新脚本若会删除目录、自动暂存，先核对现有改动与作用范围。

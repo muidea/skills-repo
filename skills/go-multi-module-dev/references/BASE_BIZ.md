@@ -14,7 +14,7 @@
 
 ## 2. 完整 base.go
 
-下面的代码以已完成结构验收的共享 Base Biz 为标准实现：
+下面是基于 magicCommon v1.5.16 的 Base Biz 参考实现；已有包装若使用不同的返回签名，升级时必须同步调整调用方并验证错误不被吞掉：
 
 ```go
 package biz
@@ -23,6 +23,7 @@ import (
 	"context"
 	"time"
 
+	cd "github.com/muidea/magicCommon/def"
 	"github.com/muidea/magicCommon/event"
 	"github.com/muidea/magicCommon/task"
 )
@@ -70,19 +71,27 @@ func (s *Base) BackgroundRoutine() task.BackgroundRoutine {
 }
 
 func (s *Base) Subscribe(eventID string, observer event.Observer) {
-	s.eventHub.Subscribe(eventID, observer)
+	if err := s.eventHub.Subscribe(eventID, observer); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Base) Unsubscribe(eventID string, observer event.Observer) {
-	s.eventHub.Unsubscribe(eventID, observer)
+	if err := s.eventHub.Unsubscribe(eventID, observer); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Base) SubscribeFunc(eventID string, observerFunc event.ObserverFunc) {
-	s.simpleObserver.Subscribe(eventID, observerFunc)
+	if err := s.simpleObserver.Subscribe(eventID, observerFunc); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Base) UnsubscribeFunc(eventID string) {
-	s.simpleObserver.Unsubscribe(eventID)
+	if err := s.simpleObserver.Unsubscribe(eventID); err != nil {
+		panic(err)
+	}
 }
 
 func (s *Base) PostEvent(event event.Event) {
@@ -93,22 +102,28 @@ func (s *Base) SendEvent(event event.Event) event.Result {
 	return s.eventHub.Send(event)
 }
 
-func (s *Base) SyncTask(funcPtr func()) {
-	taskPtr := &routineTask{funcPtr: funcPtr}
-
-	s.backgroundRoutine.SyncTask(taskPtr)
+func (s *Base) SyncTask(funcPtr func()) error {
+	return s.backgroundRoutine.SyncFunction(funcPtr)
 }
 
-func (s *Base) AsyncTask(funcPtr func()) {
-	taskPtr := &routineTask{funcPtr: funcPtr}
-	s.backgroundRoutine.AsyncTask(taskPtr)
+func (s *Base) AsyncTask(funcPtr func()) error {
+	return s.backgroundRoutine.AsyncFunction(funcPtr)
 }
 
-func (s *Base) Timer(ctx context.Context, intervalValue time.Duration, offsetValue time.Duration, funcPtr func()) {
+func (s *Base) Timer(ctx context.Context, intervalValue time.Duration, offsetValue time.Duration, funcPtr func()) error {
+	if funcPtr == nil {
+		return cd.NewError(cd.IllegalParam, "timer function is required")
+	}
 	taskPtr := &routineTask{funcPtr: funcPtr}
-	s.backgroundRoutine.Timer(ctx, taskPtr, intervalValue, offsetValue)
+	return s.backgroundRoutine.Timer(ctx, taskPtr, intervalValue, offsetValue)
 }
 ```
+
+上述无返回值订阅包装是“必需生命周期订阅”：仅在 framework guard 管理的 Setup/Run/Teardown 内使用，错误必须中断调用链，由 guard 转成生命周期错误。不得在包装层 catch 后只记日志、继续启动；普通可恢复流程应在 Biz 内检查 Hub/SimpleObserver 错误，或将 Base 包装与调用链一并改成显式返回错误，不能只改返回签名而让上层继续忽略。
+
+构造函数订阅多个 topic 时，部分失败后的资源仍须可清理。若 Biz 已持有资源，应先把 Biz 保存到 owner，再调用其返回错误的初始化方法；不要让构造中途 panic 导致 owner 无法获得已创建对象。
+
+任务包装返回错误，调用方必须检查；`SyncTask` 的超时/失败不能当作任务已停止。Timer 的成功仅指注册，不是每次业务执行成功。
 
 ## 3. 具体 Biz 的构造方式
 
@@ -133,13 +148,13 @@ func New(hub event.Hub, background task.BackgroundRoutine) *Unit {
 
 ## 4. Teardown 责任
 
-Base 不自动记录业务 topic，也不替具体 Biz 猜测关闭顺序。具体 Biz 的 `Teardown` 必须：
+Base 不自动记录业务 topic，也不替具体 Biz 猜测关闭顺序。具体 Biz 的关闭生命周期必须：
 
-1. 停止新的业务输入或后台调度。
-2. 对每个 `SubscribeFunc` 调用对应 `UnsubscribeFunc`。
-3. 对每个自定义 Observer 调用对应 `Unsubscribe`。
-4. 取消 Timer 使用的 context。
-5. 关闭本 owner 的资源并清空引用。
+1. BeginShutdown 停止新的业务输入或后台调度，取消 Timer context，但保留在途任务需要的 command handler 与依赖。
+2. Quiesce 等待本 owner 在途操作；错误/超时保留资源以便重试。
+3. Application 确认共享任务和事件排空后，最终 Teardown 逐项取消 ObserverFunc 与自定义 Observer 订阅。
+4. 取消失败必须返回/中断，不能继续关闭所需资源；取消成功也不单独证明所有在途通知结束。
+5. 只在相关操作真实结束后关闭资源并清空引用；部分 Setup 与重复清理都须安全。
 
 不要在 Base 中调用 `event.Hub.Terminate` 或 `BackgroundRoutine.Shutdown`；这些进程级 runtime 由 `framework/application` 或显式 owner 关闭。
 
@@ -164,3 +179,5 @@ Base 不自动记录业务 topic，也不替具体 Biz 猜测关闭顺序。具�
 - `PostEvent` 的 handler 在 result=nil 时不 panic。
 - Sync、Async 和 Timer 包装会把任务提交给注入的 BackgroundRoutine。
 - 关闭具体 Biz 不会终止 Application 共享的 Hub 或 BackgroundRoutine。
+- 必需订阅失败让 Setup 返回错误，取消失败后本地/Hub 状态保留，重试成功。
+- SyncTask 提交失败、panic、超时不会被 Base 包装吞掉。

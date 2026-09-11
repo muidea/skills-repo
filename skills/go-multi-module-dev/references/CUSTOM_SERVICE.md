@@ -28,7 +28,16 @@ type Service interface {
 }
 ```
 
-`application.Startup` 创建或注入进程级 runtime 后调用 `Service.Startup`；`application.Run` 调用 `Service.Run`；`application.Shutdown` 先调用 `Service.Shutdown`，再按 ownership 释放 Application 持有的 runtime。
+`application.Startup` 创建或注入 runtime 后调用 Service.Startup；Run 调用 Service.Run。生产入口优先 `application.Execute`，手动编排时必须检查 `application.ShutdownChecked` 并重试未完成停机。
+
+需要接入全进程排空屏障的 Service 还应实现：
+
+```go
+type Quiescer interface { Quiesce(context.Context) *cd.Error }
+type CheckedShutdown interface { ShutdownChecked(context.Context) *cd.Error }
+```
+
+Application 先调用 Quiesce，再排空自己拥有的 BackgroundRoutine 和 Hub，最后调用检查式 Shutdown、关闭 Hub/配置。未实现 Quiescer 的 Service 必须在自己的 Shutdown 内完成完整输入关闭与排空；不能只释放资源。无返回值 Shutdown 仅作为日志入口，不替代检查式回执。
 
 定制 Service 应落到：
 
@@ -58,11 +67,15 @@ Run:
   mark service ready
 
 Shutdown:
-  module.Teardown
-  initiator.Teardown
+  BeginShutdown for entered initiators and modules
+  Quiesce for entered initiators and modules
+  Application drains owned background tasks and Hub dispatches
+  module.TeardownChecked
+  initiator.TeardownChecked
+  Application terminates owned Hub and closes configuration
 ```
 
-Setup 或 Run 失败时，DefaultService 会按已进入的阶段执行清理。若定制 Service 复制这条链，必须保留等价的失败回滚和健康状态语义，或者明确记录为何不需要这些能力。
+Setup 或 Run 失败时，DefaultService 返回错误并保留已进入的阶段，不在局部错误分支提前清理。Application 负责统一排空后清理；直接使用 DefaultService/PluginMgr 的 owner 需显式完成同等流程。部分失败的 Setup 也要参加清理，阶段标志必须在调用 Setup 前登记。
 
 ## 4. 包装 DefaultService
 
@@ -71,17 +84,10 @@ Setup 或 Run 失败时，DefaultService 会按已进入的阶段执行清理。
 ```go
 type ProcessService struct {
     base service.Service
-
-    mu      sync.Mutex
-    started bool
-    runtime *Runtime
 }
 
-func New(runtime *Runtime) *ProcessService {
-    return &ProcessService{
-        base:    service.DefaultService(),
-        runtime: runtime,
-    }
+func New() *ProcessService {
+    return &ProcessService{base: service.DefaultService()}
 }
 
 func (s *ProcessService) Startup(
@@ -90,68 +96,42 @@ func (s *ProcessService) Startup(
     hub event.Hub,
     background task.BackgroundRoutine,
 ) *cd.Error {
-    if s.runtime == nil {
-        return cd.NewError(cd.IllegalParam, "process runtime is not configured")
-    }
-    if err := s.runtime.Preflight(ctx); err != nil {
-        return cd.NewError(cd.Unexpected, err.Error())
-    }
-    if err := s.base.Startup(ctx, serviceName, hub, background); err != nil {
-        return err
-    }
-    s.mu.Lock()
-    s.started = true
-    s.mu.Unlock()
-    return nil
+    // 在此添加启动前校验；失败返回，不提前关闭已创建的 owner 资源。
+    return s.base.Startup(ctx, serviceName, hub, background)
 }
 
 func (s *ProcessService) Run(ctx context.Context) *cd.Error {
-    s.mu.Lock()
-    started := s.started
-    s.mu.Unlock()
-    if !started {
-        return cd.NewError(cd.IllegalParam, "process service is not started")
-    }
-    if err := s.base.Run(ctx); err != nil {
-        s.Shutdown(ctx)
-        return err
-    }
-    if err := s.runtime.Activate(ctx); err != nil {
-        s.Shutdown(ctx)
-        return cd.NewError(cd.Unexpected, err.Error())
-    }
-    if err := s.runtime.Wait(ctx); err != nil {
-        s.Shutdown(ctx)
-        return cd.NewError(cd.Unexpected, err.Error())
-    }
-    return nil
+    return s.base.Run(ctx)
+}
+
+func (s *ProcessService) Quiesce(ctx context.Context) *cd.Error {
+    // 包装层自有输入应先停止；若有自有在途操作，还须返回其排空回执。
+    return s.base.(service.Quiescer).Quiesce(ctx)
+}
+
+func (s *ProcessService) ShutdownChecked(ctx context.Context) *cd.Error {
+    // Application 已完成全局屏障；自有资源也须逐阶段检查并保留失败状态。
+    return s.base.(service.CheckedShutdown).ShutdownChecked(ctx)
 }
 
 func (s *ProcessService) Shutdown(ctx context.Context) {
-    s.mu.Lock()
-    started := s.started
-    s.started = false
-    s.mu.Unlock()
-    if s.runtime != nil {
-        s.runtime.Stop(ctx)
-    }
-    if started {
-        s.base.Shutdown(ctx)
+    if err := s.ShutdownChecked(ctx); err != nil {
+        slog.Error("process shutdown incomplete", "error", err)
     }
 }
 ```
 
-典型用途：所有 Module Run 完成后再激活对外入口、在标准插件启动前做进程级 preflight、让 `Run` 阻塞等待退出信号。包装层不能再次调用 Initiator/Module 生命周期，否则会重复启动。
+这是仅展示委托合同的最小骨架，base 固定由 DefaultService 创建，因此实现两个检查式接口。若允许注入其它 Service，构造时必须校验这两个接口并 fail-fast，不能在关闭时才发现缺失。典型扩展是启动前 preflight、全部 Module Run 后激活入口以及前台等待；新增资源时同步增加停止输入、真实排空和最终释放逻辑。包装层不能重复调用插件生命周期，也不能在 Run 失败时用已取消 context 直接调用 Shutdown。
 
 ## 5. 完整实现 service.Service
 
-只有必须改变标准顺序或插件集合时才完整实现。至少跟踪每个成功阶段，以便回滚：
+只有必须改变标准顺序或插件集合时才完整实现。下面是由 Application 串行驱动的阶段骨架；如果允许外部并发调用，应额外提供生命周期互斥和重复调用保护：
 
 ```go
 type ProcessService struct {
     initiatorsSetup bool
     modulesSetup    bool
-    running         bool
+    quiesced        bool
 }
 
 func (s *ProcessService) Startup(
@@ -160,22 +140,20 @@ func (s *ProcessService) Startup(
     hub event.Hub,
     background task.BackgroundRoutine,
 ) *cd.Error {
+    s.quiesced = false
+    s.initiatorsSetup = true // 调用前登记，覆盖部分失败。
     if err := initiator.Setup(ctx, hub, background); err != nil {
         return err
     }
-    s.initiatorsSetup = true
 
     if err := s.checkDependencies(ctx); err != nil {
-        s.rollback(ctx)
         return err
     }
 
+    s.modulesSetup = true
     if err := module.Setup(ctx, hub, background); err != nil {
-        module.Teardown(ctx)
-        s.rollback(ctx)
         return err
     }
-    s.modulesSetup = true
     return nil
 }
 
@@ -184,31 +162,50 @@ func (s *ProcessService) Run(ctx context.Context) *cd.Error {
         return cd.NewError(cd.IllegalParam, "process service is not started")
     }
     if err := initiator.Run(ctx); err != nil {
-        s.rollback(ctx)
         return err
     }
     if err := module.Run(ctx); err != nil {
-        s.rollback(ctx)
         return err
     }
-    s.running = true
     return nil
 }
 
 func (s *ProcessService) Shutdown(ctx context.Context) {
-    s.rollback(ctx)
+    if err := s.ShutdownChecked(ctx); err != nil {
+        slog.Error("process shutdown incomplete", "error", err)
+    }
 }
 
-func (s *ProcessService) rollback(ctx context.Context) {
+func (s *ProcessService) Quiesce(ctx context.Context) *cd.Error {
+    if s.quiesced { return nil }
+    // 先通知所有已进入的 owner 停止输入，再等待任一 owner 排空。
+    var initErr, moduleErr *cd.Error
+    if s.initiatorsSetup { initErr = initiator.BeginShutdown(ctx) }
+    if s.modulesSetup { moduleErr = module.BeginShutdown(ctx) }
+    if initErr != nil { return initErr }
+    if moduleErr != nil { return moduleErr }
+    if s.initiatorsSetup {
+        if err := initiator.Quiesce(ctx); err != nil { return err }
+    }
     if s.modulesSetup {
-        module.Teardown(ctx)
+        if err := module.Quiesce(ctx); err != nil { return err }
+    }
+    s.quiesced = true
+    return nil
+}
+
+func (s *ProcessService) ShutdownChecked(ctx context.Context) *cd.Error {
+    if err := s.Quiesce(ctx); err != nil { return err }
+    // 由 Application 在共享任务/事件排空后调用，遇错即停。
+    if s.modulesSetup {
+        if err := module.TeardownChecked(ctx); err != nil { return err }
         s.modulesSetup = false
     }
     if s.initiatorsSetup {
-        initiator.Teardown(ctx)
+        if err := initiator.TeardownChecked(ctx); err != nil { return err }
         s.initiatorsSetup = false
     }
-    s.running = false
+    return nil
 }
 ```
 
@@ -227,6 +224,8 @@ type LifecycleService interface {
 ```
 
 通过 `service.AdaptLifecycle(name, lifecycle)` 转为 `service.Service` 时，adapter 不把 Application 创建的 EventHub 和 BackgroundRoutine 传给业务生命周期，也不会自动调用 Initiator/Module 的 Setup、Run、Teardown。
+
+adapter 的检查式 Shutdown 会传播 lifecycle.Shutdown 错误；该独立 lifecycle 自己负责停止输入、取消与排空后再释放资源，不能将等待超时当作完成。
 
 因此它适合不使用 plugin runtime 的独立前台进程；若仍需标准 plugin 编排，应包装 DefaultService 或实现完整 Service。
 
@@ -247,14 +246,17 @@ err := application.StartupWithOptions(ctx, service.DefaultService(), opts)
 
 外部注入 EventHub 或 BackgroundRoutine 时，明确设置 `Options.Ownership`。未声明 ownership 的外部 runtime 由调用方关闭；错误的 ownership 会导致泄漏或重复关闭。
 
+ShutdownChecked 失败保持 stopping，尚未释放的依赖不能换代或重新 Startup。成功 Shutdown 不创建新 runtime；下一次 Startup 才重建默认自有组件。Application 自有的外部注入 runtime 已关闭时，重启必须显式提供新实例；共享外部 runtime 的排空与关闭仍由外部 owner 保证。
+
 ## 8. 定制 Service 验收
 
 - Service 位于 `internal/services/<entry-name>`，入口只负责构造和调用 Application。
 - Service 没有 plugin `init`/Register，也不伪装成 Module。
 - 明确记录 DefaultService 不满足的生命周期差异。
-- Startup 对必需依赖 fail-fast，并跟踪已完成阶段。
-- Startup/Run 任一失败都会按逆序释放已启动资源。
-- Shutdown 幂等，可在部分启动、启动失败和完整运行后调用。
+- Startup 对必需依赖/订阅 fail-fast，并跟踪已进入阶段，包含部分失败项。
+- Startup/Run 任一失败都通过全局排空屏障后按逆序检查式释放，不在局部提前回滚。
+- ShutdownChecked 幂等、遇错即停、可重试；失败保留未释放依赖，成功阶段不重复执行。
+- 包装 Service 保留 Quiescer 和 CheckedShutdown；Execute/手动停机使用新预算，不复用已取消 context。
 - 对外入口只在依赖与路由就绪后激活。
 - Run 的阻塞、退出和 context 取消语义有直接测试。
 - 外部 EventHub/BackgroundRoutine 的 ownership 有直接测试。
