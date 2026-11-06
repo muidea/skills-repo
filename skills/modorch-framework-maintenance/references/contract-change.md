@@ -1,4 +1,4 @@
-> Generated snapshot; source: CONTRIBUTING.md; source sha256: f112e083203ec6c07c3d6780d567802d07625af3c314c3b8229cc5d34bf6ddfd; revision 1.0.2. Do not edit.
+> Generated snapshot; source: CONTRIBUTING.md; source sha256: f112e083203ec6c07c3d6780d567802d07625af3c314c3b8229cc5d34bf6ddfd; revision 1.0.6. Do not edit.
 
 # 贡献与检查
 

@@ -1,8 +1,8 @@
-> Generated snapshot; source: contracts/README.md; source sha256: fa2bbe5cc6b0597728a2eaf7f4ed15c0ca12624b8cf9923dd612d6a9f89e2619; revision 1.0.2. Do not edit.
+> Generated snapshot; source: contracts/README.md; source sha256: b7424e0283022a47d111f27c9337a4564a90efca5ecd888b34b512bc01e3ccce; revision 1.0.6. Do not edit.
 
 # 行为契约
 
-适用：modorch 0.1.0 开发树；revision 1.0.0。公开签名由源码/Rustdoc 维护，本文目录只定义可观察语义。
+适用：modorch 0.0.2 开发树；revision 1.2.0。公开签名由源码/Rustdoc 维护，本文目录只定义可观察语义。
 
 | 范围 | 契约 | 验证入口 |
 |---|---|---|
