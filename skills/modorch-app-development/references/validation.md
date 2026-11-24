@@ -1,4 +1,4 @@
-> Generated snapshot; source: docs/testing-guide.md; source sha256: 9bb3cffc3ad6f589747830b4f91f9d3141edaaeb394579547d9588bfd713763c; revision 1.0.6. Do not edit.
+> Generated snapshot; source: docs/testing-guide.md; source sha256: 9bb3cffc3ad6f589747830b4f91f9d3141edaaeb394579547d9588bfd713763c; revision 1.0.7. Do not edit.
 
 # 验证与证据维护
 

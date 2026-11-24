@@ -1,4 +1,4 @@
-> Generated snapshot; source: contracts/validation-contract.md; source sha256: 9ab8b4f0fa05dfa9790741cfa383dd8be2f2aa0fa8f26125d092ec4a5127f34c; revision 1.0.6. Do not edit.
+> Generated snapshot; source: contracts/validation-contract.md; source sha256: 6f55f93bf1b38c0e92855eb6d7a6aea491856983aeff0e5c50050f23fd8bfbad; revision 1.0.7. Do not edit.
 
 # Validation Contract
 
@@ -13,7 +13,7 @@
 - Boundaries: 日志中的测试函数必须出现唯一、完整的 test ... ok 结果；只找到源码或编译通过不能替代行为测试。补充兼容/安全/门禁测试由 Python unittest 执行并独立记录。
 - Test ID: CT-VAL-001
 - Test: test_contract_mapping_rejects_missing_test（源码定位：`../tests/agent-evals/test_tooling.py`；从匹配框架源码查询）
-- Evidence: 验证报告（源码定位：`../docs/validation/2026-11-04/release-0.0.2/README.md`；从匹配框架源码查询）
+- Evidence: 验证报告（源码定位：`../docs/validation/2026-11-06/release-0.0.3/README.md`；从匹配框架源码查询）
 - Responsibility: QA
 
 ## VAL-002：发布状态与不可绕过项
@@ -27,5 +27,5 @@
 - Boundaries: 确定性 fixture replay 不能替代独立 Agent 任务；本次未完成跨宿主 Agent 评估时必须显式阻断，不因文件存在自动通过。
 - Test ID: CT-VAL-002
 - Test: test_gate_rejects_notrun_or_missing（源码定位：`../tests/agent-evals/test_tooling.py`；从匹配框架源码查询）
-- Evidence: 验证报告（源码定位：`../docs/validation/2026-11-04/release-0.0.2/README.md`；从匹配框架源码查询）
+- Evidence: 验证报告（源码定位：`../docs/validation/2026-11-06/release-0.0.3/README.md`；从匹配框架源码查询）
 - Responsibility: Release Owner / QA

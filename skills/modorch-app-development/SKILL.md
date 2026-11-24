@@ -2,11 +2,11 @@
 name: modorch-app-development
 description: "在 Rust 应用中接入 Modorch-RS、创建独立应用、配置 Builder/Factory/显式启用、启动和检查式退出时使用；不用于修改框架 Runtime 或公共契约。"
 license: MIT
-compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.2 with matching source fingerprint"
+compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.3 with matching source fingerprint"
 metadata:
-  version: "1.0.6"
-  modorch-skill-revision: "1.0.6"
-  framework-version: "0.0.2"
+  version: "1.0.7"
+  modorch-skill-revision: "1.0.7"
+  framework-version: "0.0.3"
   contracts-revision: "1.2.0"
   author: "Modorch-RS maintainers"
 ---

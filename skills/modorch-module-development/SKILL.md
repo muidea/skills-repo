@@ -2,11 +2,11 @@
 name: modorch-module-development
 description: "在使用 Modorch-RS 的 Rust 应用中新增或修改 Initiator / Module、声明依赖、共享服务、Event/Command/Request、受管任务及生命周期测试时使用；不用于改 Runtime 核心语义。"
 license: MIT
-compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.2 with matching source fingerprint"
+compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.3 with matching source fingerprint"
 metadata:
-  version: "1.0.6"
-  modorch-skill-revision: "1.0.6"
-  framework-version: "0.0.2"
+  version: "1.0.7"
+  modorch-skill-revision: "1.0.7"
+  framework-version: "0.0.3"
   contracts-revision: "1.2.0"
   author: "Modorch-RS maintainers"
 ---

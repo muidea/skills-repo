@@ -2,11 +2,11 @@
 name: modorch-framework-maintenance
 description: "维护 Modorch-RS 框架内部、公开 API、Feature、生命周期/消息/调度/资源语义、兼容性和发布门禁时使用；不用于普通业务组件开发。"
 license: MIT
-compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.2 with matching source fingerprint"
+compatibility: "Rust >= 1.85, Cargo, Python >= 3.11; modorch 0.0.3 with matching source fingerprint"
 metadata:
-  version: "1.0.6"
-  modorch-skill-revision: "1.0.6"
-  framework-version: "0.0.2"
+  version: "1.0.7"
+  modorch-skill-revision: "1.0.7"
+  framework-version: "0.0.3"
   contracts-revision: "1.2.0"
   author: "Modorch-RS maintainers"
 ---
