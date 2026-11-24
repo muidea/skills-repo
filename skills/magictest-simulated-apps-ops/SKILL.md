@@ -1,8 +1,8 @@
 ---
 name: magictest-simulated-apps-ops
-description: Operates simulated application packaging, cold-start import/install/approval, Portal subscriptions, least-privilege CAS OAuth provisioning, data seeding, and readback verification via magicTest. Use when exporting remote simulation bundles or populating and verifying device-management and chess-room-booking on a deployed magicPlatform.
+description: Operates simulated application packaging, cold-start import/install/approval, Portal subscriptions, least-privilege CAS OAuth provisioning, data seeding, dependency self-checks, and readback verification via magicTest. Use when exporting remote simulation bundles or populating and verifying device-management and chess-room-booking on a deployed magicPlatform.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "rangh-codespace"
   tags: "magictest,simulated-apps,device-management,chess-room-booking,oauth"
 compatibility: Compatible with open_code
@@ -10,13 +10,43 @@ compatibility: Compatible with open_code
 
 # 模拟应用打包、冷启动与数据验证操作
 
-用于跨机器导出最小模拟应用工具包，并在已就绪的 `magicPlatform` 上安全完成 `device-management` 与 `chess-room-booking` 的导入安装、门户订阅、最小权限 CAS OAuth 授权、造数与双轮回读核验。
+用于跨机器导出最小模拟应用工具包，并在已就绪的 `magicPlatform` 上安全完成 `device-management` 与 `chess-room-booking` 的依赖自检、导入安装、门户订阅、最小权限 CAS OAuth 授权、造数与双轮回读核验。
 
 ## 何时使用
 
 - 需要把权威模型与模拟器工具打包到无完整源码的目标机。
 - 需要在新部署或已重置环境快速上线两大模拟应用并注入逼真演示/测试数据。
 - 需要排查 Portal 订阅、API Key、PKCE Action Token（16 KiB 上限）或双应用模拟器回读失败。
+
+## 前置依赖与自检
+
+运行冷启动、模拟器或打包器**不需要 Node.js、Docker、Playwright 或任何第三方 `pip` 包**（纯 Python 标准库），但必须满足以下条件：
+
+- **Python 版本与时区**：`Python 3.10+`（`chess-room-booking/tooling` 使用 `zoneinfo.ZoneInfo`，Linux 宿主需具备系统 `tzdata`；`bootstrap_simulated_apps.py`、`export_remote_sim_bundle.py` 与 `simulator.py` 兼容 Python 3.9+）。
+- **OpenSSL 叶证书信任能力**：使用自签证书 `--trust-leaf` 时，Python `ssl` 需支持 `ssl.VERIFY_X509_PARTIAL_CHAIN`。
+- **模型资产根目录**：存在 `~/dataspace/magicPlatform/apps/models/`，或已通过 `MAGICPLATFORM_ROOT` / `--platform-root` 指向解包后的轻量化 `magicPlatform/` 目录。
+- **凭据文件权限**：`--admin-password-file` 或生成密钥须位于本人所有的 `0600` 常规文件（或使用受管环境变量 `MAGIC_ADMIN_PASSWORD`）；不接受全局可读或软链接文件。
+- **CA 证书**：公网站点确认 `/etc/ssl/certs/ca-certificates.crt` 或 `/etc/pki/tls/certs/ca-bundle.crt` 存在；本地 `local.vpc` 确认 `tls.crt` 可读。
+- **可选开发构包工具**：仅运行离线构包或阈值候选核对（`package_tool.py`、`validate_threshold_candidate.py`）时额外需要 `go` 与同级 `magicRunner`（`vendor` 模式）；仅 `test_simulator.py` 需要 `openssl`。
+
+一键只读依赖自检（无副作用）：
+
+```sh
+PYTHONDONTWRITEBYTECODE=1 python3 -B - <<'PY'
+import os, pathlib, ssl, sys
+from zoneinfo import ZoneInfo
+
+assert sys.version_info >= (3, 10), f"need Python 3.10+, got {sys.version}"
+ZoneInfo("Asia/Shanghai")
+assert hasattr(ssl, "VERIFY_X509_PARTIAL_CHAIN"), "OpenSSL missing VERIFY_X509_PARTIAL_CHAIN"
+root = pathlib.Path(os.environ.get("MAGICPLATFORM_ROOT", "~/dataspace/magicPlatform")).expanduser()
+for app in ("device-management", "chess-room-booking"):
+    pkg = root / "apps/models" / app / "package/package.zip"
+    assert pkg.is_file(), f"missing model package: {pkg}"
+ca_hits = [p for p in ("/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt") if pathlib.Path(p).is_file()]
+print({"python": sys.version.split()[0], "platformRoot": str(root), "systemCA": ca_hits})
+PY
+```
 
 ## 核心规则与安全边界
 

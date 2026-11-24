@@ -1,8 +1,8 @@
 ---
 name: magicplatform-deploy
-description: Guides AI agents through safe magicPlatform deployment, upgrade, offline delivery, and read-only preflight/health verification. Use when preparing hosts, validating TLS/image modes, initializing/resetting/updating deployments, packaging offline releases, or diagnosing container and HTTPS health.
+description: Guides AI agents through safe magicPlatform deployment, upgrade, offline delivery, dependency self-checks, and read-only preflight/health verification. Use when preparing hosts, validating TLS/image modes, initializing/resetting/updating deployments, packaging offline releases, or diagnosing container and HTTPS health.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   author: "rangh-codespace"
   tags: "magicplatform,deployment,tls,docker-compose,ops"
 compatibility: Compatible with open_code
@@ -10,13 +10,35 @@ compatibility: Compatible with open_code
 
 # magicPlatform 部署与运维指南
 
-用于指导在任意干净或已初始化主机上执行 `magicPlatform`（`~/dataspace/magicPlatform`）的预检、初始化、开发更新、离线发布包交付与只读健康巡检。
+用于指导在任意干净或已初始化主机上执行 `magicPlatform`（`~/dataspace/magicPlatform`）的依赖核对、预检、初始化、开发更新、离线发布包交付与只读健康巡检。
 
 ## 何时使用
 
-- 准备新机器或接管现有部署，需要核对 Docker、OEM、域名、TLS 与端口前提。
+- 准备新机器或接管现有部署，需要核对工具依赖、Docker、OEM、域名、TLS 与端口前提。
 - 执行 `./initialize.sh`、`./start.sh`、`./stop.sh`、`./update.sh`、`./reset.sh` 或 `./release.sh` + `./load.sh`。
 - 需要对本机或远端已部署环境做只读巡检与故障定界。
+
+## 前置依赖与自检
+
+在执行部署或巡检前，先确认宿主机具备必需的只读检查与容器工具：
+
+| 组件 | 要求 | 说明 |
+| --- | --- | --- |
+| POSIX Shell & 文本工具 | `sh`、`sed`、`grep`、`jq`、`openssl` | 全部部署入口脚本与 TLS 校验证书必备；离线 [foundation-database_test.sh](~/dataspace/magicPlatform/tests/deployment/foundation-database_test.sh) 另需 `bash` |
+| Python | `python3 >= 3.9` | 3.11+ 零第三方依赖；3.9/3.10 需安装 `tomli==2.2.1`（见 `scripts/requirements.txt`） |
+| HTTP 客户端 | `curl` | `deployment-health.sh` 探活必需，`deployment-preflight.sh` 会在起跑前拦截缺失 |
+| 容器运行时 | `docker` + `docker compose`（v2） | 本地部署、更新与本机容器健康检查必需；远端使用 `--skip-docker --base-url` 时可省略 |
+| 端口与测试扩展（可选） | `ss`；`go`（`GOFLAGS=-mod=vendor`）+ 同级 `magicRunner`/`magicFile` | 缺 `ss` 时仅跳过 80/443 本地占用探测；仅运行 `platform-manifests_test.sh` 时需要 Go 与上游源码 |
+
+一键只读依赖自检（不修改任何文件）：
+
+```sh
+for c in sh python3 jq openssl curl sed grep docker; do
+  command -v "$c" >/dev/null 2>&1 || echo "MISSING:$c"
+done
+docker compose version >/dev/null 2>&1 || echo "MISSING:docker-compose"
+PYTHONDONTWRITEBYTECODE=1 python3 -B ~/dataspace/magicPlatform/scripts/deployment_toml.py
+```
 
 ## 核心规则与安全边界
 
@@ -39,6 +61,8 @@ sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode development 
 # 发布模式（校验 services/images.lock.json、本地镜像及 TLS）
 sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode release --require-tls --json
 ```
+
+`deployment-preflight.sh` 会同时核对 `sh`/`python3`/`jq`/`openssl`/`curl`/`tomli`/Docker 及 OEM/端口。
 
 ### 2. 初始化与生命周期管理
 
@@ -72,7 +96,7 @@ sh ~/dataspace/magicPlatform/scripts/deployment-health.sh \
 
 ## 故障定位顺序
 
-1. 先运行 `deployment-preflight.sh --json` 排除 OEM、域名、UID、端口 80/443 占用及 `images.lock.json` 问题。
+1. 先运行 `deployment-preflight.sh --json` 排除依赖工具缺失、OEM、域名、UID、端口 80/443 占用及 `images.lock.json` 问题。
 2. 再运行 `deployment-health.sh --json` 定位是基础容器（`postgres`/`magicbase`/`magiccas`/`traefik`）、核心控制面（`magicFile`/`magicPanel`/`magicGateway`/`magicWebPortal`）还是 OIDC Discovery / JWKS 异常。
 3. 核对基础服务依赖顺序：`postgres` -> `magicbase` -> `magiccas` -> Bootstrap/Installer -> `magicFile` -> `magicPanel` -> `magicGateway` -> `magicWebPortal`。
 4. 修改脚本或静态清单后，执行 `tests/deployment/deployment-checks_test.sh` 与 `tools/check_repository_layout.py`（加 `PYTHONDONTWRITEBYTECODE=1`）。
