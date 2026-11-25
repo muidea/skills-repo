@@ -2,7 +2,7 @@
 name: magictest-simulated-apps-ops
 description: Operates simulated application packaging, cold-start import/install/approval, Portal subscriptions, least-privilege CAS OAuth provisioning, data seeding, dependency self-checks, and readback verification via magicTest. Use when exporting remote simulation bundles or populating and verifying device-management and chess-room-booking on a deployed magicPlatform.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "rangh-codespace"
   tags: "magictest,simulated-apps,device-management,chess-room-booking,oauth"
 compatibility: Compatible with open_code
@@ -26,7 +26,8 @@ compatibility: Compatible with open_code
 - **OpenSSL 叶证书信任能力**：使用自签证书 `--trust-leaf` 时，Python `ssl` 需支持 `ssl.VERIFY_X509_PARTIAL_CHAIN`。
 - **模型资产根目录**：存在 `~/dataspace/magicPlatform/apps/models/`，或已通过 `MAGICPLATFORM_ROOT` / `--platform-root` 指向解包后的轻量化 `magicPlatform/` 目录。
 - **凭据文件权限**：`--admin-password-file` 或生成密钥须位于本人所有的 `0600` 常规文件（或使用受管环境变量 `MAGIC_ADMIN_PASSWORD`）；不接受全局可读或软链接文件。
-- **CA 证书**：公网站点确认 `/etc/ssl/certs/ca-certificates.crt` 或 `/etc/pki/tls/certs/ca-bundle.crt` 存在；本地 `local.vpc` 确认 `tls.crt` 可读。
+- **CA 证书**：公网站点确认 `/etc/ssl/certs/ca-certificates.crt` 或 `/etc/pki/tls/certs/ca-bundle.crt` 存在；自签 `local.vpc` 跨机测试推荐从目标机拉取 `services/secret/tls/ca.crt` 至 `0600` 私有文件并用 `--ca-file <ca.crt>` 作为根 CA 验链（不加 `--trust-leaf`）；仅直接使用叶证书 `tls.crt` 时才传 `--ca-file <tls.crt> --trust-leaf`。
+- **管理员最新凭据**：若目标平台已有人通过浏览器完成首次登录改密（`POST /oauth/password/change`），目标机上的 `services/secret/cas/bootstrap-admin-password` 已失效；遇到 `401 invalid account or password` 应向管理员核对最新密码，切勿误判路由/TLS 或直接重置库。
 - **可选开发构包工具**：仅运行离线构包或阈值候选核对（`package_tool.py`、`validate_threshold_candidate.py`）时额外需要 `go` 与同级 `magicRunner`（`vendor` 模式）；仅 `test_simulator.py` 需要 `openssl`。
 
 一键只读依赖自检（无副作用）：
@@ -86,19 +87,22 @@ python3 -B ~/codespace/magicTest/applications/live_e2e/bootstrap_simulated_apps.
   --reuse-existing
 ```
 
-- 自签 `local.vpc` 环境额外附加：`--ca-file ~/dataspace/magicPlatform/services/secret/tls/tls.crt --trust-leaf`。
+- **跨服务器直连 `local.vpc`**：若当前测试机 `/etc/hosts` 将 `panel.local.vpc` 指向 `127.0.0.1` 或无内网 DNS，统一追加 `--target-address <目标IP>`（或设置环境变量 `MAGICTEST_TARGET_ADDRESS=<目标IP>`），无需改本机 `/etc/hosts` 即可保留 TLS SNI `panel.local.vpc` 直连目标机（`bootstrap_simulated_apps.py` 及双应用模拟器均支持）。
+- 自签 `local.vpc` 证书：使用从目标机拷贝的根 CA 传 `--ca-file ~/.local/state/magic-sim/secrets/ca.crt`（不传 `--trust-leaf`）；若使用叶证书 `tls.crt` 则传 `--ca-file .../tls.crt --trust-leaf`。
 - 公网 CA 环境直接省略 `--ca-file` 即可（脚本会自动为 `simulator.py` 匹配系统 CA 束与 `--ca-is-root`）。
 
 ### 4. 复用冷启动产物驱动跨机性能压测（可选）
 
-冷启动完成后，可直接把 `--state-dir` 中非机密 URL 与 `0600` Gateway ApiKey / 最小权限 Bearer Token 交给 `load/run_load.py` 施压并采集平台 APM：
+冷启动完成后，可直接把 `--state-dir` 中非机密 URL 与 `0600` Gateway ApiKey / 最小权限 Bearer Token 交给 `load/run_load.py` 施压并采集平台 APM（跨机 `local.vpc` 目标同样传 `--target-address` 与 `--ca-file`）：
 
 ```sh
 python3 -B ~/codespace/magicTest/load/run_load.py \
   --from-sim-state ~/.local/state/magic-sim \
   --sim-app device-management --sim-scenario gateway-read \
   --mode step --concurrency 2,8,16 --duration 30 \
-  --apm-url https://apm.example.com/prometheus/ \
+  --target-address <目标IP> \
+  --ca-file ~/.local/state/magic-sim/secrets/ca.crt \
+  --apm-url https://apm.local.vpc/prometheus/ \
   --apm-idle-seconds 30 --require-apm
 ```
 
@@ -106,4 +110,5 @@ python3 -B ~/codespace/magicTest/load/run_load.py \
 
 ## Formatter
 
-- 保持操作摘要仅包含非机密身份、状态、字节计数与脱敏文件路径；所有命令加 `python3 -B` 或 `PYTHONDONTWRITEBYTECODE=1`，防止在源码树留下 `__pycache__`。
+- Markdown/YAML：同步前确保通过 `skill-hub repo rebuild-index` 与 `skill-hub apply --global`（项目内开发副本使用 `skill-hub validate --pattern magictest-simulated-apps-ops --links`）。
+- 保持操作摘要仅包含非机密身份、状态、字节计数与脱敏文件路径；所有 Python 命令加 `python3 -B` 或 `PYTHONDONTWRITEBYTECODE=1`，防止在源码树留下 `__pycache__`。
