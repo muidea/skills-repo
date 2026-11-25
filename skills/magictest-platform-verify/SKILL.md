@@ -2,7 +2,7 @@
 name: magictest-platform-verify
 description: Selects, executes, checks host dependencies for, and reports layered magicTest and magicPlatform verification suites from offline governance checks up to live regression runs. Use when pre-checking toolchain dependencies, discovering test targets, running unit/packaging/E2E dry-runs or live verification, and distinguishing offline proofs from real live acceptance.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "rangh-codespace"
   tags: "magictest,verification,e2e,regression,governance,load,apm"
 compatibility: Compatible with open_code
@@ -122,6 +122,7 @@ python3 -B load/run_load.py \
 ```
 
 - 压测凭据须为 `0600` 常规非软链文件，Bearer Token 严格限制 `<= 16384` 字节；避免用 `platform-admin` JWT 压测业务动作，优先使用 Gateway ApiKey 或最小权限账号，避免单 IP 瞬时高频登录触发 CAS `[oauth.loginRate]`（默认 60s/30 次）。
+- **远端 `local.vpc` 目标衔接**：无需修改测试机 `/etc/hosts`，只需将目标部署机只读 `services/secret/tls/ca.crt` 拷贝至测试机仓外私密目录，并在 `load/run_load.py` / `load/apm_client.py` 传 `--target-address <目标IP> --ca-file <ca.crt>`（以及在 `remote-https` 功能回归私密配置中设 `targetAddress` 与 `caFile`）即可直连 `panel.local.vpc` 与 `apm.local.vpc`。
 - 若需更深层的进程内阶段样本与 PostgreSQL SQL 指纹，仍可在被测平台宿主机按需配合 `MAGIC_PROFILE_WINDOW` 与 `collect-qps-analysis.py`。
 
 执行完整 `platform-standard` / `platform-abnormal` 前确认已通过上方 Layer 3/4 浏览器依赖自检（Node 18+、用户级 Playwright 1.65.0 与 Chromium、Docker、Go）。

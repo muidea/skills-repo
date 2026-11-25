@@ -2,7 +2,7 @@
 name: magicplatform-deploy
 description: Guides AI agents through safe magicPlatform deployment, upgrade, offline delivery, dependency self-checks, and read-only preflight/health verification. Use when preparing hosts, validating TLS/image modes, initializing/resetting/updating deployments, packaging offline releases, or diagnosing container and HTTPS health.
 metadata:
-  version: "1.2.0"
+  version: "1.2.1"
   author: "rangh-codespace"
   tags: "magicplatform,deployment,tls,docker-compose,ops"
 compatibility: Compatible with open_code
@@ -42,7 +42,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B ~/dataspace/magicPlatform/scripts/deploymen
 
 ## 核心规则与安全边界
 
-1. **禁止使用 `sudo` 直接创建运行时文件**：以部署属主普通用户执行脚本，确保 `DEPLOYMENT_UID`/`DEPLOYMENT_GID` 与 `services/data`、`services/secret`、`apps/` 属主一致。
+1. **禁止普通用户与 `sudo` 混跑**：`initialize.sh` 会将 `sudo` 调用退回 `SUDO_USER`；日常推荐以专用普通部署属主执行全套脚本，若目标测试机全程以 `root`（`DEPLOYMENT_UID=0`）直接部署与运维，则保持全程同 UID 一致且不混用其他账号，解压离线包时加 `--no-same-owner`，确保 `services/data`、`services/secret`、`apps/` 属主与 `DEPLOYMENT_UID`/`DEPLOYMENT_GID` 一致。
 2. **明确区分部署模式**：
    - 开发模式必须显式传递 `MAGIC_DEPLOYMENT_MODE=development`；使用本机 Docker daemon 中已标记 `:master` 的镜像（`initialize.sh` / `start.sh` / `reset.sh` 不自动拉取远端镜像）。
    - `update.sh` 仅允许在开发模式下运行，用于拉取最新镜像并按序重建服务。
@@ -58,7 +58,8 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B ~/dataspace/magicPlatform/scripts/deploymen
 # 源码开发模式预检（不会写文件或拉取镜像）
 sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode development --json
 
-# 发布模式（校验 services/images.lock.json、本地镜像及 TLS）
+# 发布模式（未初始化 local-ca 环境先省略 --require-tls，待 initialize.sh 生成证书或 files/acme 材料就位后再加 --require-tls）
+sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode release --domain local.vpc --json
 sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode release --require-tls --json
 ```
 
@@ -75,11 +76,19 @@ MAGIC_DEPLOYMENT_MODE=development ./start.sh
 ENABLE_APM=true MAGIC_DEPLOYMENT_MODE=development ./start.sh
 MAGIC_DEPLOYMENT_MODE=development ./update.sh
 
-# 离线发布打包（源机）-> 导入与初始化（目标机）
+# 离线发布打包（源机）-> 解压、导入、预检、初始化与启用 APM（目标机，严格 release 模式）
 ./release.sh
-# 解压到目标机后：
+# 目标机解压（剥离顶层 release/ 且不继承源机属主）：
+tar -xzf platform*.tgz --strip-components=1 --no-same-owner -C <目标目录>
+cd <目标目录>
+# 若目标机使用 local.vpc 且无本地解析，先确保 /etc/hosts 含 127.0.0.1 panel.local.vpc apm.local.vpc
 ./load.sh
-./initialize.sh
+sh scripts/deployment-preflight.sh --mode release --domain local.vpc --json
+./initialize.sh --domain local.vpc
+# initialize.sh 不自动启动 APM；如需性能观测则执行：
+ENABLE_APM=true ./start.sh
+sh scripts/deployment-health.sh --include-apm --json
+# 等待约 15s 首轮抓取后确认 5 个 Prometheus 任务（node-exporter/cadvisor/postgres-exporter/magicbase/traefik）均为 up 且宿主机未暴露 8082
 ```
 
 更多模式与 TLS 参数见 [TLS 与交付矩阵](references/tls-and-delivery-matrix.md)。
