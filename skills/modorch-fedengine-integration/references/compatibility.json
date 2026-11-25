@@ -1,17 +1,17 @@
 {
-  "skill_revision": "1.1.4",
+  "skill_revision": "1.1.6",
   "library_contracts_revision": "1.1.2",
   "hash_algorithm": "sha256(sorted UTF-8 path + NUL + lowercase file sha256 + LF)",
   "library": {
     "version": "0.1.0",
     "files": {
-      "Cargo.toml": "e4e6070f1c350686d5101fcfcef7b08ba530377b38bf87aa05b57e6f7b218a66",
+      "Cargo.toml": "fc855329c9e1106f393f3843d6a6f2971daa7bc59dc10347b0a8e1cd07464132",
       "src/client/management.rs": "b0dac71744c2501be389f024144ae404d6119224a1471ae4a872f65737302604",
       "src/client/mod.rs": "5df8a6c8c0a1794025746b0e904bf673fb3c74e2b7b90b4253216ae9805c6a68",
       "src/client/query.rs": "4d01df1aec3f2f36ef2e652723cce41cb6ec7e85eb16d61b0214b4b0679e8b23",
       "src/handle/tests.rs": "dd522c21845466239d590e55439ef27805b2fce5dec618caf0a86b9d6a1fccd4",
       "src/handle.rs": "a6b46cebe54b6ba7126a9c14a7f6dd48efde321a3bcee11a614a7fc996135605",
-      "src/lib.rs": "ccc78f6b97660f1445dafff3b8c905ab6aec85677c2f56f0fc687c460b610e1e",
+      "src/lib.rs": "149d98aa89706eb4a4246072b2376dd39a97647e17af1e31fcd72047a247c0fb",
       "src/profile.rs": "6a58db0e254602ba6952d860522ddc3b40e1b49a337817ffdf0a63395cd326c7",
       "src/witness.rs": "b0d73084d99eb642f11c9246ea862b38ec776f810397d1188e78c0e5b35b8be3",
       "README.md": "3669be3f4e36ac57ff5f36969cc8ad810023e387aaa5e175fd223c1150654be3"

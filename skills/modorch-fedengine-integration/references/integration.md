@@ -5,7 +5,7 @@
 | 接口 | 已实现行为 |
 |---|---|
 | `FedEngineConfig` | 当前 Config 别名，load/validate；路径仍按进程 CWD |
-| `FedEngineBundle` | new、profile、register；纯 Factory 注册，返回 FedEngineRegisteredComponents |
+| `FedEngineBundle` | new、profile、with_management_router_slot、register；纯 Factory 注册，返回 FedEngineRegisteredComponents |
 | `FedEngineProfile` | PgServer { management_api }、ManagedServer { pgwire }；EmbeddedCore 为明确拒绝的保留变体 |
 | 注册结果 | components、initiator_ids、module_ids、profile、resource_requirements、handle、observe |
 | `FedEngineResourceDemand` | blocking_io_threads、blocking_io_capacity、max_tasks_per_owner，建议值不自动配置宿主 |
@@ -23,6 +23,8 @@
 组件 ID：核心 Initiator `duckdb-instance`、`datasource-registry`、`duckdb-runtime`；Module `catalog-manager`、`policy-manager`、`query-coordinator`、`source-manager`；可选入口 `pgwire-listener`、`management-api`。重复 Bundle 拒绝；晚期重复可能留下部分注册，丢弃 Builder。实际 ID 应取返回迭代器，不在宿主复制清单。
 
 配置规则：保留 `data/fedengine.duckdb` 的部署路径、WAL、SecretRef 和凭据格式。不同 App 独立文件/临时目录/端口；同进程共享环境变量不是自动命名空间。缺凭据明确失败/降级，不用默认值。源配置仅首次导入，之后管理状态优先。当前版本不匹配明确拒绝，无历史迁移/回退/自动修复。
+
+扩展目录与按需插件规则：扩展解析按优先级读取插件目录（`duckdb.plugin_extension_directory` / `FEDENGINE_PLUGIN_EXTENSION_DIRECTORY`，`source="plugin"` 且允许目录可选缺失）再读取内置目录（`duckdb.extension_directory` / `FEDENGINE_EXTENSION_DIRECTORY`，`source="builtin"`）；每目录支持 `manifest.json` 及 `manifest.d/*.json`（忽略符号链接，要求 `duckdb_version="v2.0.0"` 且强制校验扩展 SHA-256 与同目录无路径逃逸/冲突）。管理端点 `GET /api/v1/plugins` 返回 11 类数据源的 `PluginCapability`（`kind`、`extension`、`extension_installed`、`extension_source`、`odbc_driver`、`odbc_driver_installed`、`ready`、`plugin_name`），其中 `postgres`/`greenplum`/`kingbasees`/`mysql`/`mariadb`/`starrocks` 为核心内置，`sqlserver`/`oracle`/`db2`/`hana`/`dameng` 检查按需插件扩展与 `ODBCSYSINI/odbcinst.ini`（或 `/etc/odbcinst.ini`）ODBC 驱动状态。`magicDataHub`（`v0.1.0+`）通过固定 Git revision 消费本库；本仓库 `publish=false` 保持不变。
 
 自动组织规则：PG/MySQL 均逐原生数据库独立成库，同产品/规范化实例/原生库精确名称相同的登记合并贡献。不同端口或原生库不得按同名合并；同一连接登记可对应多个虚拟库。PG 保留来源 Schema，MySQL 在独立虚拟库内保留原生 database 同名 Schema。来源范围、账号或凭据别名不代替原生目标身份；失败激活不等于已发布目录。
 

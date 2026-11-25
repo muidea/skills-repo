@@ -3,7 +3,7 @@ name: modorch-fedengine-integration
 description: "在 Modorch 0.0.3 宿主中接入 modorch-fedengine Facade，处理 Bundle/Profile、宿主预算、路径和检查式退出时使用；含受控 Query/Management Client，不用于修改框架 Runtime 或使用未开放的 EmbeddedCore。"
 metadata:
   compatibility: "Rust/Cargo 1.94、Python 3.11+；modorch-fedengine 0.1.0 开发源码与 Modorch 0.0.3 的匹配指纹"
-  version: "1.1.4"
+  version: "1.1.6"
   framework-version: "0.0.3"
   library-contracts-revision: "1.1.2"
 ---
@@ -33,6 +33,7 @@ python3 scripts/preflight.py --manifest-path /absolute/host/Cargo.toml
 - 进程内调用仅在 Ready 后绑定 query_client/management_client。Principal 是可信宿主已认证身份断言，不是口令验证；管理 grant 默认拒绝，必须显式授予精确源/虚拟库与写权限，不从不可信输入铸造授权。参数化 SQL、opaque Prepared、预算和未知写入规则见[当前接入规则](references/integration.md)。
 - 宿主可开启 Hub 字节预算；库的入口及下游请求声明逻辑输入成本，超额拒绝不放宽。该成本不代表 RSS 或结果流内存。
 - 运行结束始终 checked shutdown。StopIncomplete 时保留 Application/Runtime/资源并按宿主策略重试；Forced 保留异常语义。取消不等于同步扩展 I/O 已退出，不自动重放未知写入。
+- 模块化扩展与按需插件目录优先读取 `duckdb.plugin_extension_directory` / 环境变量 `FEDENGINE_PLUGIN_EXTENSION_DIRECTORY`（`plugin` 优先于内置 `extension_directory`），支持 `manifest.d/*.json` 插件清单位点及 SHA-256 校验；宿主管理端提供 `GET /api/v1/plugins` 返回 11 类数据源（内置 PG/MySQL 族与按需 OCI 插件 SQL Server/Oracle/DB2/HANA/Dameng）的扩展与 ODBC 驱动就绪状态。
 
 ## 当前边界与验证
 
