@@ -2,7 +2,7 @@
 name: magicplatform-deploy
 description: Guides AI agents through safe magicPlatform deployment, upgrade, offline delivery, dependency self-checks, and read-only preflight/health verification. Use when preparing hosts, validating TLS/image modes, initializing/resetting/updating deployments, packaging offline releases, or diagnosing container and HTTPS health.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "rangh-codespace"
   tags: "magicplatform,deployment,tls,docker-compose,ops"
 compatibility: Compatible with open_code
@@ -69,9 +69,10 @@ sh ~/dataspace/magicPlatform/scripts/deployment-preflight.sh --mode release --re
 ```sh
 cd ~/dataspace/magicPlatform
 
-# 本机开发环境初始化 / 重启 / 刷新镜像
+# 本机开发环境初始化 / 重启 / 刷新镜像 / 开启 APM（性能测试用）
 MAGIC_DEPLOYMENT_MODE=development DOMAIN=local.vpc ./initialize.sh
 MAGIC_DEPLOYMENT_MODE=development ./start.sh
+ENABLE_APM=true MAGIC_DEPLOYMENT_MODE=development ./start.sh
 MAGIC_DEPLOYMENT_MODE=development ./update.sh
 
 # 离线发布打包（源机）-> 导入与初始化（目标机）
@@ -92,7 +93,15 @@ sh ~/dataspace/magicPlatform/scripts/deployment-health.sh --json
 # 远端主机只读 HTTPS 校验（走系统 CA）
 sh ~/dataspace/magicPlatform/scripts/deployment-health.sh \
   --skip-docker --base-url https://panel.example.com --json
+
+# 远端主机含 APM（Prometheus + Grafana）只读 HTTPS 校验
+sh ~/dataspace/magicPlatform/scripts/deployment-health.sh \
+  --skip-docker --base-url https://panel.example.com --include-apm --json
 ```
+
+> **分机性能/高频功能回归提示**：
+> - 开启 `ENABLE_APM=true ./start.sh` 后，Traefik 通过内部容器网络 `:8082`（不向宿主机暴露端口）向 Prometheus 提供入口 QPS/延迟/状态码指标，测试机经 `https://apm.<domain>/prometheus/` 只读查询；非内网环境请配合访问控制/BasicAuth，避免裸露 APM 端点。
+> - 当独立测试机从单一源 IP 高频登录或压测时，CAS 默认 `[oauth.loginRate]` 为同租户同 IP 60 秒限 30 次登录；若需调整，仅修改测试部署运行配置 `services/runtime/foundation/config/cas/application.toml` 并如实记录，严禁关闭账号锁与鉴权校验。
 
 ## 故障定位顺序
 

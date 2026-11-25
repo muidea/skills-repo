@@ -2,9 +2,9 @@
 name: magictest-platform-verify
 description: Selects, executes, checks host dependencies for, and reports layered magicTest and magicPlatform verification suites from offline governance checks up to live regression runs. Use when pre-checking toolchain dependencies, discovering test targets, running unit/packaging/E2E dry-runs or live verification, and distinguishing offline proofs from real live acceptance.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "rangh-codespace"
-  tags: "magictest,verification,e2e,regression,governance"
+  tags: "magictest,verification,e2e,regression,governance,load,apm"
 compatibility: Compatible with open_code
 ---
 
@@ -81,21 +81,48 @@ python3 -B run_tests.py --list
 python3 -B regression_inventory.py --check
 
 python3 -B -m unittest discover -s applications/live_e2e -p 'test_*.py' -v
-python3 -B -m unittest discover -s tools -p 'test_export_remote_sim_bundle.py' -v
+python3 -B -m unittest discover -s tools -p 'test_*.py' -v
+python3 -B -m unittest discover -s load -p 'test_*.py' -v
 python3 -B applications/live_e2e/run_dual_apps_e2e.py --dry-run --output-dir /tmp/magic-e2e-dryrun
 ```
 
 ### Layer 3：Live 健康、双应用联调与平台标准回归
 
-先运行 `sh ~/dataspace/magicPlatform/scripts/deployment-health.sh --json` 验证环境基线，再按目标执行：
+先运行 `sh ~/dataspace/magicPlatform/scripts/deployment-health.sh --json`（远端分机测试加 `--skip-docker --base-url https://panel.<domain>`，性能测试前加 `--include-apm`）验证环境基线，再按目标执行：
 
 ```sh
 cd ~/codespace/magicTest
 # 平台常规回归预览 / 执行（使用仓外私密配置）
 python3 -B run_tests.py --target platform-standard --dry-run
+# 跨机远端功能回归：在私密 config 中设 "executionMode": "remote-https"，
+# 可选 "targetAddress"、"controlledUpstreamBind"/"Advertise"、"caFile"、"excludeHostCoupled": true
+# 报告严格区分 remoteScopeComplete 与全目录 complete（绝不将 F059-001 记为 passed）
+
 # 双应用 Live E2E（独立 state-dir 与 0600 密钥文件）
 python3 -B run_tests.py --target app-dual-live-e2e --help
 ```
+
+### Layer 4：跨机性能压测与平台 APM 关联
+
+从独立施压机纯 HTTPS 发压并拉取被测平台 `https://apm.<domain>/prometheus/`（需在被测平台机以 `ENABLE_APM=true ./start.sh` 开启 APM）：
+
+```sh
+cd ~/codespace/magicTest
+# 离线预览压测计划
+python3 -B run_tests.py --target platform-load
+
+# 真实远端稳态 / 阶梯 / 老化压测（支持 keep-alive 与 cold-tls 对照）
+python3 -B load/run_load.py \
+  --from-sim-state ~/.local/state/magic-sim \
+  --sim-app device-management --sim-scenario gateway-read \
+  --mode step --concurrency 2,8,16 --duration 30 \
+  --connection-mode keep-alive \
+  --apm-url https://apm.example.com/prometheus/ \
+  --apm-idle-seconds 30 --require-apm
+```
+
+- 压测凭据须为 `0600` 常规非软链文件，Bearer Token 严格限制 `<= 16384` 字节；避免用 `platform-admin` JWT 压测业务动作，优先使用 Gateway ApiKey 或最小权限账号，避免单 IP 瞬时高频登录触发 CAS `[oauth.loginRate]`（默认 60s/30 次）。
+- 若需更深层的进程内阶段样本与 PostgreSQL SQL 指纹，仍可在被测平台宿主机按需配合 `MAGIC_PROFILE_WINDOW` 与 `collect-qps-analysis.py`。
 
 执行完整 `platform-standard` / `platform-abnormal` 前确认已通过上方 Layer 3/4 浏览器依赖自检（Node 18+、用户级 Playwright 1.65.0 与 Chromium、Docker、Go）。
 

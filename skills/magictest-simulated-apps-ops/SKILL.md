@@ -2,7 +2,7 @@
 name: magictest-simulated-apps-ops
 description: Operates simulated application packaging, cold-start import/install/approval, Portal subscriptions, least-privilege CAS OAuth provisioning, data seeding, dependency self-checks, and readback verification via magicTest. Use when exporting remote simulation bundles or populating and verifying device-management and chess-room-booking on a deployed magicPlatform.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
   author: "rangh-codespace"
   tags: "magictest,simulated-apps,device-management,chess-room-booking,oauth"
 compatibility: Compatible with open_code
@@ -88,6 +88,19 @@ python3 -B ~/codespace/magicTest/applications/live_e2e/bootstrap_simulated_apps.
 
 - 自签 `local.vpc` 环境额外附加：`--ca-file ~/dataspace/magicPlatform/services/secret/tls/tls.crt --trust-leaf`。
 - 公网 CA 环境直接省略 `--ca-file` 即可（脚本会自动为 `simulator.py` 匹配系统 CA 束与 `--ca-is-root`）。
+
+### 4. 复用冷启动产物驱动跨机性能压测（可选）
+
+冷启动完成后，可直接把 `--state-dir` 中非机密 URL 与 `0600` Gateway ApiKey / 最小权限 Bearer Token 交给 `load/run_load.py` 施压并采集平台 APM：
+
+```sh
+python3 -B ~/codespace/magicTest/load/run_load.py \
+  --from-sim-state ~/.local/state/magic-sim \
+  --sim-app device-management --sim-scenario gateway-read \
+  --mode step --concurrency 2,8,16 --duration 30 \
+  --apm-url https://apm.example.com/prometheus/ \
+  --apm-idle-seconds 30 --require-apm
+```
 
 认证与 API 常见坑点详见 [认证与接口排障清单](references/auth-and-api-pitfalls.md)。
 
