@@ -2,7 +2,7 @@
 name: magictest-remote-verification
 description: End-to-end runbook for verifying a remote magicPlatform deployment from a separate clean test server over HTTPS only (without remote Docker socket or source mounts). Covers host readiness prechecks, remote health/APM checks, lightweight bundle or git setup, simulated-apps bootstrap/readback, cross-server load + Prometheus APM, and remote-https functional regression.
 metadata:
-  version: "1.0.0"
+  version: 1.0.1
   author: "rangh-codespace"
   tags: "magictest,remote-verification,cross-server,load,apm,e2e,regression"
 compatibility: Compatible with open_code
@@ -118,7 +118,7 @@ sh "$MAGICPLATFORM_ROOT/scripts/deployment-health.sh" \
 
 ### Step 4：双模拟应用冷启动、授权、造数与回读（档位 1）
 
-先执行零网络 `--dry-run` 确认本地包摘要完整，再联机执行（若目标平台已有 `ready` 实例，补充 `--reuse-existing`）：
+先执行零网络 `--dry-run` 确认本地包摘要完整，再联机执行（若目标平台已有 `ready` 实例，补充 `--reuse-existing`；若远端已存在默认 `crb-sim-operator` 且本机无其密码文件，应传 `--operator-password-file` 或指定独立 `--operator-account <name>`；在 `--reuse-existing` 下若 `chess-room-booking` 远端实例非空，工具会执行只读 `inspect` 而不覆写既有数据）：
 
 ```sh
 PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/applications/live_e2e/bootstrap_simulated_apps.py \
@@ -132,7 +132,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/applications/live_e2e/bootstrap_s
   --reuse-existing
 ```
 
-完成后确认 `~/.local/state/magic-verify/bootstrap-summary.json`、`runs/device-management/verification.json` 均通过，且 `crbOperator.tokenBytes <= 16384`。
+完成后确认 `~/.local/state/magic-verify/bootstrap-summary.json`、`runs/device-management/verification.json` 均通过（或 `chess-room-booking` 在复用非空实例时为 `reused_non_empty_readonly_inspected`），且 `crbOperator.tokenBytes <= 16384`。
 
 ### Step 5：跨机性能压测与 Prometheus APM 采集（档位 1）
 
@@ -154,18 +154,18 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/load/run_load.py \
 
 ### Step 6：跨机 `remote-https` 功能回归（档位 2 / 档位 3）
 
-在仓外准备 `0600` 权限的 `credentials.json` 与 `regression-config.json`（模板见 [远端验证清单与配置模板](references/remote-runner-checklist.md)），并设置短 `TMPDIR` 与 `no_proxy`：
+在仓外准备 `0600` 权限的扁平 `credentials.json` 与分套件 `regression-config-standard.json` / `regression-config-abnormal.json`（先跑 `standard` 再跑 `abnormal`，模板见 [远端验证清单与配置模板](references/remote-runner-checklist.md)），并设置短 `TMPDIR` 与 `no_proxy`：
 
 ```sh
 export TMPDIR=~/.local/state/magic-verify/t
 # 1. 离线预览本次远端执行用例清单（确认 excludeHostCoupled 分流生效）：
 PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/regression/run_standard.py \
-  --config ~/.local/state/magic-verify/regression-config.json \
+  --config ~/.local/state/magic-verify/regression-config-standard.json \
   --suite standard --dry-run
 
-# 2. 执行远端标准（或 --suite abnormal）功能回归：
+# 2. 执行远端标准（以及独立的 --suite abnormal）功能回归：
 PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/regression/run_standard.py \
-  --config ~/.local/state/magic-verify/regression-config.json \
+  --config ~/.local/state/magic-verify/regression-config-standard.json \
   --suite standard
 ```
 
@@ -173,9 +173,9 @@ PYTHONDONTWRITEBYTECODE=1 python3 -B magicTest/regression/run_standard.py \
 
 输出最终验证结论时，按实测分层分别列出且互不混用：
 1. **远端健康与 APM**：`deployment-health.sh` 返回的 HTTP / OIDC / Prometheus targets 结果。
-2. **双模拟应用**：安装 ID / Deployment ID、Service Key、Token 字节数、`verification.json` 与 `simulation_tool verify` 结果（标注仅 Gateway 回读，不含浏览器页面验收）。
+2. **双模拟应用**：安装 ID / Deployment ID、Service Key、Token 字节数、`verification.json` 与 `simulation_tool verify`/`inspect` 结果（标注仅 Gateway 回读，不含浏览器页面验收）。
 3. **跨机压测与 APM**：目标端点、并发阶梯、`keep-alive`/`cold-tls` 模式、失败率及各采集器（`host`/`traefik`/`postgres`/`cadvisor`/`magicbase`）可用状态。
-4. **跨机功能回归**：明确列出 `remoteScopeComplete`、`excludedCases` 数量与原因（宿主机耦合 / 无反连回调通道），禁止写成全目录 `complete`。
+4. **跨机功能回归**：明确列出 `remoteScopeComplete`、`excludedCases` 与 `excludedCaseReasons`（宿主机耦合 / 本地交付夹具 / 无反连回调通道），禁止写成全目录 `complete`。
 
 详细信息与配置模板见 [远端验证清单与配置模板](references/remote-runner-checklist.md)。
 

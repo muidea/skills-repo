@@ -19,43 +19,36 @@ export TMPDIR=~/.local/state/magic-verify/t
 
 ## 2. 私密 `credentials.json` 模板（仓外 `0600` 文件）
 
-> 切勿将此文件放进任意 Git 仓库。各账号密码须与目标平台当前有效账号一致（含已改密后的 `platform-admin`）。
+> 切勿将此文件放进任意 Git 仓库。`regression/standard.cjs` 使用扁平管理员结构（`origin`、`account`、`password`、`namespace`），运行时会自动创建并清理 `tenantA`、`tenantB`、`user`、`tenantAdmin`、`otherTenantAdmin` 等回归夹具，无需预置租户或普通用户凭据。
 
 ```json
 {
   "origin": "https://panel.<domain>",
-  "admin": {
-    "account": "platform-admin",
-    "password": "<current-admin-password>",
-    "namespace": "panel"
-  },
-  "tenantAdmin": {
-    "account": "<tenant-admin-account>",
-    "password": "<tenant-admin-password>",
-    "namespace": "<tenant-ns>"
-  },
-  "user": {
-    "account": "<ordinary-user-account>",
-    "password": "<ordinary-user-password>",
-    "namespace": "<tenant-ns>"
-  }
+  "account": "platform-admin",
+  "password": "<current-admin-password>",
+  "namespace": "panel"
 }
 ```
 
 ## 3. 私密 `regression-config.json` 模板（`remote-https` 模式，仓外 `0600` 文件）
 
-### 档位 2（仅测试机 -> 平台单向 HTTPS，自动分流宿主机强耦合与回调类用例）
+### 档位 2（仅测试机 -> 平台单向 HTTPS，自动分流宿主机强耦合、本地夹具与回调类用例）
 
+为使 `standard` 与 `abnormal` 两套报告并列留存（`run_standard.py` 运行全量 `standard` 时会清理历史轮次目录），建议为两套配置独立的 `output` 子目录：
+
+`regression-config-standard.json`：
 ```json
 {
   "executionMode": "remote-https",
   "credentials": "/home/<user>/.local/state/magic-verify/secrets/credentials.json",
-  "output": "/home/<user>/codespace/magicTest/reports/remote-verify",
+  "output": "/home/<user>/testspace/magicTest/reports/remote-verify/standard",
   "targetAddress": "<target-ip>",
   "caFile": "/home/<user>/.local/state/magic-verify/secrets/ca.crt",
   "excludeHostCoupled": true
 }
 ```
+
+`regression-config-abnormal.json`：将 `output` 改为 `.../reports/remote-verify/abnormal`；`F049-003` 会默认通过 `GET /files/self/files/limits/` 自动读取部署上限，如需覆盖或强制校对，可补充可选字段 `"fileUploadMaxBytes": <uploads.maxBytes>`。
 
 ### 档位 3（额外开放平台 -> 测试机外部回调，补跑回调用例）
 
@@ -69,14 +62,15 @@ export TMPDIR=~/.local/state/magic-verify/t
 ```
 
 - 注意：`remote-https` 模式下**禁止**配置 `deliveryFixtureConfig` 或 `runtimeSnapshotConfig`。
-- `caFile` 对公网 CA 域名可省略；对自签 `local.vpc` 域名指向目标机拷出的 `ca.crt`。
+- `caFile` 对公网 CA 域名可省略；对自签 `local.vpc` 域名指向目标机拷出的 `ca.crt`（或叶证书 `tls.crt`）。
 
 ## 4. `remote-https` 用例自动分流边界
 
-[remote_profile.py](~/codespace/magicTest/regression/remote_profile.py) 在 `excludeHostCoupled: true`（默认）下按以下规则自动分流：
+[remote_profile.py](~/codespace/magicTest/regression/remote_profile.py) 在 `excludeHostCoupled: true`（默认）下按以下规则自动分流，并在 `inputs.json` 与 `report.json` 的 `executionGates.excludedCaseReasons` 中按类别留证：
 
-- **始终排除（宿主机强耦合，跨机不宣称通过）**：标准套件 34 项（含 `F059-001` 容器指纹及 `postgres_fixture`/Docker/本地交付夹具用例）、异常套件 6 项。
-- **未配 `controlledUpstreamBind`/`Advertise` 时额外排除（外部上游回调）**：标准套件 28 项、异常套件 2 项。
+- **宿主机强耦合（`hostCoupled`，始终排除）**：标准套件 34 项（含 `F059-001` 容器指纹及 `postgres_fixture`/Docker/本地交付夹具用例）、异常套件 6 项。
+- **本地交付夹具依赖（`deliveryFixture`，需 `deliveryFixtureConfig`）**：标准套件 58 项、异常套件 9 项。
+- **外部上游回调（`upstreamCallback`，未配 `controlledUpstreamBind`/`Advertise` 时排除）**：标准套件 28 项、异常套件 2 项。
 - 报告 JSON 中使用 `remoteScopeComplete` 判定远端已覆盖范围是否全通，`catalogCoverage.complete` 仍保持严格全目录口径。
 
 ## 5. 跨机压测前的平台侧检查清单
