@@ -1,8 +1,8 @@
 ---
 name: magicwebportal-ui-interaction
-description: 用于规范和收口 magicWebPortal 的门户与管理台页面交互、按钮四级分层、功能块容器收口、响应式适配及 E2E/单测契约保护。当在 magicWebPortal 新增、修改或评审 portal/panel 页面、Card/Tabs/Modal/Table 布局、行内操作按钮、390px 移动端适配或顶栏空间切换组件时使用。
+description: 用于规范和收口 magicWebPortal 的门户、管理台与工作台页面交互、按钮四级分层、功能块容器收口、响应式适配及 E2E/单测契约保护。当在 magicWebPortal 新增、修改或评审 portal/panel/workbench 页面、Card/Tabs/Modal/Table 布局、行内操作按钮、390px 移动端适配或顶栏空间切换组件时使用。
 metadata:
-  version: "1.0.0"
+  version: 1.0.3
   author: "rangh"
   created_at: "2026-11-27T07:38:15+08:00"
 ---
@@ -12,7 +12,7 @@ metadata:
 
 ## 适用场景
 
-- 在 `magicWebPortal/src/pages/portal` 或 `magicWebPortal/src/pages/panel` 新增页面、拆分标签页（Tabs）、重构表格/卡片列表或调整页面布局。
+- 在 `magicWebPortal/src/pages/portal`、`magicWebPortal/src/pages/panel` 或 `magicWebPortal/src/pages/workbench`（含 `components/ApplicationPageRenderer`、`components/service-debugger`）新增页面、拆分标签页（Tabs）、重构表格/卡片列表或调整页面布局。
 - 评审或收口页面按钮数量过多、多主按钮冲突、Card 套 Card、长文本清单撑破卡片或永久禁用按钮占位的页面缺陷。
 - 调整顶栏入口（门户/管理台切换胶囊）、一体化“当前操作空间”切换面板或 390px 小屏布局适配。
 - 配套同步 `magicWebPortal/src/__tests__/` 单元测试或 `magicTest/regression/` 浏览器用例。
@@ -62,7 +62,7 @@ metadata:
 ## 实施流程与契约保护
 
 1. 修改前对照 [8 大页面群收口对照清单](references/page-group-checklist.md) 锁定目标页面与组件边界，并搜索 `magicWebPortal/src/__tests__/` 与 `magicTest/regression/` 确认受影响契约锚点：
-   - 关键精准按钮/文本锚点：`安装详情`（内联可见）、`配置服务`、`保存日志保留策略`、`查看全部 (N)`、`查看`、`进入服务`、`去处理`（需通过 `aria-label="去处理"` 与 icon `aria-hidden="true"` 保持无障碍名称精确一致）、`[aria-label="编辑空间"]`、`[aria-label="删除空间"]`、`<Link to="..."><Button ...>模型包管理</Button></Link>`。
+   - 关键精准按钮/文本锚点：`安装详情`（内联可见）、`配置服务`、`保存日志保留策略`、`查看全部 (N)`、`查看`、`进入服务`、`去处理`（需通过 `aria-label="去处理"` 与 icon `aria-hidden="true"` 保持无障碍名称精确一致）、`[aria-label="编辑空间"]`、`[aria-label="删除空间"]`、`<Link to="..."><Button ...>模型包管理</Button></Link>`；Workbench 工作台：`发送请求`、`下载 OpenAPI`、`下载接口合同`、`业务操作`、`重新加载应用`、`刷新业务记录`。
 2. 当操作被折叠进 `<Dropdown>` 或块被移入 `<Tabs>` 导致原有测试直接查询不到 DOM 时，严禁悄悄删测试，必须同步更新对应单测或 E2E（例如先打开 `[role=tab]` 或点击 `[aria-label="更多..."]` 后再点击对应菜单项）。
 3. 完成编辑后按顺序执行下方验证。
 
@@ -93,3 +93,5 @@ metadata:
 - 不要在 `Portal` 或 `Panel` 页面重新引入“租户空间”字样。
 - 折叠危险操作至 `更多` 后，`onOk` 仍须走原有的防御性确认、版本并发检查与错误提示链路，不可跳过 `Modal.confirm`。
 - 检查 `deployment-table-layout.test.ts` 与 `ArtifactDeploymentPanels.tsx` 的契约限制（例如无参数 `<Space>` 禁止检查、`tableLayout="fixed"` 强制检查）。
+- **模型应用展示与单值编辑边界**：`magic.application-ui/v1` 运行态与设计器（`PagePresentationEditor` / `PageDraftEditor`）需保持单套合同同步；未配置扩展展示时 `PageFieldValue` 须保持轻量 `<span>` 输出，行内单值编辑（`inlineEdit`）仅限非主键非只读标量字段并通过授权写入 owner（`queryActionRecord` + `submitBusinessWrite` + `assertBusinessWriteReceipt`）校验 `expectedVersion`，不得绕过版本并发与 CAS 检查。
+- **筛选预设、目录动作与指标色调**：`PageSourceFilterForm` 扩展支持 `string` `contains`、数值 `gte`/`lte` 区间、`filters.presets` 一键预设与可关闭激活标签（保持既有 `aria-label` 与按钮文案）；`entity-directory` 具名业务动作统一渲染为 T3 `业务操作` 链接（单行直出不超过 3 个），`metric-group` 支持单项 `metrics.itemTones`（`default`/`primary`/`success`/`warning`/`danger`）。
